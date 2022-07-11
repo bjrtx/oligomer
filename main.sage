@@ -57,6 +57,18 @@ assert(SymmetricGroup(4).is_isomorphic(dG))
 def nb_adjacencies(g, subset):
     """Number of pairs of vertices in subset which are adjacent in g."""
     return sum(g.has_edge(x, y) or g.has_edge(y, x) for x, y in combinations(subset, 2))
+
+def plot(blue_set):
+    def diamond(x, y, idx):
+        p = polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color= (0, 0, 1) if idx in blue_set else (1, 0, 0), edgecolor= (0, 0, 0))
+        if y == 1:
+            p += line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)], rgbcolor = (0, 0, 0))
+        else:
+            p += line([(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
+        return p
+        
+    centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
+    sum(diamond(x,y, idx) for idx, (x, y) in centers.items()).show(axes=False)
     
 
 def unique_colourings(nb_blue_vertices=6, directed=True):
@@ -78,6 +90,7 @@ def unique_colourings(nb_blue_vertices=6, directed=True):
             auto = g.automorphism_group(partition=partition)
             adj = nb_adjacencies(g, red_set)    
             unique_colourings[canon] = (auto, adj)
+            plot(blue_set)
     t = Counter((auto.order(), adj) for G, (auto, adj) in unique_colourings.items())
     print('{} case. With {} blue tiles there are {} unique colourings up to rotations.'.format(
           'Directed' if directed else 'Undirected', nb_blue_vertices, len(unique_colourings)), 
