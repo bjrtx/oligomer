@@ -59,37 +59,31 @@ def nb_adjacencies(g, subset):
     return sum(g.has_edge(x, y) or g.has_edge(y, x) for x, y in combinations(subset, 2))
 
 def plot(blue_set):
+    blue_set = set(blue_set)
     def diamond(x, y, idx):
-        p = polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color= (0, 0, 1) if idx in blue_set else (1, 0, 0), edgecolor= (0, 0, 0))
-        if y == 1:
-            p += line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)], rgbcolor = (0, 0, 0))
-        else:
-            p += line([(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
-        return p
+        return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color=((0, 0, 1) if idx in blue_set else (1, 0, 0)), edgecolor= (0, 0, 0)) \
+               + line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)] if y == 1 else [(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
         
     centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
     sum(diamond(x,y, idx) for idx, (x, y) in centers.items()).show(axes=False)
     
 
-def unique_colourings(nb_blue_vertices=6, directed=True):
+def unique_colourings(nb_blue_vertices=6, directed=True, graph=None):
     """List the colourings with a given number of blue vertices,
     either in the directed graph, up to rotations (if directed is True),
     or in the undirected graph, up to rotations and reflexions.
     """
-    g = directedCuboctahedralGraph() if directed else cuboctahedralGraph()
+    graph = directedCuboctahedralGraph() if directed else cuboctahedralGraph()
     assert(0 <= nb_blue_vertices <= 12)
-    unique_colourings = dict()
-    for blue_set in combinations(g.vertices(), nb_blue_vertices):
-        red_set = [v for v in g.vertices() if v not in blue_set]
+    unique_colourings = {}
+    for blue_set in combinations(graph.vertices(), nb_blue_vertices):
+        red_set = [v for v in graph.vertices() if v not in blue_set]
         partition = [blue_set, red_set]
         # select a canonical representative of the (di)graph
         # up to automorphisms that preserve the red and blue colour classes
         # and either the edges or the directed edges
-        canon = g.canonical_label(partition)
-        if canon not in unique_colourings:
-            auto = g.automorphism_group(partition=partition)
-            adj = nb_adjacencies(g, red_set)    
-            unique_colourings[canon] = (auto, adj)
+        if (canon := graph.canonical_label(partition)) not in unique_colourings:
+            unique_colourings[canon] = (graph.automorphism_group(partition=partition), nb_adjacencies(graph, red_set))
             plot(blue_set)
     t = Counter((auto.order(), adj) for G, (auto, adj) in unique_colourings.items())
     print('{} case. With {} blue tiles there are {} unique colourings up to rotations.'.format(
