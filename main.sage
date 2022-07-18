@@ -4,26 +4,10 @@
 # For example, using https://sagecell.sagemath.org/
 
 from itertools import combinations
-from collections import Counter
+from functools import cached_property
+from collections import Counter, namedtuple
 from sage.misc.banner import require_version
-require_version(9, 6) # because of a bug in SageMath v9.5
-
-def cuboctahedralGraph():
-    """Returns an immutable copy of the cuboctahedral graph."""
-    return polytopes.cuboctahedron().graph().copy(immutable=True)
-
-g = cuboctahedralGraph()
-assert(g.order() == 12 and g.num_edges() == 24
-       and g.is_polyhedral() and g.is_regular(k=4))
-assert(g.is_immutable())
-
-G = g.automorphism_group()
-assert(G.order() == 48)
-# the automorphism group of g is (isomorphic to) S_4 * S_2 and can be interpreted as
-# the full octahedral symmetry group (S_4 = O for rotations and S_2 for reflections)
-H, *_ = SymmetricGroup(4).direct_product(SymmetricGroup(2))
-assert(H.is_isomorphic(G))
-
+require_version(9, 6) # because of an apparent bug in SageMath v9.5
 
 #directed version, with arcs oriented =||
 def directedCuboctahedralGraph():
@@ -46,53 +30,85 @@ def directedCuboctahedralGraph():
     }
     return DiGraph(out_neighbours, immutable=True)
 
-dg = directedCuboctahedralGraph()
-assert(dg.to_undirected().is_isomorphic(g))
-dG = dg.automorphism_group()
-assert(dG.order() == 24)
-# the automorphism group of dg is (isomorphic to) S_4 and can be interpreted as
-# the rotational octahedral symmetry group (O, 432, etc.)
-assert(SymmetricGroup(4).is_isomorphic(dG))
+if __name__ == '__main__':
+    dg = directedCuboctahedralGraph()
+    # The undirected graph underlying dg is the cuboctahedral graph
+    assert(dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph()))
+    dG = dg.automorphism_group()
+    assert(dG.order() == 24)
+    # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as
+    # the rotational octahedral symmetry group (O, 432, etc.)
+    assert(SymmetricGroup(4).is_isomorphic(dG))
 
-def nb_adjacencies(g, subset):
-    """Number of pairs of vertices in subset which are adjacent in g."""
-    return sum(g.has_edge(x, y) or g.has_edge(y, x) for x, y in combinations(subset, 2))
+def nb_adjacencies(g, left, right):
+    """Number of edges from left to right in the directed graph g."""
+    return sum(g.has_edge(x, y) for x in left for y in right)
 
 def plot(blue_set):
-    blue_set = set(blue_set)
+    """A Sage Graphics object representing an oligomer with coloured dimers."""
+    blue_set = frozenset(blue_set)
     def diamond(x, y, idx):
         return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color=((0, 0, 1) if idx in blue_set else (1, 0, 0)), edgecolor= (0, 0, 0)) \
                + line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)] if y == 1 else [(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
         
     centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
-    sum(diamond(x,y, idx) for idx, (x, y) in centers.items()).show(axes=False)
-    
+    return sum(diamond(x,y, idx) for idx, (x, y) in centers.items())
 
-def unique_colourings(nb_blue_vertices=6, directed=True, graph=None):
+Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
+
+class Bicolouring:
+    """A class that stores information about a blue-red colouring of a (directed) graph."""
+    
+    def __init__(self, graph, blue_set):
+        self.graph = graph
+        self.blue_set = frozenset(blue_set)
+        self.red_set = frozenset(v for v in graph.vertices() if v not in blue_set)
+    
+    @cached_property
+    def canon(self):
+        """A label that identifies the colouring up to automorphisms."""
+        return self.graph.canonical_label([self.blue_set, self.red_set])
+    
+    @cached_property
+    def adjacencies(self):
+        return Adjacencies(nb_adjacencies(self.graph, self.blue_set, self.blue_set),
+                           nb_adjacencies(self.graph, self.red_set, self.red_set),
+                           nb_adjacencies(self.graph, self.blue_set, self.red_set),
+                           nb_adjacencies(self.graph, self.red_set, self.blue_set))
+    
+    @cached_property
+    def automorphism_group(self):
+        return self.graph.automorphism_group(partition=[self.blue_set, self.red_set])
+    
+    def __repr__(self):
+        return f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, automorphism group of order {self.automorphism_group.order()}'
+    
+    @cached_property
+    def picture(self):
+        """Only works properly if self.graph is the directed cuboctahedral graph."""
+        return plot(self.blue_set)
+    
+    def show(self):
+        self.picture.show(axes=False)
+        
+
+def unique_colourings(nb_blue_vertices=6, graph=None, show=False, write=True):
     """List the colourings with a given number of blue vertices,
-    either in the directed graph, up to rotations (if directed is True),
-    or in the undirected graph, up to rotations and reflexions.
+    in the directed graph, up to rotations (if directed is True),
     """
-    graph = directedCuboctahedralGraph() if directed else cuboctahedralGraph()
-    assert(0 <= nb_blue_vertices <= 12)
+    graph = directedCuboctahedralGraph() if graph is None else graph
+    assert(0 <= nb_blue_vertices <= graph.order())
     unique_colourings = {}
     for blue_set in combinations(graph.vertices(), nb_blue_vertices):
-        red_set = [v for v in graph.vertices() if v not in blue_set]
-        partition = [blue_set, red_set]
-        # select a canonical representative of the (di)graph
+        c = Bicolouring(graph, blue_set)
+        # select a canonical representative of the digraph
         # up to automorphisms that preserve the red and blue colour classes
-        # and either the edges or the directed edges
-        if (canon := graph.canonical_label(partition)) not in unique_colourings:
-            unique_colourings[canon] = (graph.automorphism_group(partition=partition), nb_adjacencies(graph, red_set))
-            plot(blue_set)
-    t = Counter((auto.order(), adj) for G, (auto, adj) in unique_colourings.items())
-    print('{} case. With {} blue tiles there are {} unique colourings up to rotations.'.format(
-          'Directed' if directed else 'Undirected', nb_blue_vertices, len(unique_colourings)), 
-          'Order of the automorphism group / red-red adjacencies, number of such colourings',
-          [k + (v,) for k, v in t.items()],
-          """The smallest possible number of red-red adjacencies is {}.""".format(
-          min(adj for _, adj  in unique_colourings.values())),
-          sep='\n')
+        # and the directed edges
+        if c.canon not in unique_colourings:
+            unique_colourings[c.canon] = c
+            if show: c.show()
+            if write: print(c)
+    return unique_colourings
           
 if __name__ == '__main__':
-    unique_colourings()
+    unique_colourings(show=False)
