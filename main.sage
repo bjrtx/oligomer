@@ -89,12 +89,13 @@ class Bicolouring:
         return plot(self.blue_set)
     
     def show(self):
+        """Displays a picture of the colouring."""
         self.picture.show(axes=False)
         
 
 def unique_colourings(nb_blue_vertices=6, graph=None, show=False, write=True):
     """List the colourings with a given number of blue vertices,
-    in the directed graph, up to rotations (if directed is True),
+    in the directed graph, up to rotations.
     """
     graph = directedCuboctahedralGraph() if graph is None else graph
     assert(0 <= nb_blue_vertices <= graph.order())
@@ -111,4 +112,4 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False, write=True):
     return unique_colourings
           
 if __name__ == '__main__':
-    unique_colourings(show=False)
+    unique_colourings()
