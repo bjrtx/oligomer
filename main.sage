@@ -61,7 +61,7 @@ def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
     return sum(diamond(x,y, idx) for idx, (x, y) in centers.items())
 
 Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
-Adjacencies.__repr__ = lambda self: (f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, '
+Adjacencies.__str__ = lambda self: (f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, '
                                      f'orange->orange {self.RR}, orange->blue {self.RB}')
     
 
@@ -89,7 +89,7 @@ class Bicolouring:
     def automorphism_group(self):
         return self.graph.automorphism_group(partition=[self.blue_set, self.red_set])
     
-    def __repr__(self):
+    def __str__(self):
         return (f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, '
                 f'automorphism group of order {self.automorphism_group.order()}')
     
@@ -124,7 +124,7 @@ def short_display(nb_blue_vertices, **options):
     a = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
     print(f'With {nb_blue_vertices} vertices and {12 - nb_blue_vertices} orange vertices,'
           f'the number of distinct arrangements is {len(a)}.')
-    C = Counter(repr(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
+    C = Counter(str(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
     for v, k in C.items():
         print(v + f'\t({k} such arrangements)' if k > 1 else v)
     
