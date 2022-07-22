@@ -34,12 +34,12 @@ def directedCuboctahedralGraph():
 if __name__ == '__main__':
     dg = directedCuboctahedralGraph()
     # The undirected graph underlying dg is the cuboctahedral graph
-    assert(dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph()))
+    assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
     dG = dg.automorphism_group()
-    assert(dG.order() == 24)
+    assert dG.order() == 24
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as
     # the rotational octahedral symmetry group (O, 432, etc.)
-    assert(SymmetricGroup(4).is_isomorphic(dG))
+    assert SymmetricGroup(4).is_isomorphic(dG)
 
 def nb_adjacencies(g, left, right):
     """Number of edges from left to right in the directed graph g."""
@@ -49,10 +49,15 @@ def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
     """A Sage Graphics object representing an oligomer with coloured dimers."""
     blue_set = frozenset(blue_set)
     def diamond(x, y, idx):
-        return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color=(blue if idx in blue_set else red), edgecolor= (0, 0, 0)) \
-               + line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)] if y == 1 else [(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
+        return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
+                       color=(blue if idx in blue_set else red),
+                       edgecolor= (0, 0, 0)) \
+               + line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)] if y == 1
+                      else [(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], 
+                      rgbcolor = (0, 0, 0))
         
-    centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
+    centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 
+               11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
     return sum(diamond(x,y, idx) for idx, (x, y) in centers.items())
 
 Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
@@ -101,7 +106,7 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
     in the directed graph, up to rotations.
     """
     graph = directedCuboctahedralGraph() if graph is None else graph
-    assert(0 <= nb_blue_vertices <= graph.order())
+    assert 0 <= nb_blue_vertices <= graph.order()
     unique_colourings = {}
     for blue_set in combinations(graph.vertices(), nb_blue_vertices):
         c = Bicolouring(graph, blue_set)
@@ -115,7 +120,7 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
 
 def short_display(nb_blue_vertices, **options):
     a = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
-    print(f'{nb_blue_vertices}:{12 - nb_blue_vertices}, the number of distinct arrangements is {len(a)}')
+    print(f'With {nb_blue_vertices} vertices and {12 - nb_blue_vertices} orange vertices, the number of distinct arrangements is {len(a)}.')
     C = Counter(repr(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
     for v, k in C.items():
         print(v + f'\t({k} such arrangements)' if k > 1 else v)
