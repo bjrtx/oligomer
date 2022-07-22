@@ -41,9 +41,9 @@ if __name__ == '__main__':
     # the rotational octahedral symmetry group (O, 432, etc.)
     assert SymmetricGroup(4).is_isomorphic(dG)
 
-def nb_adjacencies(g, left, right):
-    """Number of edges from left to right in the directed graph g."""
-    return sum(g.has_edge(x, y) for x in left for y in right)
+def nb_adjacencies(graph, left, right):
+    """Number of edges from left to right in the directed graph."""
+    return sum(graph.has_edge(x, y) for x in left for y in right)
 
 def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
     """A Sage Graphics object representing an oligomer with coloured dimers."""
