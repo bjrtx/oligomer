@@ -10,7 +10,7 @@ from sage.misc.banner import require_version
 require_version(9, 6) # because of an apparent bug in SageMath v9.5
 
 #directed version, with arcs oriented =||
-def directedCuboctahedralGraph():
+def directed_cuboctahedral_graph():
     """Returns an immutable copy of the cuboctahedral graph
     with a specific edge orientation.
     """
@@ -32,7 +32,7 @@ def directedCuboctahedralGraph():
 
 # Several assertions concerning this directed graph
 if __name__ == '__main__':
-    dg = directedCuboctahedralGraph()
+    dg = directed_cuboctahedral_graph()
     # The undirected graph underlying dg is the cuboctahedral graph
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
     dG = dg.automorphism_group()
@@ -61,7 +61,8 @@ def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
     return sum(diamond(x,y, idx) for idx, (x, y) in centers.items())
 
 Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
-Adjacencies.__repr__ = lambda self: f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, orange->orange {self.RR}, orange->blue {self.RB}'
+Adjacencies.__repr__ = lambda self: (f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, '
+                                     f'orange->orange {self.RR}, orange->blue {self.RB}')
     
 
 class Bicolouring:
@@ -89,7 +90,8 @@ class Bicolouring:
         return self.graph.automorphism_group(partition=[self.blue_set, self.red_set])
     
     def __repr__(self):
-        return f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, automorphism group of order {self.automorphism_group.order()}'
+        return (f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, '
+                f'automorphism group of order {self.automorphism_group.order()}')
     
     @cached_property
     def picture(self):
@@ -105,7 +107,7 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
     """List the colourings with a given number of blue vertices,
     in the directed graph, up to rotations.
     """
-    graph = directedCuboctahedralGraph() if graph is None else graph
+    graph = directed_cuboctahedral_graph() if graph is None else graph
     assert 0 <= nb_blue_vertices <= graph.order()
     unique_colourings = {}
     for blue_set in combinations(graph.vertices(), nb_blue_vertices):
@@ -120,7 +122,8 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
 
 def short_display(nb_blue_vertices, **options):
     a = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
-    print(f'With {nb_blue_vertices} vertices and {12 - nb_blue_vertices} orange vertices, the number of distinct arrangements is {len(a)}.')
+    print(f'With {nb_blue_vertices} vertices and {12 - nb_blue_vertices} orange vertices,'
+          f'the number of distinct arrangements is {len(a)}.')
     C = Counter(repr(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
     for v, k in C.items():
         print(v + f'\t({k} such arrangements)' if k > 1 else v)
