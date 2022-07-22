@@ -30,6 +30,7 @@ def directedCuboctahedralGraph():
     }
     return DiGraph(out_neighbours, immutable=True)
 
+# Several assertions concerning this directed graph
 if __name__ == '__main__':
     dg = directedCuboctahedralGraph()
     # The undirected graph underlying dg is the cuboctahedral graph
@@ -44,17 +45,19 @@ def nb_adjacencies(g, left, right):
     """Number of edges from left to right in the directed graph g."""
     return sum(g.has_edge(x, y) for x in left for y in right)
 
-def plot(blue_set):
+def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
     """A Sage Graphics object representing an oligomer with coloured dimers."""
     blue_set = frozenset(blue_set)
     def diamond(x, y, idx):
-        return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color=((0, 0, 1) if idx in blue_set else (1, 0, 0)), edgecolor= (0, 0, 0)) \
+        return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)], color=(blue if idx in blue_set else red), edgecolor= (0, 0, 0)) \
                + line([(x - 0.5, y - 0.5),(x + 0.5, y + 0.5)] if y == 1 else [(x - 0.5, y + 0.5),(x + 0.5, y - 0.5)], rgbcolor = (0, 0, 0))
         
     centers = {9: (0, 0), 10: (0, 2), 2: (1,1), 1: (2, 0), 3: (2, 2), 0: (3, 1), 8: (4, 0), 11:(4,2), 4: (5, 1), 5: (6, 0), 7: (6, 2), 6: (7, 1)}
     return sum(diamond(x,y, idx) for idx, (x, y) in centers.items())
 
 Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
+Adjacencies.__repr__ = lambda self: f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, orange->orange {self.RR}, orange->blue {self.RB}'
+    
 
 class Bicolouring:
     """A class that stores information about a blue-red colouring of a (directed) graph."""
@@ -93,7 +96,7 @@ class Bicolouring:
         self.picture.show(axes=False)
         
 
-def unique_colourings(nb_blue_vertices=6, graph=None, show=False, write=True):
+def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
     """List the colourings with a given number of blue vertices,
     in the directed graph, up to rotations.
     """
@@ -108,8 +111,17 @@ def unique_colourings(nb_blue_vertices=6, graph=None, show=False, write=True):
         if c.canon not in unique_colourings:
             unique_colourings[c.canon] = c
             if show: c.show()
-            if write: print(c)
     return unique_colourings
+
+def short_display(nb_blue_vertices, **options):
+    a = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
+    print(f'{nb_blue_vertices}:{12 - nb_blue_vertices}, the number of distinct arrangements is {len(a)}')
+    C = Counter(repr(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
+    for v, k in C.items():
+        print(v + f'\t({k} such arrangements)' if k > 1 else v)
+    
           
 if __name__ == '__main__':
-    unique_colourings()
+    short_display(6)
+    print('-' * 100)
+    short_display(7)
