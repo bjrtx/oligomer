@@ -6,12 +6,13 @@
 from itertools import combinations
 from functools import cached_property
 from collections import Counter, namedtuple
+from dataclasses import dataclass
 from sage.misc.banner import require_version
 require_version(9, 6) # because of an apparent bug in SageMath v9.5
 
 #directed version, with arcs oriented =||
 def directed_cuboctahedral_graph():
-    """Returns an immutable copy of the cuboctahedral graph
+    """Return an immutable copy of the cuboctahedral graph
     with a specific edge orientation.
     """
     out_neighbours = {
@@ -35,18 +36,16 @@ if __name__ == '__main__':
     dg = directed_cuboctahedral_graph()
     # The undirected graph underlying dg is the cuboctahedral graph
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
-    dG = dg.automorphism_group()
-    assert dG.order() == 24
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as
     # the rotational octahedral symmetry group (O, 432, etc.)
-    assert SymmetricGroup(4).is_isomorphic(dG)
+    assert SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
 def nb_adjacencies(graph, left, right):
-    """Number of edges from left to right in the directed graph."""
+    """Count the edges from left to right in the directed graph."""
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
-def plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
-    """A Sage Graphics object representing an oligomer with coloured dimers."""
+def _plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
+    """Return a Sage Graphics object representing an oligomer with coloured dimers."""
     blue_set = frozenset(blue_set)
     def diamond(x, y, idx):
         return polygon([(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
@@ -64,15 +63,16 @@ Adjacencies = namedtuple('Adjacencies', ['BB', 'RR', 'BR', 'RB'])
 Adjacencies.__str__ = lambda self: (f'junctions: blue->orange {self.BR}, blue->blue {self.BB}, '
                                      f'orange->orange {self.RR}, orange->blue {self.RB}')
     
-
+@dataclass(frozen=True)
 class Bicolouring:
-    """A class that stores information about a blue-red colouring of a (directed) graph."""
+    """Store information about a blue-red colouring of a (directed) graph."""
+    graph: Graph = directed_cuboctahedral_graph()
+    blue_set: frozenset = frozenset()
     
-    def __init__(self, graph, blue_set):
-        self.graph = graph
-        self.blue_set = frozenset(blue_set)
-        self.red_set = frozenset(v for v in graph.vertices() if v not in blue_set)
-    
+    def __post_init__(self):
+        object.__setattr__(self, 'blue_set', frozenset(self.blue_set))
+        object.__setattr__(self, 'red_set', frozenset(self.graph.vertices()) - self.blue_set)
+        
     @cached_property
     def canon(self):
         """A label that identifies the colouring up to automorphisms."""
@@ -93,27 +93,28 @@ class Bicolouring:
         return (f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, '
                 f'automorphism group of order {self.automorphism_group.order()}')
     
+    def __eq__(self, other):
+        return self.canon == other.canon
+    
+    def __hash__(self):
+        return hash(self.canon)
+    
     @cached_property
     def picture(self):
         """Only works properly if self.graph is the directed cuboctahedral graph."""
-        return plot(self.blue_set)
+        return _plot(self.blue_set)
     
     def show(self):
         """Displays a picture of the colouring."""
         self.picture.show(axes=False)
             
 
-def unique_colourings(nb_blue_vertices=6, graph=None):
+def unique_colourings(nb_blue_vertices=6, graph=directed_cuboctahedral_graph()):
     """List the colourings with a given number of blue vertices,
     in the directed graph, up to rotations.
     """
-    graph = directed_cuboctahedral_graph() if graph is None else graph
     assert 0 <= nb_blue_vertices <= graph.order()
-    colourings = {}
-    for blue_set in combinations(graph.vertices(), nb_blue_vertices):
-        c = Bicolouring(graph, blue_set)
-        colourings.setdefault(c.canon, c)
-    return colourings.values()
+    return {Bicolouring(graph, blue_set) for blue_set in combinations(graph.vertices(), nb_blue_vertices)}
 
 def short_display(nb_blue_vertices, **options):
     """Display the unique colourings for a given number of blue vertices."""
