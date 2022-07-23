@@ -101,30 +101,26 @@ class Bicolouring:
     def show(self):
         """Displays a picture of the colouring."""
         self.picture.show(axes=False)
-        
+            
 
-def unique_colourings(nb_blue_vertices=6, graph=None, show=False):
+def unique_colourings(nb_blue_vertices=6, graph=None):
     """List the colourings with a given number of blue vertices,
     in the directed graph, up to rotations.
     """
     graph = directed_cuboctahedral_graph() if graph is None else graph
     assert 0 <= nb_blue_vertices <= graph.order()
-    unique_colourings = {}
+    colourings = {}
     for blue_set in combinations(graph.vertices(), nb_blue_vertices):
         c = Bicolouring(graph, blue_set)
-        # select a canonical representative of the digraph
-        # up to automorphisms that preserve the red and blue colour classes
-        # and the directed edges
-        if c.canon not in unique_colourings:
-            unique_colourings[c.canon] = c
-            if show: c.show()
-    return unique_colourings
+        colourings.setdefault(c.canon, c)
+    return colourings.values()
 
 def short_display(nb_blue_vertices, **options):
-    a = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
-    print(f'With {nb_blue_vertices} vertices and {12 - nb_blue_vertices} orange vertices,'
-          f'the number of distinct arrangements is {len(a)}.')
-    C = Counter(str(c) for c in sorted(a.values(), key = lambda c:c.adjacencies.BR, reverse=True))
+    """Display the unique colourings for a given number of blue vertices."""
+    colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
+    print(f'With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,'
+          f' the number of distinct arrangements is {len(colourings)}.')
+    C = Counter(str(c) for c in sorted(colourings, key = lambda c:c.adjacencies.BR, reverse=True))
     for v, k in C.items():
         print(v + f'\t({k} such arrangements)' if k > 1 else v)
     
