@@ -1,11 +1,12 @@
 #!/usr/bin/env sage
 
 # This script must be run with SageMath
-# For example, using https://sagecell.sagemath.org/
+# See installation instructions at https://www.sagemath.org/
+# or use an online interpreter such as https://sagecell.sagemath.org/
 
 from itertools import combinations
 from functools import cached_property
-from collections import Counter, namedtuple
+from collections import Counter, defaultdict, namedtuple
 from dataclasses import dataclass
 from sage.misc.banner import require_version
 require_version(9, 6) # because of an apparent bug in SageMath v9.5
@@ -29,7 +30,7 @@ def directed_cuboctahedral_graph():
         10: [2, 7],
         11: [3, 4]
     }
-    # pos is solely for drawing the graph
+    # fixing vertex positions for drawing the graph
     pos = [[-1,-1], [-1,1], [1,1], [1,-1], [-5,-5], [-5, 5], [5,5], [5,-5], [-3,0], [0,3], [3, 0], [0,-3]]
     pos = dict(enumerate(pos))
     return DiGraph(out_neighbours, pos=pos, immutable=True)
@@ -76,7 +77,7 @@ class Bicolouring:
         object.__setattr__(self, 'red_set', frozenset(self.graph.vertices()) - self.blue_set)
         
     @cached_property
-    def canon(self):
+    def _canon(self):
         """A label that identifies the colouring up to automorphisms."""
         return self.graph.canonical_label([self.blue_set, self.red_set])
     
@@ -93,13 +94,17 @@ class Bicolouring:
     
     def __str__(self):
         return (f'{len(self.blue_set)}:{len(self.red_set)}, {self.adjacencies}, '
-                f'automorphism group of order {self.automorphism_group.order()}')
+                f'symmetry number {self.automorphism_group.order()}')
     
     def __eq__(self, other):
-        return self.canon == other.canon
+        return self._canon == other._canon
     
     def __hash__(self):
-        return hash(self.canon)
+        return hash(self._canon)
+    
+    def distance(self, other):
+        """Count the vertices which have distinct colours in self and in other."""
+        return len(self.blue_set.symmetric_difference(other.blue_set))
     
     @cached_property
     def picture(self):
@@ -111,7 +116,7 @@ class Bicolouring:
         self.picture.show(axes=False)
             
 
-def unique_colourings(nb_blue_vertices=6, graph=directed_cuboctahedral_graph(), isomorphism=True):
+def unique_colourings(nb_blue_vertices=6, *, graph=directed_cuboctahedral_graph(), isomorphism=True):
     """List the colourings with a given number of blue vertices
     in the directed graph, either up to rotations (if isomorphism is True) or not.
     """
@@ -127,10 +132,19 @@ def short_display(nb_blue_vertices, **options):
     C = Counter(str(c) for c in sorted(colourings, key = lambda c:c.adjacencies.BR, reverse=True))
     for v, k in C.items():
         print(v + f'\t({k} such arrangements)' if k > 1 else v)
+
+def overlap():
+    colourings1 = (c for c in unique_colourings(6, isomorphism=False) if c.adjacencies.BR == 8)
+    colourings2 = (c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8)
     
+    close = defaultdict(set)
+    for c1 in colourings1:
+        for c2 in colourings2:
+            if c1.distance(c2) == 1:
+                close[c1].add(c2)
+    return close
           
 if __name__ == '__main__':
-    directed_cuboctahedral_graph().show(vertex_labels=False)
     short_display(6)
     print('-' * 100)
     short_display(7)
