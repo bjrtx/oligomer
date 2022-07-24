@@ -39,8 +39,7 @@ if __name__ == '__main__':
     dg = directed_cuboctahedral_graph()
     # The undirected graph underlying dg is the cuboctahedral graph
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
-    # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as
-    # the rotational octahedral symmetry group (O, 432, etc.)
+    # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the rotational octahedral symmetry group (O, 432, etc.)
     assert SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
 def nb_adjacencies(graph, left, right):
