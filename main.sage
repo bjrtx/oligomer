@@ -109,12 +109,13 @@ class Bicolouring:
         self.picture.show(axes=False)
             
 
-def unique_colourings(nb_blue_vertices=6, graph=directed_cuboctahedral_graph()):
-    """List the colourings with a given number of blue vertices,
-    in the directed graph, up to rotations.
+def unique_colourings(nb_blue_vertices=6, graph=directed_cuboctahedral_graph(), isomorphism=True):
+    """List the colourings with a given number of blue vertices
+    in the directed graph, either up to rotations (if isomorphism is True) or not.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
-    return {Bicolouring(graph, blue_set) for blue_set in combinations(graph.vertices(), nb_blue_vertices)}
+    g = (Bicolouring(graph, blue_set) for blue_set in combinations(graph.vertices(), nb_blue_vertices))
+    return set(g) if isomorphism else list(g)
 
 def short_display(nb_blue_vertices, **options):
     """Display the unique colourings for a given number of blue vertices."""
