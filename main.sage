@@ -68,7 +68,10 @@ Adjacencies.__str__ = lambda self: (f'junctions: blue->orange {self.BR}, blue->b
     
 @dataclass(frozen=True)
 class Bicolouring:
-    """Store information about a blue-red colouring of a (directed) graph."""
+    """Store information about a blue-red colouring of a (directed) graph.
+    Two such colourings that are equivalent up to automorphism will test equal
+    and will have the same hash.
+    """
     graph: Graph = directed_cuboctahedral_graph()
     blue_set: frozenset = frozenset()
     
