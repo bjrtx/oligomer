@@ -4,6 +4,8 @@
 # See installation instructions at https://www.sagemath.org/
 # or use an online interpreter such as https://sagecell.sagemath.org/
 
+import csv
+import sys
 from itertools import combinations
 from functools import cached_property
 from collections import Counter, defaultdict, namedtuple
@@ -31,9 +33,9 @@ def directed_cuboctahedral_graph():
         11: [3, 4]
     }
     # fixing vertex positions for drawing the graph
-    pos = [[-1,-1], [-1,1], [1,1], [1,-1], [-5,-5], [-5, 5], [5,5], [5,-5], [-3,0], [0,3], [3, 0], [0,-3]]
-    pos = dict(enumerate(pos))
-    return DiGraph(out_neighbours, pos=pos, immutable=True)
+    pos = [[-1, -1], [-1, 1], [1, 1], [1, -1], [-5, -5], [-5, 5],
+           [5, 5], [5, -5], [-3, 0], [0, 3], [3, 0], [0, -3]]
+    return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 # Several assertions concerning this directed graph
 if __name__ == '__main__':
@@ -127,14 +129,22 @@ def unique_colourings(nb_blue_vertices=6, *, graph=directed_cuboctahedral_graph(
     g = (Bicolouring(graph, blue_set) for blue_set in combinations(graph.vertices(), nb_blue_vertices))
     return set(g) if isomorphism else list(g)
 
-def short_display(nb_blue_vertices, **options):
+def short_display(nb_blue_vertices, csv_=True, **options):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
-    print(f'With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,'
-          f' the number of distinct arrangements is {len(colourings)}.')
     C = Counter(str(c) for c in sorted(colourings, key = lambda c:c.adjacencies.BR, reverse=True))
-    for v, k in C.items():
-        print(v + f'\t({k} such arrangements)' if k > 1 else v)
+    
+    if csv_:
+        writer = csv.writer(sys.stdout, dialect='unix')
+        writer.writerow(['blue vertices', 'red vertices', 'blue->red', 'blue->blue', 'red->red', 'red->blue', 'symmetry number'])
+        for v in colourings:
+            writer.writerow([len(v.blue_set), len(v.red_set), v.adjacencies.BR, v.adjacencies.BB,
+                             v.adjacencies.RR, v.adjacencies.RB, v.automorphism_group.order()])
+    else:
+        print(f'With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,'
+              f' the number of distinct arrangements is {len(colourings)}.')
+        for v, k in C.items():
+            print(v + f'\t({k} such arrangements)' if k > 1 else v)
 
 def overlap():
     colourings1 = (c for c in unique_colourings(6, isomorphism=False) if c.adjacencies.BR == 8)
