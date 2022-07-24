@@ -129,17 +129,28 @@ def unique_colourings(nb_blue_vertices=6, *, graph=directed_cuboctahedral_graph(
     g = (Bicolouring(graph, blue_set) for blue_set in combinations(graph.vertices(), nb_blue_vertices))
     return set(g) if isomorphism else list(g)
 
+def write_to_csv(colourings, csvfile=None, dialect='unix'):
+    
+    def write_to_file(file):
+        writer = csv.writer(file, dialect=dialect)
+        writer.writerow(['blue vertices', 'red vertices', 'blue->red', 'blue->blue', 'red->red', 'red->blue', 'symmetry number'])
+        for v in colourings:
+            writer.writerow([len(v.blue_set), len(v.red_set), v.adjacencies.BR, v.adjacencies.BB,
+                            v.adjacencies.RR, v.adjacencies.RB, v.automorphism_group.order()])
+            
+    if csvfile:
+        with open(csvfile, 'w') as file:
+            write_to_file(file)
+    else:
+        write_to_file(sys.stdout)
+
 def short_display(nb_blue_vertices, csv_=True, **options):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
     C = Counter(str(c) for c in sorted(colourings, key = lambda c:c.adjacencies.BR, reverse=True))
     
     if csv_:
-        writer = csv.writer(sys.stdout, dialect='unix')
-        writer.writerow(['blue vertices', 'red vertices', 'blue->red', 'blue->blue', 'red->red', 'red->blue', 'symmetry number'])
-        for v in colourings:
-            writer.writerow([len(v.blue_set), len(v.red_set), v.adjacencies.BR, v.adjacencies.BB,
-                             v.adjacencies.RR, v.adjacencies.RB, v.automorphism_group.order()])
+        write_to_csv(colourings)
     else:
         print(f'With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,'
               f' the number of distinct arrangements is {len(colourings)}.')
