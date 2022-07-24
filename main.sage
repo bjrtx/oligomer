@@ -29,7 +29,10 @@ def directed_cuboctahedral_graph():
         10: [2, 7],
         11: [3, 4]
     }
-    return DiGraph(out_neighbours, immutable=True)
+    # pos is solely for drawing the graph
+    pos = [[-1,-1], [-1,1], [1,1], [1,-1], [-5,-5], [-5, 5], [5,5], [5,-5], [-3,0], [0,3], [3, 0], [0,-3]]
+    pos = dict(enumerate(pos))
+    return DiGraph(out_neighbours, pos=pos, immutable=True)
 
 # Several assertions concerning this directed graph
 if __name__ == '__main__':
@@ -128,6 +131,7 @@ def short_display(nb_blue_vertices, **options):
     
           
 if __name__ == '__main__':
+    directed_cuboctahedral_graph().show(vertex_labels=False)
     short_display(6)
     print('-' * 100)
     short_display(7)
