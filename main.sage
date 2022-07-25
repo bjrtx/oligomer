@@ -274,10 +274,12 @@ def overlap() -> Dict[Colouring]:
         c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1
     }
 
+
 def experimental_colouring(switch=True):
-    """Return the colouring which the data seem to indicate, with the last vertex either 
+    """Return the colouring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return Bicolouring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [7]))
+
 
 if __name__ == "__main__":
     short_display(6, csv_=True)
