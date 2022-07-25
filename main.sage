@@ -197,9 +197,14 @@ def unique_colourings(
 
 
 def write_to_csv(
-    colourings: Iterable[Bicolouring], csv_file=None, *, csv_header=True, dialect="excel"
+    colourings: Iterable[Bicolouring],
+    csv_file=None,
+    *,
+    csv_header=True,
+    dialect="excel",
 ):
     """Write the contents of colourings to csv_file (if None, to the standard output)."""
+
     def write(file):
         writer = csv.writer(file, dialect=dialect)
         if csv_header:
@@ -270,5 +275,5 @@ def overlap() -> Dict[Colouring]:
 
 if __name__ == "__main__":
     short_display(6, csv_=True)
-    #print("-" * 100)
+    # print("-" * 100)
     short_display(7, csv_=True, csv_header=False)
