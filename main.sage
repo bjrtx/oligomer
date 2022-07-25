@@ -125,7 +125,7 @@ class Bicolouring:
 
     def __post_init__(self):
         if not self.graph.is_immutable():
-            object.__setattr__(self, 'graph', self.graph.copy(immutable=True))
+            object.__setattr__(self, "graph", self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         object.__setattr__(
             self, "red_set", frozenset(self.graph.vertices()) - self.blue_set
@@ -194,15 +194,15 @@ def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel")
         writer = csv.writer(file, dialect=dialect)
         if csv_header:
             writer.writerow(
-            [
-                "blue vertices",
-                "red vertices",
-                "blue->red",
-                "blue->blue",
-                "red->red",
-                "red->blue",
-                "symmetry number",
-            ]
+                [
+                    "blue vertices",
+                    "red vertices",
+                    "blue->red",
+                    "blue->blue",
+                    "red->red",
+                    "red->blue",
+                    "symmetry number",
+                ]
             )
         for v, nb in colourings.items():
             writer.writerow(
@@ -224,7 +224,9 @@ def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel")
         write_to_file(sys.stdout)
 
 
-def short_display(nb_blue_vertices, csv_=False, csv_file=None, csv_header=True, **options):
+def short_display(
+    nb_blue_vertices, csv_=False, csv_file=None, csv_header=True, **options
+):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
 
@@ -253,11 +255,13 @@ def overlap():
     colourings2 = [
         c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8
     ]
-    return {c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1}
+    return {
+        c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1
+    }
 
 
 if __name__ == "__main__":
-    g = DiGraph({0:[1,2,3]})
+    g = DiGraph({0: [1, 2, 3]})
     short_display(1, graph=g, csv_=True)
     # print("-" * 100)
     short_display(7, csv_=True, csv_header=False)
