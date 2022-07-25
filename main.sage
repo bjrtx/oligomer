@@ -65,7 +65,7 @@ def directed_cuboctahedral_graph() -> Digraph:
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
-    assert dg.is_isomorphic(AlternatingGroup(4).cayley_graph())
+    assert dg.is_isomorphic(AlternatingGroup(4).cayley_graph(), edge_labels=False)
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the
     # rotational octahedral symmetry group (O, 432, etc.).
@@ -192,7 +192,7 @@ def unique_colourings(
     either up to rotations (if isomorphism is True) or not.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
-    return (Counter if isomorphism else list)(
+    return (set if isomorphism else list)(
         Bicolouring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
@@ -250,7 +250,7 @@ def short_display(
     if csv_:
         write_to_csv(colourings, csv_file=csv_file, csv_header=csv_header)
     else:
-        colourings.sort(key=lambda c: c.adjacencies.BR, reverse=True)
+        colourings = sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
         lines = Counter(str(c) for c in colourings)
         print(
             f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
