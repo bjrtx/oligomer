@@ -224,7 +224,8 @@ def short_display(nb_blue_vertices, csv_=True, **options):
         write_to_csv(colourings)
     else:
         C = Counter(
-            str(c) for c in sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
+            str(c)
+            for c in sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
         )
         print(
             f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
