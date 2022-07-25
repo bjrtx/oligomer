@@ -243,7 +243,8 @@ def overlap():
         c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8
     )
     return {c1: {c2 for c2 in colourings2 if c1.distace(c2) == 1} for c1 in colourings1}
-   
+
+
 if __name__ == "__main__":
     short_display(6)
     print("-" * 100)
