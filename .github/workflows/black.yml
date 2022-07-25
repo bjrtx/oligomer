@@ -7,11 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Check formatting
+      - name: Format files
         uses: psf/black@stable
         with:
-          options: '--check --diff --include \.sage$'
-      - name: Format and commit changed files
+          options: '--include \.sage$'
+      - name: Commit changes
         if: ${{ failure() }}
         run: |
           git config user.name github-actions
