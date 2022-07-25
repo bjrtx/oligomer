@@ -182,7 +182,7 @@ def unique_colourings(
     return set(g) if isomorphism else list(g)
 
 
-def write_to_csv(colourings, csvfile=None, dialect="unix"):
+def write_to_csv(colourings, csv_file=None, dialect="unix"):
     def write_to_file(file):
         writer = csv.writer(file, dialect=dialect)
         writer.writerow(
@@ -209,19 +209,19 @@ def write_to_csv(colourings, csvfile=None, dialect="unix"):
                 ]
             )
 
-    if csvfile:
-        with open(csvfile, "w") as file:
+    if csv_file:
+        with open(csv_file, "w") as file:
             write_to_file(file)
     else:
         write_to_file(sys.stdout)
 
 
-def short_display(nb_blue_vertices, csv_=True, **options):
+def short_display(nb_blue_vertices, csv_=True, csv_file=None, **options):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
 
     if csv_:
-        write_to_csv(colourings)
+        write_to_csv(colourings, csv_file=csv_file)
     else:
         C = Counter(
             str(c)
@@ -242,15 +242,8 @@ def overlap():
     colourings2 = (
         c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8
     )
-
-    close = defaultdict(set)
-    for c1 in colourings1:
-        for c2 in colourings2:
-            if c1.distance(c2) == 1:
-                close[c1].add(c2)
-    return close
-
-
+    return {c1: {c2 for c2 in colourings2 if c1.distace(c2) == 1} for c1 in colourings1}
+   
 if __name__ == "__main__":
     short_display(6)
     print("-" * 100)
