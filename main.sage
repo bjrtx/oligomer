@@ -10,6 +10,7 @@ from itertools import combinations
 from functools import cached_property
 from collections import Counter, defaultdict, namedtuple
 from dataclasses import dataclass
+from typing import Dict, FrozenSet, Iterable
 from sage.misc.banner import require_version
 
 require_version(9, 6)  # because of an apparent bug in SageMath v9.5
@@ -18,8 +19,11 @@ BLACK = (0, 0, 0)
 RED = (1, 0, 0)
 BLUE = (0, 0, 1)
 
+Graph = sage.graphs.generic_graph.GenericGraph
+Digraph = sage.graphs.digraph.DiGraph
+
 # directed version, with arcs oriented =||
-def directed_cuboctahedral_graph():
+def directed_cuboctahedral_graph() -> Digraph:
     """Return an immutable copy of the cuboctahedral graph
     with a specific edge orientation.
     """
@@ -66,12 +70,12 @@ if __name__ == "__main__":
     assert SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
 
-def nb_adjacencies(graph, left, right):
+def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     """Count the edges from left to right in the directed graph."""
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
 
-def _plot(blue_set, blue=BLUE, red=RED):
+def _plot(blue_set: Iterable, blue=BLUE, red=RED):
     """Return a Sage Graphics object representing an oligomer with coloured
     dimers.
     """
@@ -121,7 +125,7 @@ class Bicolouring:
     """
 
     graph: Graph = directed_cuboctahedral_graph()
-    blue_set: frozenset = frozenset()
+    blue_set: FrozenSet[int] = frozenset()
 
     def __post_init__(self):
         if not self.graph.is_immutable():
@@ -155,13 +159,13 @@ class Bicolouring:
             f"symmetry number {self.automorphism_group.order()}"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Bicolouring):
         return self._canon == other._canon
 
     def __hash__(self):
         return hash(self._canon)
 
-    def distance(self, other):
+    def distance(self, other: Bicolouring):
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
@@ -177,7 +181,7 @@ class Bicolouring:
 
 
 def unique_colourings(
-    nb_blue_vertices=6, *, graph=directed_cuboctahedral_graph(), isomorphism=True
+    nb_blue_vertices=6, *, graph: Graph =directed_cuboctahedral_graph(), isomorphism=True
 ):
     """List the colourings with a given number of blue vertices
     in the directed graph, either up to rotations (if isomorphism is True) or not.
@@ -245,7 +249,7 @@ def short_display(
             print(v + f"\t({k} such arrangements)" if k > 1 else v)
 
 
-def overlap():
+def overlap() -> Dict[Colouring]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex colour.
     """
