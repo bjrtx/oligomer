@@ -181,7 +181,10 @@ class Bicolouring:
 
 
 def unique_colourings(
-    nb_blue_vertices=6, *, graph: Graph =directed_cuboctahedral_graph(), isomorphism=True
+    nb_blue_vertices=6,
+    *,
+    graph: Graph = directed_cuboctahedral_graph(),
+    isomorphism=True,
 ):
     """List the colourings with a given number of blue vertices
     in the directed graph, either up to rotations (if isomorphism is True) or not.
