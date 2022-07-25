@@ -6,6 +6,7 @@
 
 import csv
 import sys
+from __future__ import annotations
 from itertools import combinations
 from functools import cached_property
 from collections import Counter, defaultdict, namedtuple
@@ -62,11 +63,10 @@ def directed_cuboctahedral_graph() -> Digraph:
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
-    # dg is isomorphic to the Cayley graph of A_4
     assert dg.is_isomorphic(AlternatingGroup(4).cayley_graph())
-    # The undirected graph underlying dg is the cuboctahedral graph
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
-    # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the rotational octahedral symmetry group (O, 432, etc.)
+    # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the
+    # rotational octahedral symmetry group (O, 432, etc.).
     assert SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
 
@@ -186,8 +186,8 @@ def unique_colourings(
     graph: Graph = directed_cuboctahedral_graph(),
     isomorphism=True,
 ):
-    """List the colourings with a given number of blue vertices
-    in the directed graph, either up to rotations (if isomorphism is True) or not.
+    """List the colourings with a given number of blue vertices in the directed graph,
+    either up to rotations (if isomorphism is True) or not.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
     return (Counter if isomorphism else list)(
@@ -196,8 +196,11 @@ def unique_colourings(
     )
 
 
-def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel"):
-    def write_to_file(file):
+def write_to_csv(
+    colourings: Iterable[Bicolouring], csv_file=None, *, csv_header=True, dialect="excel"
+):
+    """Write the contents of colourings to csv_file (if None, to the standard output)."""
+    def write(file):
         writer = csv.writer(file, dialect=dialect)
         if csv_header:
             writer.writerow(
@@ -211,7 +214,7 @@ def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel")
                     "symmetry number",
                 ]
             )
-        for v, nb in colourings.items():
+        for v in colourings:
             writer.writerow(
                 [
                     len(v.blue_set),
@@ -226,9 +229,9 @@ def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel")
 
     if csv_file:
         with open(csv_file, "w") as file:
-            write_to_file(file)
+            write(file)
     else:
-        write_to_file(sys.stdout)
+        write(sys.stdout)
 
 
 def short_display(
@@ -240,15 +243,13 @@ def short_display(
     if csv_:
         write_to_csv(colourings, csv_file=csv_file, csv_header=csv_header)
     else:
-        C = Counter(
-            str(c)
-            for c in sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
-        )
+        colourings.sort(key=lambda c: c.adjacencies.BR, reverse=True)
+        lines = Counter(str(c) for c in colourings)
         print(
             f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
             f" the number of distinct arrangements is {len(colourings)}."
         )
-        for v, k in C.items():
+        for v, k in lines.items():
             print(v + f"\t({k} such arrangements)" if k > 1 else v)
 
 
@@ -268,7 +269,6 @@ def overlap() -> Dict[Colouring]:
 
 
 if __name__ == "__main__":
-    g = DiGraph({0: [1, 2, 3]})
-    short_display(1, graph=g, csv_=True)
-    # print("-" * 100)
+    short_display(6, csv_=True)
+    #print("-" * 100)
     short_display(7, csv_=True, csv_header=False)
