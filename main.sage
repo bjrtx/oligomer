@@ -14,6 +14,9 @@ from sage.misc.banner import require_version
 
 require_version(9, 6)  # because of an apparent bug in SageMath v9.5
 
+RED = (1, 0, 0)
+BLUE = (0, 0, 1)
+
 # directed version, with arcs oriented =||
 def directed_cuboctahedral_graph():
     """Return an immutable copy of the cuboctahedral graph
@@ -65,7 +68,7 @@ def nb_adjacencies(graph, left, right):
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
 
-def _plot(blue_set, blue=(0, 0, 1), red=(1, 0, 0)):
+def _plot(blue_set, blue=BLUE, red=RED):
     """Return a Sage Graphics object representing an oligomer with coloured dimers."""
     blue_set = frozenset(blue_set)
 
@@ -216,13 +219,13 @@ def write_to_csv(colourings, csvfile=None, dialect="unix"):
 def short_display(nb_blue_vertices, csv_=True, **options):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
-    C = Counter(
-        str(c) for c in sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
-    )
 
     if csv_:
         write_to_csv(colourings)
     else:
+        C = Counter(
+            str(c) for c in sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
+        )
         print(
             f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
             f" the number of distinct arrangements is {len(colourings)}."
