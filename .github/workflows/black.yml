@@ -12,7 +12,6 @@ jobs:
         with:
           options: '--include \.sage$'
       - name: Commit changes
-        if: ${{ failure() }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
