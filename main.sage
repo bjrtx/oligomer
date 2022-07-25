@@ -58,6 +58,8 @@ def directed_cuboctahedral_graph():
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
+    # dg is isomorphic to the Cayley graph of A_4
+    assert dg.is_isomorphic(AlternatingGroup(4).cayley_graph())
     # The undirected graph underlying dg is the cuboctahedral graph
     assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the rotational octahedral symmetry group (O, 432, etc.)
@@ -122,6 +124,8 @@ class Bicolouring:
     blue_set: frozenset = frozenset()
 
     def __post_init__(self):
+        if not self.graph.is_immutable():
+            object.__setattr__(self, 'graph', self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         object.__setattr__(
             self, "red_set", frozenset(self.graph.vertices()) - self.blue_set
@@ -179,16 +183,17 @@ def unique_colourings(
     in the directed graph, either up to rotations (if isomorphism is True) or not.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
-    return (set if isomorphism else list)(
+    return (Counter if isomorphism else list)(
         Bicolouring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
 
-def write_to_csv(colourings, csv_file=None, dialect="unix"):
+def write_to_csv(colourings, csv_file=None, *, csv_header=True, dialect="excel"):
     def write_to_file(file):
         writer = csv.writer(file, dialect=dialect)
-        writer.writerow(
+        if csv_header:
+            writer.writerow(
             [
                 "blue vertices",
                 "red vertices",
@@ -198,8 +203,8 @@ def write_to_csv(colourings, csv_file=None, dialect="unix"):
                 "red->blue",
                 "symmetry number",
             ]
-        )
-        for v in colourings:
+            )
+        for v, nb in colourings.items():
             writer.writerow(
                 [
                     len(v.blue_set),
@@ -219,12 +224,12 @@ def write_to_csv(colourings, csv_file=None, dialect="unix"):
         write_to_file(sys.stdout)
 
 
-def short_display(nb_blue_vertices, csv_=True, csv_file=None, **options):
+def short_display(nb_blue_vertices, csv_=False, csv_file=None, csv_header=True, **options):
     """Display the unique colourings for a given number of blue vertices."""
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
 
     if csv_:
-        write_to_csv(colourings, csv_file=csv_file)
+        write_to_csv(colourings, csv_file=csv_file, csv_header=csv_header)
     else:
         C = Counter(
             str(c)
@@ -245,13 +250,14 @@ def overlap():
     colourings1 = (
         c for c in unique_colourings(6, isomorphism=False) if c.adjacencies.BR == 8
     )
-    colourings2 = (
+    colourings2 = [
         c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8
-    )
-    return {c1: {c2 for c2 in colourings2 if c1.distace(c2) == 1} for c1 in colourings1}
+    ]
+    return {c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1}
 
 
 if __name__ == "__main__":
-    short_display(6)
-    print("-" * 100)
-    short_display(7)
+    g = DiGraph({0:[1,2,3]})
+    short_display(1, graph=g, csv_=True)
+    # print("-" * 100)
+    short_display(7, csv_=True, csv_header=False)
