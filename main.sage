@@ -14,6 +14,7 @@ from sage.misc.banner import require_version
 
 require_version(9, 6)  # because of an apparent bug in SageMath v9.5
 
+BLACK = (0, 0, 0)
 RED = (1, 0, 0)
 BLUE = (0, 0, 1)
 
@@ -69,19 +70,21 @@ def nb_adjacencies(graph, left, right):
 
 
 def _plot(blue_set, blue=BLUE, red=RED):
-    """Return a Sage Graphics object representing an oligomer with coloured dimers."""
+    """Return a Sage Graphics object representing an oligomer with coloured 
+    dimers.
+    """
     blue_set = frozenset(blue_set)
 
     def diamond(x, y, idx):
         return polygon(
             [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
             color=(blue if idx in blue_set else red),
-            edgecolor=(0, 0, 0),
+            edgecolor=BLACK,
         ) + line(
             [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
             if y == 1
             else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
-            rgbcolor=(0, 0, 0),
+            rgbcolor=BLACK,
         )
 
     centers = {
@@ -155,12 +158,14 @@ class Bicolouring:
         return hash(self._canon)
 
     def distance(self, other):
-        """Count the vertices which have distinct colours in self and in other."""
+        """Count the vertices which have distinct colours in self and in other.
+        """
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
     @cached_property
     def picture(self):
-        """Only works properly if self.graph is the directed cuboctahedral graph."""
+        """Only works properly if self.graph is the directed cuboctahedral 
+        graph."""
         return _plot(self.blue_set)
 
     def show(self):
@@ -175,12 +180,10 @@ def unique_colourings(
     in the directed graph, either up to rotations (if isomorphism is True) or not.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
-    g = (
+    return (set if isomorphism else list) (
         Bicolouring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
-    return set(g) if isomorphism else list(g)
-
 
 def write_to_csv(colourings, csv_file=None, dialect="unix"):
     def write_to_file(file):
@@ -236,6 +239,9 @@ def short_display(nb_blue_vertices, csv_=True, csv_file=None, **options):
 
 
 def overlap():
+    """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue 
+    vertices and c2 is obtained from c1 by changing a single vertex colour.
+    """
     colourings1 = (
         c for c in unique_colourings(6, isomorphism=False) if c.adjacencies.BR == 8
     )
