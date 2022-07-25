@@ -18,7 +18,9 @@ require_version(9, 6)  # because of an apparent bug in SageMath v9.5
 
 BLACK = (0, 0, 0)
 RED = (1, 0, 0)
+CHIMERA_RED = (0.776, 0.208, 0.031)
 BLUE = (0, 0, 1)
+CHIMERA_BLUE = (0.051, 0.02, 0.933)
 
 Graph = sage.graphs.generic_graph.GenericGraph
 Digraph = sage.graphs.digraph.DiGraph
@@ -75,7 +77,7 @@ def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
 
-def _plot(blue_set: Iterable, blue=BLUE, red=RED):
+def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
     """Return a Sage Graphics object representing an oligomer with coloured
     dimers.
     """
@@ -272,8 +274,17 @@ def overlap() -> Dict[Colouring]:
         c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1
     }
 
+def experimental_colouring(switch=True):
+    """Return the colouring which the data seem to indicate, with the last vertex either 
+    red or blue as switch is True or False."""
+    return Bicolouring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [7]))
 
 if __name__ == "__main__":
     short_display(6, csv_=True)
     # print("-" * 100)
     short_display(7, csv_=True, csv_header=False)
+    a, b = experimental_colouring(True), experimental_colouring(False)
+    a.show()
+    print(a)
+    b.show()
+    print(b)
