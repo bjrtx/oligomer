@@ -168,7 +168,9 @@ class Bicolouring:
     @cached_property
     def _canon(self):
         """A label that identifies the colouring up to automorphisms."""
-        return self.graph.canonical_label([self.blue_set, self.red_set]).copy(immutable=False)
+        return self.graph.canonical_label([self.blue_set, self.red_set]).copy(
+            immutable=False
+        )
 
     @cached_property
     def adjacencies(self):
