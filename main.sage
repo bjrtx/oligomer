@@ -168,7 +168,7 @@ class Bicolouring:
     @cached_property
     def _canon(self):
         """A label that identifies the colouring up to automorphisms."""
-        return self.graph.canonical_label([self.blue_set, self.red_set])
+        return self.graph.canonical_label([self.blue_set, self.red_set]).copy(immutable=False)
 
     @cached_property
     def adjacencies(self):
@@ -193,7 +193,7 @@ class Bicolouring:
         return self._canon == other._canon
 
     def __hash__(self):
-        return hash(self._canon)
+        return hash(self._canon.copy)
 
     def distance(self, other: Bicolouring):
         """Count the vertices which have distinct colours in self and in other."""
