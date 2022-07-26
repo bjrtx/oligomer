@@ -7,7 +7,7 @@
 import csv
 import sys
 from __future__ import annotations
-from itertools import combinations
+from itertools import chain, combinations
 from functools import cached_property
 from collections import Counter, defaultdict, namedtuple
 from dataclasses import dataclass
@@ -62,6 +62,24 @@ def directed_cuboctahedral_graph() -> Digraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 
+def more_complicated_graph() -> Digraph:
+    out_neighbours = {
+        0: [(1, 1), (11, 0)],
+        1: [(2, 0), (8, 0)],
+        2: [(3, 0), (9, 1)],
+        3: [(0, 1), (10, 1)],
+        4: [(7, 0), (8, 1)],
+        5: [(4, 0), (9, 0)],
+        6: [(10, 0), (5, 1)],
+        7: [(6, 1), (11, 1)],
+        8: [(5, 0), (0, 0)],
+        9: [(1, 0), (6, 0)],
+        10: [(2, 1), (7, 1)],
+        11: [(3, 1), (4, 1)],
+    }
+    out_neighbours = dict(chain.from_iterable([((k , 0), v), ((k , 1), v)] for k, v in out_neighbours.items()))
+    return DiGraph(out_neighbours, immutable=True)
+
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
@@ -74,7 +92,7 @@ if __name__ == "__main__":
 
 def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     """Count the edges from left to right in the directed graph."""
-    x, y = frozenset(x), frozenset(y)
+    left, right = frozenset(left), frozenset(right)
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
 
@@ -131,11 +149,10 @@ class Bicolouring:
     blue_set: frozenset[int] = frozenset()
 
     def __post_init__(self):
-        object.__setattr__(self, "graph", self.graph.copy(immutable=True))
+        object.__setattr__(self, "graph", self.graph if self.graph.is_immutable() else self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
-        object.__setattr__(
-            self, "red_set", frozenset(self.graph.vertices()) - self.blue_set
-        )
+        vertices = frozenset(self.graph.vertices())
+        object.__setattr__(self, "red_set", vertices - self.blue_set)
 
     @cached_property
     def _canon(self):
@@ -275,7 +292,7 @@ def overlap() -> dict[Colouring]:
     }
 
 
-def experimental_colouring(switch=True):
+def _experimental_colouring(switch=True):
     """Return the colouring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return Bicolouring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [7]))
@@ -285,8 +302,4 @@ if __name__ == "__main__":
     short_display(6, csv_=True)
     # print("-" * 100)
     short_display(7, csv_=True, csv_header=False)
-    a, b = experimental_colouring(True), experimental_colouring(False)
-    a.show()
-    print(a)
-    b.show()
-    print(b)
+    print(len(unique_colourings(12, graph=more_complicated_graph())))
