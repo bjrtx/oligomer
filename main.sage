@@ -11,7 +11,7 @@ from itertools import combinations
 from functools import cached_property
 from collections import Counter, defaultdict, namedtuple
 from dataclasses import dataclass
-from typing import Dict, FrozenSet, Iterable
+from collections.abc import Iterable
 from sage.misc.banner import require_version
 
 require_version(9, 6)  # because of an apparent bug in SageMath v9.5
@@ -74,6 +74,7 @@ if __name__ == "__main__":
 
 def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     """Count the edges from left to right in the directed graph."""
+    x, y = frozenset(x), frozenset(y)
     return sum(graph.has_edge(x, y) for x in left for y in right)
 
 
@@ -127,11 +128,10 @@ class Bicolouring:
     """
 
     graph: Graph = directed_cuboctahedral_graph()
-    blue_set: FrozenSet[int] = frozenset()
+    blue_set: frozenset[int] = frozenset()
 
     def __post_init__(self):
-        if not self.graph.is_immutable():
-            object.__setattr__(self, "graph", self.graph.copy(immutable=True))
+        object.__setattr__(self, "graph", self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         object.__setattr__(
             self, "red_set", frozenset(self.graph.vertices()) - self.blue_set
@@ -187,7 +187,7 @@ def unique_colourings(
     *,
     graph: Graph = directed_cuboctahedral_graph(),
     isomorphism=True,
-):
+) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
     either up to rotations (if isomorphism is True) or not.
     """
@@ -260,7 +260,7 @@ def short_display(
             print(v + f"\t({k} such arrangements)" if k > 1 else v)
 
 
-def overlap() -> Dict[Colouring]:
+def overlap() -> dict[Colouring]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex colour.
     """
