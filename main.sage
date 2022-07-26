@@ -77,8 +77,13 @@ def more_complicated_graph() -> Digraph:
         10: [(2, 1), (7, 1)],
         11: [(3, 1), (4, 1)],
     }
-    out_neighbours = dict(chain.from_iterable([((k , 0), v), ((k , 1), v)] for k, v in out_neighbours.items()))
+    out_neighbours = dict(
+        chain.from_iterable(
+            [((k, 0), v), ((k, 1), v)] for k, v in out_neighbours.items()
+        )
+    )
     return DiGraph(out_neighbours, immutable=True)
+
 
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
@@ -149,7 +154,13 @@ class Bicolouring:
     blue_set: frozenset[int] = frozenset()
 
     def __post_init__(self):
-        object.__setattr__(self, "graph", self.graph if self.graph.is_immutable() else self.graph.copy(immutable=True))
+        object.__setattr__(
+            self,
+            "graph",
+            self.graph
+            if self.graph.is_immutable()
+            else self.graph.copy(immutable=True),
+        )
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         vertices = frozenset(self.graph.vertices())
         object.__setattr__(self, "red_set", vertices - self.blue_set)
