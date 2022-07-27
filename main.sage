@@ -4,15 +4,15 @@
 # See installation instructions at https://www.sagemath.org/
 # or use an online interpreter such as https://sagecell.sagemath.org/
 
-import csv
-import sys
 from __future__ import annotations
 from itertools import chain, combinations
 from functools import cached_property
-from collections import Counter, defaultdict, namedtuple
-from dataclasses import dataclass
+from collections import Counter, namedtuple
 from collections.abc import Iterable
-from sage.misc.banner import require_version
+from dataclasses import dataclass
+
+import csv.writer
+import sys.stdout
 
 # colours, including those matching UCSF Chimera's
 BLACK = (0, 0, 0)
@@ -23,10 +23,10 @@ CHIMERA_BLUE = (0.051, 0.02, 0.933)
 
 # type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
-Digraph = sage.graphs.digraph.DiGraph
+DiGraph = sage.graphs.digraph.DiGraph
 
 # directed version, with arcs oriented =||
-def directed_cuboctahedral_graph() -> Digraph:
+def directed_cuboctahedral_graph() -> DiGraph:
     """Return an immutable copy of the cuboctahedral graph
     with a specific edge orientation.
     """
@@ -62,7 +62,7 @@ def directed_cuboctahedral_graph() -> Digraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 
-def more_complicated_graph() -> Digraph:
+def more_complicated_graph() -> DiGraph:
     out_neighbours = {
         0: [(1, 1), (11, 0)],
         1: [(2, 0), (8, 0)],
@@ -88,11 +88,11 @@ def more_complicated_graph() -> Digraph:
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
-    assert dg.is_isomorphic(AlternatingGroup(4).cayley_graph(), edge_labels=False)
-    assert dg.to_undirected().is_isomorphic(polytopes.cuboctahedron().graph())
+    assert dg.is_isomorphic(sage.all.AlternatingGroup(4).cayley_graph(), edge_labels=False)
+    assert dg.to_undirected().is_isomorphic(sage.all.polytopes.cuboctahedron().graph())
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the
     # rotational octahedral symmetry group (O, 432, etc.).
-    assert SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
+    assert sage.all.SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
 
 def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
@@ -107,12 +107,13 @@ def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
     """
     blue_set = frozenset(blue_set)
 
-    def diamond(x, y, idx):
-        return polygon(
+    def diamond(center, idx):
+        x, y = center
+        return sage.all.polygon(
             [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
             color=(blue if idx in blue_set else red),
             edgecolor=BLACK,
-        ) + line(
+        ) + sage.all.line(
             [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
             if y == 1
             else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
@@ -133,7 +134,7 @@ def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
         7: (6, 2),
         6: (7, 1),
     }
-    return sum(diamond(x, y, idx) for idx, (x, y) in centers.items())
+    return sum(diamond(center, idx) for idx, center in centers.items())
 
 
 Adjacencies = namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
@@ -253,16 +254,16 @@ def write_to_csv(
                     "symmetry number",
                 ]
             )
-        for v in colourings:
+        for colouring in colourings:
             writer.writerow(
                 [
-                    len(v.blue_set),
-                    len(v.red_set),
-                    v.adjacencies.BR,
-                    v.adjacencies.BB,
-                    v.adjacencies.RR,
-                    v.adjacencies.RB,
-                    v.automorphism_group.order(),
+                    len(colouring.blue_set),
+                    len(colouring.red_set),
+                    colouring.adjacencies.BR,
+                    colouring.adjacencies.BB,
+                    colouring.adjacencies.RR,
+                    colouring.adjacencies.RB,
+                    colouring.automorphism_group.order(),
                 ]
             )
 
@@ -288,11 +289,11 @@ def short_display(
             f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
             f" the number of distinct arrangements is {len(colourings)}."
         )
-        for v, k in lines.items():
-            print(v + f"\t({k} such arrangements)" if k > 1 else v)
+        for val, key in lines.items():
+            print(val + f"\t({key} such arrangements)" if key > 1 else val)
 
 
-def overlap() -> dict[Colouring]:
+def overlap() -> dict[Bicolouring]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex colour.
     """
