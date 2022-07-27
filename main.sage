@@ -14,14 +14,14 @@ from dataclasses import dataclass
 from collections.abc import Iterable
 from sage.misc.banner import require_version
 
-require_version(9, 6)  # because of an apparent bug in SageMath v9.5
-
+# colours, including those matching UCSF Chimera's
 BLACK = (0, 0, 0)
 RED = (1, 0, 0)
 CHIMERA_RED = (0.776, 0.208, 0.031)
 BLUE = (0, 0, 1)
 CHIMERA_BLUE = (0.051, 0.02, 0.933)
 
+# type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 Digraph = sage.graphs.digraph.DiGraph
 
@@ -167,13 +167,14 @@ class Bicolouring:
 
     @cached_property
     def _canon(self):
-        """A label that identifies the colouring up to automorphisms."""
+        """Return an object that characterises the colouring up to automorphisms."""
         return self.graph.canonical_label([self.blue_set, self.red_set]).copy(
-            immutable=False
+            immutable=True
         )
 
     @cached_property
     def adjacencies(self):
+        """Count the number of adjacencies, sorted by colours."""
         return Adjacencies(
             nb_adjacencies(self.graph, self.blue_set, self.blue_set),
             nb_adjacencies(self.graph, self.red_set, self.red_set),
@@ -183,6 +184,7 @@ class Bicolouring:
 
     @cached_property
     def automorphism_group(self):
+        """Return the group of automorphisms that preserve vertex colours."""
         return self.graph.automorphism_group(partition=[self.blue_set, self.red_set])
 
     def __str__(self):
@@ -195,7 +197,7 @@ class Bicolouring:
         return self._canon == other._canon
 
     def __hash__(self):
-        return hash(self._canon.copy)
+        return hash(self._canon)
 
     def distance(self, other: Bicolouring):
         """Count the vertices which have distinct colours in self and in other."""
@@ -312,7 +314,5 @@ def _experimental_colouring(switch=True):
 
 
 if __name__ == "__main__":
-    short_display(6, csv_=True)
-    # print("-" * 100)
-    short_display(7, csv_=True, csv_header=False)
-    print(len(unique_colourings(12, graph=more_complicated_graph())))
+    for i in range(13):
+        print(f'{i}:{24-i}', len(unique_colourings(i, graph=more_complicated_graph())))
