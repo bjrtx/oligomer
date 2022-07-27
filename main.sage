@@ -173,7 +173,7 @@ class Bicolouring:
         return self.graph.canonical_label([self.blue_set, self.red_set]).copy(
             immutable=True
         )
- 
+
     @cached_property
     def adjacencies(self):
         """Count the number of adjacencies, sorted by colours."""
