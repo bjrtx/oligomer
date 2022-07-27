@@ -88,7 +88,9 @@ def more_complicated_graph() -> DiGraph:
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
     dg = directed_cuboctahedral_graph()
-    assert dg.is_isomorphic(sage.all.AlternatingGroup(4).cayley_graph(), edge_labels=False)
+    assert dg.is_isomorphic(
+        sage.all.AlternatingGroup(4).cayley_graph(), edge_labels=False
+    )
     assert dg.to_undirected().is_isomorphic(sage.all.polytopes.cuboctahedron().graph())
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the
     # rotational octahedral symmetry group (O, 432, etc.).
