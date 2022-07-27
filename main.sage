@@ -99,8 +99,7 @@ if __name__ == "__main__":
 
 def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     """Count the edges from left to right in the directed graph."""
-    left, right = frozenset(left), frozenset(right)
-    return sum(graph.has_edge(x, y) for x in left for y in right)
+    return sum(graph.has_edge(x, y) for x in set(left) for y in set(right))
 
 
 def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
@@ -174,7 +173,7 @@ class Bicolouring:
         return self.graph.canonical_label([self.blue_set, self.red_set]).copy(
             immutable=True
         )
-
+ 
     @cached_property
     def adjacencies(self):
         """Count the number of adjacencies, sorted by colours."""
@@ -206,7 +205,6 @@ class Bicolouring:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    @cached_property
     def picture(self):
         """Only works properly if self.graph is the directed cuboctahedral
         graph."""
