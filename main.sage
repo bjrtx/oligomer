@@ -315,4 +315,4 @@ def _experimental_colouring(switch=True):
 
 if __name__ == "__main__":
     for i in range(13):
-        print(f'{i}:{24-i}', len(unique_colourings(i, graph=more_complicated_graph())))
+        print(f"{i}:{24-i}", len(unique_colourings(i, graph=more_complicated_graph())))
