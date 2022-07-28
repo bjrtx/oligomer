@@ -11,8 +11,8 @@ from collections import Counter, namedtuple
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-import csv.writer
-import sys.stdout
+import csv
+import sys
 
 # colours, including those matching UCSF Chimera's
 BLACK = (0, 0, 0)
@@ -27,8 +27,7 @@ DiGraph = sage.graphs.digraph.DiGraph
 
 # directed version, with arcs oriented =||
 def directed_cuboctahedral_graph() -> DiGraph:
-    """Return an immutable copy of the cuboctahedral graph
-    with a specific edge orientation.
+    """Return an immutable copy of the cuboctahedral graph with a specific edge orientation.
     """
     out_neighbours = {
         0: [1, 11],
@@ -77,11 +76,8 @@ def more_complicated_graph() -> DiGraph:
         10: [(2, 1), (7, 1)],
         11: [(3, 1), (4, 1)],
     }
-    out_neighbours = dict(
-        chain.from_iterable(
-            [((k, 0), v), ((k, 1), v)] for k, v in out_neighbours.items()
-        )
-    )
+    out_neighbours = ([((k, 0), v), ((k, 1), v)] for k, v in out_neighbours.items())
+    out_neighbours = dict(chain.from_iterable(out_neighbours))
     return DiGraph(out_neighbours, immutable=True)
 
 
@@ -102,41 +98,52 @@ def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     return sum(graph.has_edge(x, y) for x in set(left) for y in set(right))
 
 
-def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
+def _plot(blue_set: Iterable, mode='net', blue=CHIMERA_BLUE, red=CHIMERA_RED):
     """Return a Sage Graphics object representing an oligomer with coloured
     dimers.
     """
     blue_set = frozenset(blue_set)
 
-    def diamond(center, idx):
-        x, y = center
-        return sage.all.polygon(
-            [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
-            color=(blue if idx in blue_set else red),
-            edgecolor=BLACK,
-        ) + sage.all.line(
-            [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
-            if y == 1
-            else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
-            rgbcolor=BLACK,
-        )
+    match mode:
+        case 'net':
+            def diamond(center, idx):
+                x, y = center
+                return sage.all.polygon(
+                    [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
+                    color=(blue if idx in blue_set else red),
+                    edgecolor=BLACK,
+                ) + sage.all.line(
+                    [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
+                    if y == 1
+                    else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
+                    rgbcolor=BLACK,
+                )
 
-    centers = {
-        9: (0, 0),
-        10: (0, 2),
-        2: (1, 1),
-        1: (2, 0),
-        3: (2, 2),
-        0: (3, 1),
-        8: (4, 0),
-        11: (4, 2),
-        4: (5, 1),
-        5: (6, 0),
-        7: (6, 2),
-        6: (7, 1),
-    }
-    return sum(diamond(center, idx) for idx, center in centers.items())
+            centers = {
+                9: (0, 0),
+                10: (0, 2),
+                2: (1, 1),
+                1: (2, 0),
+                3: (2, 2),
+                0: (3, 1),
+                8: (4, 0),
+                11: (4, 2),
+                4: (5, 1),
+                5: (6, 0),
+                7: (6, 2),
+                6: (7, 1),
+            }
+            return sum(diamond(center, idx) for idx, center in centers.items())
+        
+        case 'graph':
+            return directed_cuboctahedral_graph().plot(
+                vertex_labels = None,
+                vertex_color = CHIMERA_RED,
+                vertex_colors = {CHIMERA_BLUE: blue_set}
+            )
 
+        case _:
+            raise ValueError(f'Unknown representation type {mode}')
 
 Adjacencies = namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
 Adjacencies.__str__ = lambda self: (
@@ -205,14 +212,14 @@ class Bicolouring:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def picture(self):
+    def picture(self, mode):
         """Only works properly if self.graph is the directed cuboctahedral
         graph."""
-        return _plot(self.blue_set)
+        return _plot(self.blue_set, mode)
 
-    def show(self):
+    def show(self, mode):
         """Displays a picture of the colouring."""
-        self.picture.show(axes=False)
+        self.picture(mode=mode).show(axes=False)
 
 
 def unique_colourings(
@@ -268,7 +275,7 @@ def write_to_csv(
             )
 
     if csv_file:
-        with open(csv_file, "w") as file:
+        with open(csv_file, "a") as file:
             write(file)
     else:
         write(sys.stdout)
@@ -315,5 +322,5 @@ def _experimental_colouring(switch=True):
 
 
 if __name__ == "__main__":
-    for i in range(13):
-        print(f"{i}:{24-i}", len(unique_colourings(i, graph=more_complicated_graph())))
+    for c in unique_colourings():
+        c.show(mode='graph')
