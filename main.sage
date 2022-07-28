@@ -177,7 +177,7 @@ class Bicolouring:
     @cached_property
     def _canon(self):
         """Return an object that characterises the colouring up to automorphisms."""
-        return self.graph.canonical_label([self.blue_set, self.red_set]).copy(
+        return self.graph.canonical_label(partition=[self.blue_set, self.red_set]).copy(
             immutable=True
         )
 
@@ -217,7 +217,7 @@ class Bicolouring:
         graph."""
         return _plot(self.blue_set, mode)
 
-    def show(self, mode):
+    def show(self, mode='net'):
         """Displays a picture of the colouring."""
         self.picture(mode=mode).show(axes=False)
 
@@ -229,7 +229,13 @@ def unique_colourings(
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
-    either up to rotations (if isomorphism is True) or not.
+    either up to rotations (if isomorphism is True) or not. Return either a list or a set.
+
+    Keyword arguments:
+    nb_blue_vertices -- number of vertices to be coloured in blue
+    graph -- graph to be coloured
+    isomorphism -- if True, the colourings are counted up to colour-preserving automorphisms
+    of the graph. If False, all colourings are listed.
     """
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
@@ -245,7 +251,14 @@ def write_to_csv(
     csv_header=True,
     dialect="excel",
 ):
-    """Write the contents of colourings to csv_file (if None, to the standard output)."""
+    """Write the contents of colourings to csv_file.
+    
+    Keyword arguments:
+    csv_file -- a path-like object (such as a string corresponding to a filename) or None.
+    If None, the output will be written to the standard output.
+    csv_header -- if True, add a header with column names as the first row
+    dialect -- csv format, see Python csv documentation 
+    """
 
     def write(file):
         writer = csv.writer(file, dialect=dialect)
@@ -284,7 +297,12 @@ def write_to_csv(
 def short_display(
     nb_blue_vertices, csv_=False, csv_file=None, csv_header=True, **options
 ):
-    """Display the unique colourings for a given number of blue vertices."""
+    """Display the unique colourings for a given number of blue vertices.
+    
+    Keyword arguments:
+    csv_ -- whether to output in the csv format
+    csv_file, csv_header -- options passed to write_to_csv if csv_ is True
+    """
     colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
 
     if csv_:
