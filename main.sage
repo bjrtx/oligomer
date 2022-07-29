@@ -12,7 +12,6 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 import csv
-from os import O_NONBLOCK
 import sys
 
 # colours, including those matching UCSF Chimera's
@@ -215,11 +214,6 @@ class Bicolouring:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def plot(self, mode):
-        """Only works properly if self.graph is the directed cuboctahedral
-        graph."""
-        return _plot(self.blue_set, mode)
-
     def show(self, mode='net'):
         """Displays a picture of the colouring."""
         if mode == 'net':
@@ -305,7 +299,8 @@ def write_to_csv(
 
 
 def short_display(
-    nb_blue_vertices, csv_=False, csv_file=None, csv_header=True, **options
+    nb_blue_vertices, csv_=False, graph: Graph = directed_cuboctahedral_graph(),
+    **csv_options
 ):
     """Display the unique colourings for a given number of blue vertices.
     
@@ -313,15 +308,15 @@ def short_display(
     csv_ -- whether to output in the csv format
     csv_file, csv_header -- options passed to write_to_csv if csv_ is True
     """
-    colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, **options)
+    colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, graph=graph, **options)
 
     if csv_:
-        write_to_csv(colourings, csv_file=csv_file, csv_header=csv_header)
+        write_to_csv(colourings, **csv_options)
     else:
         colourings = sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
         lines = Counter(str(c) for c in colourings)
         print(
-            f"With {nb_blue_vertices} blue vertices and {12 - nb_blue_vertices} orange vertices,"
+            f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices} orange vertices,"
             f" the number of distinct arrangements is {len(colourings)}."
         )
         for val, key in lines.items():
