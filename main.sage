@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 import csv
+from os import O_NONBLOCK
 import sys
 
 # colours, including those matching UCSF Chimera's
@@ -175,11 +176,13 @@ class Bicolouring:
         object.__setattr__(self, "red_set", vertices - self.blue_set)
 
     @cached_property
-    def _canon(self):
-        """Return an object that characterises the colouring up to automorphisms."""
-        return self.graph.canonical_label(partition=[self.blue_set, self.red_set]).copy(
-            immutable=True
-        )
+    def _canon(self) -> Bicolouring:
+        """Return an object that characterises the colouring up to automorphisms. In practice, this is a 
+        relabelling of self.graph in which the vertices of self.blue_set come first. This relabelling is the
+        same for two colourings of the same graph with a colour-preserving isomorphism.
+        """
+        canon, mapping = self.graph.canonical_label(partition=[self.blue_set, self.red_set], certificate=True)
+        return Bicolouring(canon, blue_set={mapping[v] for v in self.blue_set})
 
     @cached_property
     def adjacencies(self):
@@ -203,23 +206,30 @@ class Bicolouring:
         )
 
     def __eq__(self, other: Bicolouring):
-        return self._canon == other._canon
+        return self._canon.graph == other._canon.graph
 
     def __hash__(self):
-        return hash(self._canon)
+        return hash(self._canon.graph)
 
     def distance(self, other: Bicolouring):
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def picture(self, mode):
+    def plot(self, mode):
         """Only works properly if self.graph is the directed cuboctahedral
         graph."""
         return _plot(self.blue_set, mode)
 
     def show(self, mode='net'):
         """Displays a picture of the colouring."""
-        self.picture(mode=mode).show(axes=False)
+        if mode == 'net':
+            _plot(self.blue_set, 'net').show(axes=False)
+        else:
+            self.graph.plot(
+                vertex_labels = None,
+                vertex_color = CHIMERA_RED,
+                vertex_colors = {CHIMERA_BLUE: self.blue_set}
+                ).show()
 
 
 def unique_colourings(
