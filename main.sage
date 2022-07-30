@@ -27,8 +27,7 @@ DiGraph = sage.graphs.digraph.DiGraph
 
 # directed version, with arcs oriented =||
 def directed_cuboctahedral_graph() -> DiGraph:
-    """Return an immutable copy of the cuboctahedral graph with a specific edge orientation.
-    """
+    """Return an immutable copy of the cuboctahedral graph with a specific edge orientation."""
     out_neighbours = {
         0: [1, 11],
         1: [2, 8],
@@ -60,14 +59,16 @@ def directed_cuboctahedral_graph() -> DiGraph:
     ]
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
+
 def vertices_to_facets():
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
     facet_dict = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
     edges = [
-        (i, j) for (i, f), (j, g) in combinations(face_dict.items(), 2) 
+        (i, j)
+        for (i, f), (j, g) in combinations(face_dict.items(), 2)
         if f.as_polyhedron().intersection(g.as_polyhedron()).dimension() == 1
-        ]
+    ]
     assert len(edges) == 24 and len(facets) == 12
     g = sage.graphs.graph.Graph(data=edges)
     h = directed_cuboctahedral_graph().to_undirected()
@@ -180,11 +181,13 @@ class Bicolouring:
 
     @cached_property
     def _canon(self) -> Bicolouring:
-        """Return an object that characterises the colouring up to automorphisms. In practice, this is a 
+        """Return an object that characterises the colouring up to automorphisms. In practice, this is a
         relabelling of self.graph in which the vertices of self.blue_set come first. This relabelling is the
         same for two colourings of the same graph with a colour-preserving isomorphism.
         """
-        canon, mapping = self.graph.canonical_label(partition=[self.blue_set, self.red_set], certificate=True)
+        canon, mapping = self.graph.canonical_label(
+            partition=[self.blue_set, self.red_set], certificate=True
+        )
         return Bicolouring(canon, blue_set={mapping[v] for v in self.blue_set})
 
     @cached_property
@@ -218,20 +221,24 @@ class Bicolouring:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def show(self, mode='net') -> None:
+    def show(self, mode="net") -> None:
         """Displays a picture of the colouring."""
-        if mode == 'net':
+        if mode == "net":
             _plot(self.blue_set).show(axes=False)
-        elif mode == 'graph':
+        elif mode == "graph":
             self.graph.plot(
-                vertex_labels = None,
-                vertex_color = CHIMERA_RED,
-                vertex_colors = {CHIMERA_BLUE: self.blue_set}
-                ).show()
-        elif mode == 'polyhedron':
+                vertex_labels=None,
+                vertex_color=CHIMERA_RED,
+                vertex_colors={CHIMERA_BLUE: self.blue_set},
+            ).show()
+        elif mode == "polyhedron":
             facets = colouring_to_facets()
-            sum(facets[i].as_polyhedron().plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED) for i in range(12)).show(frame=False)
-
+            sum(
+                facets[i]
+                .as_polyhedron()
+                .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
+                for i in range(12)
+            ).show(frame=False)
 
 
 def unique_colourings(
@@ -264,12 +271,12 @@ def write_to_csv(
     dialect="excel",
 ):
     """Write the contents of colourings to csv_file.
-    
+
     Keyword arguments:
     csv_file -- a path-like object (such as a string corresponding to a filename) or None.
     If None, the output will be written to the standard output.
     csv_header -- if True, add a header with column names as the first row
-    dialect -- csv format, see Python csv documentation 
+    dialect -- csv format, see Python csv documentation
     """
 
     def write(file):
@@ -307,16 +314,20 @@ def write_to_csv(
 
 
 def short_display(
-    nb_blue_vertices, csv_=False, graph: Graph = directed_cuboctahedral_graph(),
-    **csv_options
+    nb_blue_vertices,
+    csv_=False,
+    graph: Graph = directed_cuboctahedral_graph(),
+    **csv_options,
 ):
     """Display the unique colourings for a given number of blue vertices.
-    
+
     Keyword arguments:
     csv_ -- whether to output in the csv format
     csv_file, csv_header -- options passed to write_to_csv if csv_ is True
     """
-    colourings = unique_colourings(nb_blue_vertices=nb_blue_vertices, graph=graph, **options)
+    colourings = unique_colourings(
+        nb_blue_vertices=nb_blue_vertices, graph=graph, **options
+    )
 
     if csv_:
         write_to_csv(colourings, **csv_options)
@@ -354,5 +365,5 @@ def _experimental_colouring(switch=True) -> Bicolouring:
 
 if __name__ == "__main__":
     for c in unique_colourings(2):
-        c.show(mode='graph')
-        c.show(mode='polyhedron')
+        c.show(mode="graph")
+        c.show(mode="polyhedron")
