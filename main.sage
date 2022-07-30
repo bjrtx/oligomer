@@ -61,11 +61,13 @@ def directed_cuboctahedral_graph() -> DiGraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 def vertices_to_facets():
-    """Returns a dict mapping each vertex of the directed octahedral graph to a facet of
+    """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
-    facets = polytopes.rhombic_dodecahedron().facets()
-    face_dict = {i:f for i, f in enumerate(facets)}
-    edges = [(i, j) for (i, f), (j, g) in combinations(face_dict.items(), 2) if f.as_polyhedron().intersection(g.as_polyhedron()).dimension()==1]
+    facet_dict = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
+    edges = [
+        (i, j) for (i, f), (j, g) in combinations(face_dict.items(), 2) 
+        if f.as_polyhedron().intersection(g.as_polyhedron()).dimension() == 1
+        ]
     assert len(edges) == 24 and len(facets) == 12
     g = sage.graphs.graph.Graph(data=edges)
     h = directed_cuboctahedral_graph().to_undirected()
@@ -110,45 +112,42 @@ def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
     return sum(graph.has_edge(x, y) for x in set(left) for y in set(right))
 
 
-def _plot(blue_set: Iterable, mode='net', blue=CHIMERA_BLUE, red=CHIMERA_RED):
+def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
     """Return a Sage Graphics object representing an oligomer with coloured
     dimers.
     """
     blue_set = frozenset(blue_set)
 
-    match mode:
-        case 'net':
-            def diamond(center, idx):
-                x, y = center
-                return sage.all.polygon(
-                    [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
-                    color=(blue if idx in blue_set else red),
-                    edgecolor=BLACK,
-                ) + sage.all.line(
-                    [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
-                    if y == 1
-                    else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
-                    rgbcolor=BLACK,
-                )
+    def diamond(center, idx):
+        x, y = center
+        return sage.all.polygon(
+            [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
+            color=(blue if idx in blue_set else red),
+            edgecolor=BLACK,
+        ) + sage.all.line(
+            [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
+            if y == 1
+            else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
+            rgbcolor=BLACK,
+        )
 
-            centers = {
-                9: (0, 0),
-                10: (0, 2),
-                2: (1, 1),
-                1: (2, 0),
-                3: (2, 2),
-                0: (3, 1),
-                8: (4, 0),
-                11: (4, 2),
-                4: (5, 1),
-                5: (6, 0),
-                7: (6, 2),
-                6: (7, 1),
-            }
-            return sum(diamond(center, idx) for idx, center in centers.items())
+    centers = {
+        9: (0, 0),
+        10: (0, 2),
+        2: (1, 1),
+        1: (2, 0),
+        3: (2, 2),
+        0: (3, 1),
+        8: (4, 0),
+        11: (4, 2),
+        4: (5, 1),
+        5: (6, 0),
+        7: (6, 2),
+        6: (7, 1),
+    }
 
-        case _:
-            raise ValueError(f'Unknown representation type {mode}')
+    return sum(diamond(center, idx) for idx, center in centers.items())
+
 
 Adjacencies = namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
 Adjacencies.__str__ = lambda self: (
@@ -215,14 +214,14 @@ class Bicolouring:
     def __hash__(self):
         return hash(self._canon.graph)
 
-    def distance(self, other: Bicolouring):
+    def distance(self, other: Bicolouring) -> int:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def show(self, mode='net'):
+    def show(self, mode='net') -> None:
         """Displays a picture of the colouring."""
         if mode == 'net':
-            _plot(self.blue_set, 'net').show(axes=False)
+            _plot(self.blue_set).show(axes=False)
         elif mode == 'graph':
             self.graph.plot(
                 vertex_labels = None,
@@ -347,7 +346,7 @@ def overlap() -> dict[Bicolouring]:
     }
 
 
-def _experimental_colouring(switch=True):
+def _experimental_colouring(switch=True) -> Bicolouring:
     """Return the colouring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return Bicolouring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [7]))
