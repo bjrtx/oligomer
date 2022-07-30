@@ -60,6 +60,18 @@ def directed_cuboctahedral_graph() -> DiGraph:
     ]
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
+def vertices_to_facets():
+    """Returns a dict mapping each vertex of the directed octahedral graph to a facet of
+    the rhombic dodecahedron."""
+    facets = polytopes.rhombic_dodecahedron().facets()
+    face_dict = {i:f for i, f in enumerate(facets)}
+    edges = [(i, j) for (i, f), (j, g) in combinations(face_dict.items(), 2) if f.as_polyhedron().intersection(g.as_polyhedron()).dimension()==1]
+    assert len(edges) == 24 and len(facets) == 12
+    g = sage.graphs.graph.Graph(data=edges)
+    h = directed_cuboctahedral_graph().to_undirected()
+    _, mapping = g.is_isomorphic(h, certificate=True)
+    return {mapping[i]: f for i, f in face_dict.items()}
+
 
 def more_complicated_graph() -> DiGraph:
     out_neighbours = {
@@ -134,13 +146,6 @@ def _plot(blue_set: Iterable, mode='net', blue=CHIMERA_BLUE, red=CHIMERA_RED):
                 6: (7, 1),
             }
             return sum(diamond(center, idx) for idx, center in centers.items())
-        
-        case 'graph':
-            return directed_cuboctahedral_graph().plot(
-                vertex_labels = None,
-                vertex_color = CHIMERA_RED,
-                vertex_colors = {CHIMERA_BLUE: blue_set}
-            )
 
         case _:
             raise ValueError(f'Unknown representation type {mode}')
@@ -218,12 +223,16 @@ class Bicolouring:
         """Displays a picture of the colouring."""
         if mode == 'net':
             _plot(self.blue_set, 'net').show(axes=False)
-        else:
+        elif mode == 'graph':
             self.graph.plot(
                 vertex_labels = None,
                 vertex_color = CHIMERA_RED,
                 vertex_colors = {CHIMERA_BLUE: self.blue_set}
                 ).show()
+        elif mode == 'polyhedron':
+            facets = colouring_to_facets()
+            sum(facets[i].as_polyhedron().plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED) for i in range(12)).show(frame=False)
+
 
 
 def unique_colourings(
@@ -345,5 +354,6 @@ def _experimental_colouring(switch=True):
 
 
 if __name__ == "__main__":
-    for c in unique_colourings():
+    for c in unique_colourings(2):
         c.show(mode='graph')
+        c.show(mode='polyhedron')
