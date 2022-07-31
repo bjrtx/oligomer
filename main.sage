@@ -238,7 +238,7 @@ class OctahedralBicolouring(Bicolouring):
 
     def show(self, mode="net") -> None:
         """Displays a picture of the colouring.
-        
+
         Keyword arguments:
         mode -- one of "net", "graph", "polyhedron"
         """
@@ -272,7 +272,9 @@ class OctahedralBicolouring(Bicolouring):
                 6: (7, 1),
             }
 
-            sum(diamond(center, idx) for idx, center in centers.items()).show(axes=False)
+            sum(diamond(center, idx) for idx, center in centers.items()).show(
+                axes=False
+            )
 
         elif mode == "graph":
             super().show()
@@ -288,9 +290,11 @@ class OctahedralBicolouring(Bicolouring):
                 + oligomer_structure()
             ).show(frame=False)
         else:
-            raise ValueError('Unknown mode for displaying the colouring, mode must be one of net, graph and polyhedron.')
+            raise ValueError(
+                "Unknown mode for displaying the colouring, mode must be one of net, graph and polyhedron."
+            )
 
-    def print_Chimera_commands(self, interline: str="\n" ) -> None:
+    def print_Chimera_commands(self, interline: str = "\n") -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
@@ -307,7 +311,7 @@ def unique_colourings(
     nb_blue_vertices=6,
     *,
     default_graph=True,
-    graph: Optional[Graph]=None,
+    graph: Optional[Graph] = None,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
@@ -337,7 +341,7 @@ def unique_colourings(
 
 def write_to_csv(
     colourings: Iterable[Bicolouring],
-    csv_file: Optional[str]=None,
+    csv_file: Optional[str] = None,
     *,
     csv_header=True,
     dialect="excel",
@@ -389,7 +393,7 @@ def short_display(
     nb_blue_vertices: int,
     csv_=False,
     graph: Graph = directed_cuboctahedral_graph(),
-    **csv_options
+    **csv_options,
 ):
     """Display the unique colourings for a given number of blue vertices.
 
