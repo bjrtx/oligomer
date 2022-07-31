@@ -60,7 +60,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 
-def vertices_to_dimers():
+def _vertices_to_dimers():
     """Return a dict mapping each vertex of the directed octahedral graph to the two letters
     designing its dimers (top then bottom).
     """
@@ -80,7 +80,7 @@ def vertices_to_dimers():
     }
 
 
-def vertices_to_facets():
+def _vertices_to_facets():
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
     facets = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
@@ -90,20 +90,27 @@ def vertices_to_facets():
         if f.as_polyhedron().intersection(g.as_polyhedron()).dimension() == 1
     ]
     assert len(edges) == 24 and len(facets) == 12
-    g = sage.graphs.graph.Graph(data=edges)
-    h = directed_cuboctahedral_graph().to_undirected()
-    _, isomorphism = g.is_isomorphic(h, certificate=True)
+    _, isomorphism = sage.graphs.graph.Graph(data=edges).is_isomorphic(
+        directed_cuboctahedral_graph().to_undirected(), certificate=True)
     return {isomorphism[i]: f for i, f in facets.items()}
 
 
 def oligomer_structure():
-    facets = vertices_to_facets()
+    facets = _vertices_to_facets()
     g = directed_cuboctahedral_graph()
-    for i, f in facets:
-        edges = (f.as_polyhedron().intersection(ff.as_polyhedron()) for ff in g[i])
+    struct = []
+
+    for i, f in facets.items():
+        edges = [f.as_polyhedron().intersection(facets[j].as_polyhedron()) for j in g.neighbors_out(i)]
+        print(len(edges))
+        midpoints = [e.center() for e in edges]
+        struct.append(Polyhedron(vertices=midpoints).plot(edge_color='black'))
+
+    return sum(struct)
 
 
 def more_complicated_graph() -> DiGraph:
+    """Return a digraph that encodes dimer-dimer junctions (for the case of heterodimers)/"""
     out_neighbours = {
         0: [(1, 1), (11, 0)],
         1: [(2, 0), (8, 0)],
@@ -118,8 +125,8 @@ def more_complicated_graph() -> DiGraph:
         10: [(2, 1), (7, 1)],
         11: [(3, 1), (4, 1)],
     }
-    out_neighbours = ([((k, 0), v), ((k, 1), v)] for k, v in out_neighbours.items())
-    out_neighbours = dict(chain.from_iterable(out_neighbours))
+    out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
+    out_neighbours = dict(chain(out_neighbours))
     return DiGraph(out_neighbours, immutable=True)
 
 
@@ -133,11 +140,6 @@ if __name__ == "__main__":
     # The automorphism group of dg is (isomorphic to) S_4 and can be interpreted as the
     # rotational octahedral symmetry group (O, 432, etc.).
     assert sage.all.SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
-
-
-def nb_adjacencies(graph: Graph, left: Iterable, right: Iterable) -> int:
-    """Count the edges from left to right in the directed graph."""
-    return sum(graph.has_edge(x, y) for x in set(left) for y in set(right))
 
 
 def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
@@ -217,14 +219,18 @@ class Bicolouring:
         )
         return Bicolouring(canon, blue_set={mapping[v] for v in self.blue_set})
 
+    def nb_adjacencies(self, left: Iterable, right: Iterable) -> int:
+        """Count the edges from left to right."""
+        return sum(self.graph.has_edge(x, y) for x in set(left) for y in set(right))
+
     @cached_property
     def adjacencies(self):
         """Count the number of adjacencies, sorted by colours."""
         return Adjacencies(
-            nb_adjacencies(self.graph, self.blue_set, self.blue_set),
-            nb_adjacencies(self.graph, self.red_set, self.red_set),
-            nb_adjacencies(self.graph, self.blue_set, self.red_set),
-            nb_adjacencies(self.graph, self.red_set, self.blue_set),
+            nb_adjacencies(self, self.blue_set, self.blue_set),
+            nb_adjacencies(self, self.red_set, self.red_set),
+            nb_adjacencies(self, self.blue_set, self.red_set),
+            nb_adjacencies(self, self.red_set, self.blue_set),
         )
 
     @cached_property
@@ -271,16 +277,18 @@ class OctahedralBicolouring(Bicolouring):
         elif mode == "graph":
             super().show()
         elif mode == "polyhedron":
-            facets = vertices_to_facets()
-            sum(
+            facets = _vertices_to_facets()
+            (sum(
                 facets[i]
                 .as_polyhedron()
                 .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
                 for i in range(12)
+            ) + oligomer_structure()
             ).show(frame=False)
 
     def print_Chimera_commands(self, interline="\n"):
-        alphabet = vertices_to_dimers()
+        """Print the Chimera UCSF commands that generate the corresponding oligomer."""
+        alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
         red_letters = chain.from_iterable(alphabet[v].upper() for v in self.red_set)
         if self.blue_set:
@@ -383,7 +391,7 @@ def short_display(
 
     Keyword arguments:
     csv_ -- whether to output in the csv format
-    csv_file, csv_header -- options passed to write_to_csv if csv_ is True
+    csv_options -- options passed to write_to_csv if csv_ is True
     """
     colourings = unique_colourings(
         nb_blue_vertices=nb_blue_vertices, graph=graph, **options
