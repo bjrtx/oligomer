@@ -75,12 +75,13 @@ def vertices_to_facets():
     _, isomorphism = g.is_isomorphic(h, certificate=True)
     return {isomorphism[i]: f for i, f in facets.items()}
 
+
 def oligomer_structure():
     facets = vertices_to_facets()
     g = directed_cuboctahedral_graph()
     for i, f in facets:
         edges = (f.as_polyhedron().intersection(ff.as_polyhedron()) for ff in g[i])
-    
+
 
 def more_complicated_graph() -> DiGraph:
     out_neighbours = {
@@ -371,6 +372,6 @@ def _experimental_colouring(switch=True) -> Bicolouring:
 
 if __name__ == "__main__":
     for c in unique_colourings(3):
-        c.show(mode='net')
+        c.show(mode="net")
         c.show(mode="graph")
         c.show(mode="polyhedron")
