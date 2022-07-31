@@ -60,7 +60,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 
-def _vertices_to_dimers():
+def _vertices_to_dimers() -> dict[str]:
     """Return a dict mapping each vertex of the directed octahedral graph to the two letters
     designing its dimers (top then bottom).
     """
@@ -80,7 +80,7 @@ def _vertices_to_dimers():
     }
 
 
-def _vertices_to_facets():
+def _vertices_to_facets() -> dict:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
     facets = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
@@ -145,44 +145,6 @@ if __name__ == "__main__":
     # rotational octahedral symmetry group (O, 432, etc.).
     assert sage.all.SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
-
-def _plot(blue_set: Iterable, blue=CHIMERA_BLUE, red=CHIMERA_RED):
-    """Return a Sage Graphics object representing an oligomer with coloured
-    dimers.
-    """
-    blue_set = frozenset(blue_set)
-
-    def diamond(center, idx):
-        x, y = center
-        return sage.all.polygon(
-            [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
-            color=(blue if idx in blue_set else red),
-            edgecolor=BLACK,
-        ) + sage.all.line(
-            [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
-            if y == 1
-            else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
-            rgbcolor=BLACK,
-        )
-
-    centers = {
-        9: (0, 0),
-        10: (0, 2),
-        2: (1, 1),
-        1: (2, 0),
-        3: (2, 2),
-        0: (3, 1),
-        8: (4, 0),
-        11: (4, 2),
-        4: (5, 1),
-        5: (6, 0),
-        7: (6, 2),
-        6: (7, 1),
-    }
-
-    return sum(diamond(center, idx) for idx, center in centers.items())
-
-
 Adjacencies = namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
 Adjacencies.__str__ = lambda self: (
     f"junctions: blue->orange {self.BR}, blue->blue {self.BB}, "
@@ -198,7 +160,7 @@ class Bicolouring:
     """
 
     graph: Graph
-    blue_set: frozenset[int] = frozenset()
+    blue_set: frozenset = frozenset()
 
     def __post_init__(self):
         object.__setattr__(
@@ -275,9 +237,43 @@ class OctahedralBicolouring(Bicolouring):
         super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
 
     def show(self, mode="net") -> None:
-        """Displays a picture of the colouring."""
+        """Displays a picture of the colouring.
+        
+        Keyword arguments:
+        mode -- one of "net", "graph", "polyhedron"
+        """
         if mode == "net":
-            _plot(self.blue_set).show(axes=False)
+
+            def diamond(center, idx):
+                x, y = center
+                return sage.all.polygon(
+                    [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
+                    color=(CHIMERA_BLUE if idx in self.blue_set else CHIMERA_RED),
+                    edgecolor=BLACK,
+                ) + sage.all.line(
+                    [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
+                    if y == 1
+                    else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
+                    rgbcolor=BLACK,
+                )
+
+            centers = {
+                9: (0, 0),
+                10: (0, 2),
+                2: (1, 1),
+                1: (2, 0),
+                3: (2, 2),
+                0: (3, 1),
+                8: (4, 0),
+                11: (4, 2),
+                4: (5, 1),
+                5: (6, 0),
+                7: (6, 2),
+                6: (7, 1),
+            }
+
+            sum(diamond(center, idx) for idx, center in centers.items()).show(axes=False)
+
         elif mode == "graph":
             super().show()
         elif mode == "polyhedron":
@@ -291,8 +287,10 @@ class OctahedralBicolouring(Bicolouring):
                 )
                 + oligomer_structure()
             ).show(frame=False)
+        else:
+            raise ValueError('Unknown mode for displaying the colouring, mode must be one of net, graph and polyhedron.')
 
-    def print_Chimera_commands(self, interline="\n"):
+    def print_Chimera_commands(self, interline: str="\n" ) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
@@ -309,7 +307,7 @@ def unique_colourings(
     nb_blue_vertices=6,
     *,
     default_graph=True,
-    graph: Graph = None,
+    graph: Optional[Graph]=None,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
@@ -339,7 +337,7 @@ def unique_colourings(
 
 def write_to_csv(
     colourings: Iterable[Bicolouring],
-    csv_file=None,
+    csv_file: Optional[str]=None,
     *,
     csv_header=True,
     dialect="excel",
@@ -388,10 +386,10 @@ def write_to_csv(
 
 
 def short_display(
-    nb_blue_vertices,
+    nb_blue_vertices: int,
     csv_=False,
     graph: Graph = directed_cuboctahedral_graph(),
-    **csv_options,
+    **csv_options
 ):
     """Display the unique colourings for a given number of blue vertices.
 
