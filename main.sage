@@ -65,9 +65,20 @@ def vertices_to_dimers():
     designing its dimers (top then bottom).
     """
     return {
-        10: 'ob', 9: 'nh', 2: 'cv', 3: 'kg', 1: 'xm', 0: 'fr',
-        11: 'is', 8: 'ud', 4: 'tj', 7: 'wl', 5: 'pe', 6: 'qa'
+        10: "ob",
+        9: "nh",
+        2: "cv",
+        3: "kg",
+        1: "xm",
+        0: "fr",
+        11: "is",
+        8: "ud",
+        4: "tj",
+        7: "wl",
+        5: "pe",
+        6: "qa",
     }
+
 
 def vertices_to_facets():
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
@@ -244,15 +255,15 @@ class Bicolouring:
             vertex_color=CHIMERA_RED,
             vertex_colors={CHIMERA_BLUE: self.blue_set},
         ).show()
-    
 
-@dataclass(frozen=True, eq=False) # inherit inequality from the parent class
+
+@dataclass(frozen=True, eq=False)  # inherit inequality from the parent class
 class OctahedralBicolouring(Bicolouring):
     """Provide methods specific to bicolourings of the directed octahedral graph."""
 
     def __init__(self, blue_set: frozenset[int] = frozenset()):
         super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
-    
+
     def show(self, mode="net") -> None:
         """Displays a picture of the colouring."""
         if mode == "net":
@@ -267,8 +278,8 @@ class OctahedralBicolouring(Bicolouring):
                 .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
                 for i in range(12)
             ).show(frame=False)
-    
-    def print_Chimera_commands(self, interline='\n'):
+
+    def print_Chimera_commands(self, interline="\n"):
         alphabet = vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
         red_letters = chain.from_iterable(alphabet[v].upper() for v in self.red_set)
@@ -279,10 +290,11 @@ class OctahedralBicolouring(Bicolouring):
         if interline:
             print(interline)
 
+
 def unique_colourings(
     nb_blue_vertices=6,
     *,
-    default_graph = True,
+    default_graph=True,
     graph: Graph = None,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
