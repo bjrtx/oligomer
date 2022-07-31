@@ -60,6 +60,15 @@ def directed_cuboctahedral_graph() -> DiGraph:
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
 
+def vertices_to_dimers():
+    """Return a dict mapping each vertex of the directed octahedral graph to the two letters
+    designing its dimers (top then bottom).
+    """
+    return {
+        10: 'ob', 9: 'nh', 2: 'cv', 3: 'kg', 1: 'xm', 0: 'fr',
+        11: 'is', 8: 'ud', 4: 'tj', 7: 'wl', 5: 'pe', 6: 'qa'
+    }
+
 def vertices_to_facets():
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
@@ -228,16 +237,28 @@ class Bicolouring:
         """Count the vertices which have distinct colours in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
+    def show(self) -> None:
+        """Displays a picture of the colouring."""
+        self.graph.plot(
+            vertex_labels=None,
+            vertex_color=CHIMERA_RED,
+            vertex_colors={CHIMERA_BLUE: self.blue_set},
+        ).show()
+    
+
+@dataclass(frozen=True, eq=False) # inherit inequality from the parent class
+class OctahedralBicolouring(Bicolouring):
+    """Provide methods specific to bicolourings of the directed octahedral graph."""
+
+    def __init__(self, blue_set: frozenset[int] = frozenset()):
+        super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
+    
     def show(self, mode="net") -> None:
         """Displays a picture of the colouring."""
         if mode == "net":
             _plot(self.blue_set).show(axes=False)
         elif mode == "graph":
-            self.graph.plot(
-                vertex_labels=None,
-                vertex_color=CHIMERA_RED,
-                vertex_colors={CHIMERA_BLUE: self.blue_set},
-            ).show()
+            super().show()
         elif mode == "polyhedron":
             facets = vertices_to_facets()
             sum(
@@ -246,21 +267,23 @@ class Bicolouring:
                 .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
                 for i in range(12)
             ).show(frame=False)
-
-
-@dataclass(frozen=True)
-class OctahedralBicolouring(Bicolouring):
-    """Provide methods specific to bicolourings of the directed octahedral graph."""
-
-    def __init__(self, blue_set: frozenset[int] = frozenset()):
-        super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
-
+    
+    def print_Chimera_commands(self, interline='\n'):
+        alphabet = vertices_to_dimers()
+        blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
+        red_letters = chain.from_iterable(alphabet[v].upper() for v in self.red_set)
+        if self.blue_set:
+            print(f"sel #1:.{':.'.join(blue_letters)}")
+        if self.red_set:
+            print(f"sel #2:.{':.'.join(red_letters)}")
+        if interline:
+            print(interline)
 
 def unique_colourings(
     nb_blue_vertices=6,
     *,
-    default_graph=True,
-    graph: Graph,
+    default_graph = True,
+    graph: Graph = None,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
