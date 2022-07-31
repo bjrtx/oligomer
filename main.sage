@@ -191,7 +191,7 @@ class Bicolouring:
     and will have the same hash.
     """
 
-    graph: Graph = directed_cuboctahedral_graph()
+    graph: Graph
     blue_set: frozenset[int] = frozenset()
 
     def __post_init__(self):
