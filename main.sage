@@ -247,6 +247,7 @@ class Bicolouring:
                 for i in range(12)
             ).show(frame=False)
 
+
 @dataclass(frozen=True)
 class OctahedralBicolouring(Bicolouring):
     """Provide methods specific to bicolourings of the directed octahedral graph."""
@@ -254,10 +255,11 @@ class OctahedralBicolouring(Bicolouring):
     def __init__(self, blue_set: frozenset[int] = frozenset()):
         super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
 
+
 def unique_colourings(
     nb_blue_vertices=6,
     *,
-    default_graph = True,
+    default_graph=True,
     graph: Graph,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
@@ -275,11 +277,13 @@ def unique_colourings(
     if default_graph:
         graph = directed_cuboctahedral_graph()
     elif graph is None:
-        raise ValueError('Set default_graph to True or provide graph.')
+        raise ValueError("Set default_graph to True or provide graph.")
 
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
-        OctahedralBicolouring(blue_set) if default_graph else Bicolouring(graph, blue_set)
+        OctahedralBicolouring(blue_set)
+        if default_graph
+        else Bicolouring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
