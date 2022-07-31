@@ -247,11 +247,18 @@ class Bicolouring:
                 for i in range(12)
             ).show(frame=False)
 
+@dataclass(frozen=True)
+class OctahedralBicolouring(Bicolouring):
+    """Provide methods specific to bicolourings of the directed octahedral graph."""
+
+    def __init__(self, blue_set: frozenset[int] = frozenset()):
+        super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
 
 def unique_colourings(
     nb_blue_vertices=6,
     *,
-    graph: Graph = directed_cuboctahedral_graph(),
+    default_graph = True,
+    graph: Graph,
     isomorphism=True,
 ) -> Iterable[Bicolouring]:
     """List the colourings with a given number of blue vertices in the directed graph,
@@ -259,13 +266,20 @@ def unique_colourings(
 
     Keyword arguments:
     nb_blue_vertices -- number of vertices to be coloured in blue
-    graph -- graph to be coloured
+    default_graph -- whether to use the directed octahedral graph
+    graph -- graph to be coloured if default_graph is False
     isomorphism -- if True, the colourings are counted up to colour-preserving automorphisms
     of the graph. If False, all colourings are listed.
     """
+
+    if default_graph:
+        graph = directed_cuboctahedral_graph()
+    elif graph is None:
+        raise ValueError('Set default_graph to True or provide graph.')
+
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
-        Bicolouring(graph, blue_set)
+        OctahedralBicolouring(blue_set) if default_graph else Bicolouring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
