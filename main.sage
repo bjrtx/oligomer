@@ -63,18 +63,24 @@ def directed_cuboctahedral_graph() -> DiGraph:
 def vertices_to_facets():
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
-    facet_dict = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
+    facets = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
     edges = [
         (i, j)
-        for (i, f), (j, g) in combinations(face_dict.items(), 2)
+        for (i, f), (j, g) in combinations(facets.items(), 2)
         if f.as_polyhedron().intersection(g.as_polyhedron()).dimension() == 1
     ]
     assert len(edges) == 24 and len(facets) == 12
     g = sage.graphs.graph.Graph(data=edges)
     h = directed_cuboctahedral_graph().to_undirected()
-    _, mapping = g.is_isomorphic(h, certificate=True)
-    return {mapping[i]: f for i, f in face_dict.items()}
+    _, isomorphism = g.is_isomorphic(h, certificate=True)
+    return {isomorphism[i]: f for i, f in facets.items()}
 
+def oligomer_structure():
+    facets = vertices_to_facets()
+    g = directed_cuboctahedral_graph()
+    for i, f in facets:
+        edges = (f.as_polyhedron().intersection(ff.as_polyhedron()) for ff in g[i])
+    
 
 def more_complicated_graph() -> DiGraph:
     out_neighbours = {
@@ -232,7 +238,7 @@ class Bicolouring:
                 vertex_colors={CHIMERA_BLUE: self.blue_set},
             ).show()
         elif mode == "polyhedron":
-            facets = colouring_to_facets()
+            facets = vertices_to_facets()
             sum(
                 facets[i]
                 .as_polyhedron()
@@ -364,6 +370,7 @@ def _experimental_colouring(switch=True) -> Bicolouring:
 
 
 if __name__ == "__main__":
-    for c in unique_colourings(2):
+    for c in unique_colourings(3):
+        c.show(mode='net')
         c.show(mode="graph")
         c.show(mode="polyhedron")
