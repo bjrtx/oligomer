@@ -91,7 +91,8 @@ def _vertices_to_facets():
     ]
     assert len(edges) == 24 and len(facets) == 12
     _, isomorphism = sage.graphs.graph.Graph(data=edges).is_isomorphic(
-        directed_cuboctahedral_graph().to_undirected(), certificate=True)
+        directed_cuboctahedral_graph().to_undirected(), certificate=True
+    )
     return {isomorphism[i]: f for i, f in facets.items()}
 
 
@@ -101,10 +102,13 @@ def oligomer_structure():
     struct = []
 
     for i, f in facets.items():
-        edges = [f.as_polyhedron().intersection(facets[j].as_polyhedron()) for j in g.neighbors_out(i)]
+        edges = [
+            f.as_polyhedron().intersection(facets[j].as_polyhedron())
+            for j in g.neighbors_out(i)
+        ]
         print(len(edges))
         midpoints = [e.center() for e in edges]
-        struct.append(Polyhedron(vertices=midpoints).plot(edge_color='black'))
+        struct.append(Polyhedron(vertices=midpoints).plot(edge_color="black"))
 
     return sum(struct)
 
@@ -278,12 +282,14 @@ class OctahedralBicolouring(Bicolouring):
             super().show()
         elif mode == "polyhedron":
             facets = _vertices_to_facets()
-            (sum(
-                facets[i]
-                .as_polyhedron()
-                .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
-                for i in range(12)
-            ) + oligomer_structure()
+            (
+                sum(
+                    facets[i]
+                    .as_polyhedron()
+                    .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
+                    for i in range(12)
+                )
+                + oligomer_structure()
             ).show(frame=False)
 
     def print_Chimera_commands(self, interline="\n"):
