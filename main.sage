@@ -70,8 +70,8 @@ def directed_cuboctahedral_graph() -> DiGraph:
 
 @cache
 def _vertices_to_dimers() -> dict[int, str]:
-    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed 
-    octahedral graph to the two letters designing its dimers (first top then bottom) in 
+    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed
+    octahedral graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
     return {
