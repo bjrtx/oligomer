@@ -45,20 +45,24 @@ def directed_cuboctahedral_graph() -> DiGraph:
         11: [3, 4],
     }
     # fixing vertex positions for drawing the graph
-    vertex_positions = dict(enumerate([
-        [-1, -1],
-        [-1, 1],
-        [1, 1],
-        [1, -1],
-        [-5, -5],
-        [-5, 5],
-        [5, 5],
-        [5, -5],
-        [-3, 0],
-        [0, 3],
-        [3, 0],
-        [0, -3],
-    ]))
+    vertex_positions = dict(
+        enumerate(
+            [
+                [-1, -1],
+                [-1, 1],
+                [1, 1],
+                [1, -1],
+                [-5, -5],
+                [-5, 5],
+                [5, 5],
+                [5, -5],
+                [-3, 0],
+                [0, 3],
+                [3, 0],
+                [0, -3],
+            ]
+        )
+    )
     return DiGraph(
         out_neighbours, pos=vertex_positions, immutable=True, format="dict_of_lists"
     )
@@ -66,8 +70,8 @@ def directed_cuboctahedral_graph() -> DiGraph:
 
 @cache
 def _vertices_to_dimers() -> dict[str]:
-    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed 
-    octahedral graph to the two letters designing its dimers (first top then bottom) in 
+    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed
+    octahedral graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
     return {
@@ -108,11 +112,13 @@ def oligomer_structure(blue_set: set = frozenset()):
     to blue_set.
     """
     # the facets correspond to dimers
-    facets = {idx: facet.as_polyhedron() for idx, facet in _vertices_to_facets().items()}
+    facets = {
+        idx: facet.as_polyhedron() for idx, facet in _vertices_to_facets().items()
+    }
     graph = directed_cuboctahedral_graph()
     graphics_object = 0
 
-    for i, f in facets.items(): # for each dimer
+    for i, f in facets.items():  # for each dimer
         # build the two 'outgoing' edges of the dimer, and their two midpoints
         edges_out = (f.intersection(facets[j]) for j in graph.neighbors_out(i))
         midpoints = [e.center() for e in edges_out]
@@ -121,7 +127,9 @@ def oligomer_structure(blue_set: set = frozenset()):
         # add the two quadrilaterals corresponding to the dimer's chains
         # to the Graphics object
         for edge in edges_in:
-            graphics_object += Polyhedron(vertices=chain(edge.vertices(), midpoints)).plot(
+            graphics_object += Polyhedron(
+                vertices=chain(edge.vertices(), midpoints)
+            ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
             )
@@ -183,12 +191,8 @@ class Bicoloring:
     def __post_init__(self):
         # using __setattr__ because the class if frozen (its values cannot be modified
         # in the standard way)
-        if not self.graph.is_immutable(): 
-            object.__setattr__(
-                self,
-                "graph",
-                self.graph.copy(immutable=True)
-            )
+        if not self.graph.is_immutable():
+            object.__setattr__(self, "graph", self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         vertices = frozenset(self.graph.vertices())
         object.__setattr__(self, "red_set", vertices - self.blue_set)
@@ -360,7 +364,7 @@ def write_to_csv(
     """Write the contents of colorings in the CSV format to csv_file.
 
     Keyword arguments:
-    csv_file -- optional: a path-like object (such as a string corresponding to a filename) 
+    csv_file -- optional: a path-like object (such as a string corresponding to a filename)
     If None, the output will be written to the standard output.
     csv_header -- if True, add a header with column names as the first row
     dialect -- specific CSV format, see Python's csv module documentation
