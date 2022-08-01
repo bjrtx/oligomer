@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 from itertools import chain, combinations
-from functools import cached_property
+from functools import cache, cached_property
 from collections import Counter, namedtuple
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -14,18 +14,17 @@ from dataclasses import dataclass
 import csv
 import sys
 
-# colours, including those matching UCSF Chimera's
+# colors, including those matching UCSF Chimera's
 BLACK = (0, 0, 0)
-RED = (1, 0, 0)
 CHIMERA_RED = (0.776, 0.208, 0.031)
-BLUE = (0, 0, 1)
-CHIMERA_BLUE = (0.051, 0.02, 0.933)
+MEDIUM_BLUE = sage.plot.colors.Color('#3232cd').rgb() # from Chimera
 
 # type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
 
 # directed version, with arcs oriented =||
+@cache
 def directed_cuboctahedral_graph() -> DiGraph:
     """Return an immutable copy of the cuboctahedral graph with a specific edge orientation."""
     out_neighbours = {
@@ -59,7 +58,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
     ]
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
-
+@cache
 def _vertices_to_dimers() -> dict[str]:
     """Return a dict mapping each vertex of the directed octahedral graph to the two letters
     designing its dimers (top then bottom).
@@ -79,7 +78,7 @@ def _vertices_to_dimers() -> dict[str]:
         6: "qa",
     }
 
-
+@cache
 def _vertices_to_facets() -> dict:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
@@ -95,24 +94,29 @@ def _vertices_to_facets() -> dict:
     )
     return {isomorphism[i]: f for i, f in facets.items()}
 
-
-def oligomer_structure():
+def oligomer_structure(blue_set: set=frozenset()):
     facets = _vertices_to_facets()
     g = directed_cuboctahedral_graph()
     struct = []
 
     for i, f in facets.items():
-        edges = [
+        edges_out = [
             f.as_polyhedron().intersection(facets[j].as_polyhedron())
             for j in g.neighbors_out(i)
         ]
-        print(len(edges))
-        midpoints = [e.center() for e in edges]
-        struct.append(Polyhedron(vertices=midpoints).plot(edge_color="black"))
+        midpoints = [e.center() for e in edges_out]
+        edges_in = [
+            f.as_polyhedron().intersection(facets[j].as_polyhedron())
+            for j in g.neighbors_in(i)
+        ]
+        for e in edges_in:
+            struct.append(Polyhedron(vertices= chain(e.vertices(), midpoints)).plot(
+                line={'color': BLACK, 'thickness': 8},
+                polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED))
 
     return sum(struct)
 
-
+@cache
 def more_complicated_graph() -> DiGraph:
     """Return a digraph that encodes dimer-dimer junctions (for the case of heterodimers)/"""
     out_neighbours = {
@@ -153,9 +157,9 @@ Adjacencies.__str__ = lambda self: (
 
 
 @dataclass(frozen=True)
-class Bicolouring:
-    """Store information about a blue-red colouring of a (directed) graph.
-    Two such colourings that are equivalent up to automorphism will test equal
+class Bicoloring:
+    """Store information about a blue-red coloring of a (directed) graph.
+    Two such colorings that are equivalent up to automorphism will test equal
     and will have the same hash.
     """
 
@@ -175,15 +179,15 @@ class Bicolouring:
         object.__setattr__(self, "red_set", vertices - self.blue_set)
 
     @cached_property
-    def _canon(self) -> Bicolouring:
-        """Return an object that characterises the colouring up to automorphisms. In practice, this is a
+    def canonical_form(self) -> Bicoloring:
+        """Return an object that characterises the coloring up to automorphisms. In practice, this is a
         relabelling of self.graph in which the vertices of self.blue_set come first. This relabelling is the
-        same for two colourings of the same graph with a colour-preserving isomorphism.
+        same for two colorings of the same graph with a color-preserving isomorphism.
         """
         canon, mapping = self.graph.canonical_label(
             partition=[self.blue_set, self.red_set], certificate=True
         )
-        return Bicolouring(canon, blue_set={mapping[v] for v in self.blue_set})
+        return Bicoloring(canon, blue_set={mapping[v] for v in self.blue_set})
 
     def nb_adjacencies(self, left: Iterable, right: Iterable) -> int:
         """Count the edges from left to right."""
@@ -191,17 +195,17 @@ class Bicolouring:
 
     @cached_property
     def adjacencies(self):
-        """Count the number of adjacencies, sorted by colours."""
+        """Count the number of adjacencies, sorted by colors."""
         return Adjacencies(
-            nb_adjacencies(self, self.blue_set, self.blue_set),
-            nb_adjacencies(self, self.red_set, self.red_set),
-            nb_adjacencies(self, self.blue_set, self.red_set),
-            nb_adjacencies(self, self.red_set, self.blue_set),
+            self.nb_adjacencies(self.blue_set, self.blue_set),
+            self.nb_adjacencies(self.red_set, self.red_set),
+            self.nb_adjacencies(self.blue_set, self.red_set),
+            self.nb_adjacencies(self.red_set, self.blue_set),
         )
 
     @cached_property
     def automorphism_group(self):
-        """Return the group of automorphisms that preserve vertex colours."""
+        """Return the group of automorphisms that preserve vertex colors."""
         return self.graph.automorphism_group(partition=[self.blue_set, self.red_set])
 
     def __str__(self):
@@ -210,34 +214,34 @@ class Bicolouring:
             f"symmetry number {self.automorphism_group.order()}"
         )
 
-    def __eq__(self, other: Bicolouring):
-        return self._canon.graph == other._canon.graph
+    def __eq__(self, other: Bicoloring):
+        return self.canonical_form.graph == other.canonical_form.graph
 
     def __hash__(self):
-        return hash(self._canon.graph)
+        return hash(self.canonical_form.graph)
 
-    def distance(self, other: Bicolouring) -> int:
-        """Count the vertices which have distinct colours in self and in other."""
+    def distance(self, other: Bicoloring) -> int:
+        """Count the vertices which have distinct colors in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
     def show(self) -> None:
-        """Displays a picture of the colouring."""
+        """Displays a picture of the coloring."""
         self.graph.plot(
             vertex_labels=None,
             vertex_color=CHIMERA_RED,
-            vertex_colors={CHIMERA_BLUE: self.blue_set},
+            vertex_colors={MEDIUM_BLUE: self.blue_set},
         ).show()
 
 
 @dataclass(frozen=True, eq=False)  # inherit inequality from the parent class
-class OctahedralBicolouring(Bicolouring):
-    """Provide methods specific to bicolourings of the directed octahedral graph."""
+class OctahedralBicoloring(Bicoloring):
+    """Provide methods specific to bicolorings of the directed octahedral graph."""
 
     def __init__(self, blue_set: frozenset[int] = frozenset()):
         super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
 
     def show(self, mode="net") -> None:
-        """Displays a picture of the colouring.
+        """Displays a picture of the coloring.
 
         Keyword arguments:
         mode -- one of "net", "graph", "polyhedron"
@@ -248,7 +252,7 @@ class OctahedralBicolouring(Bicolouring):
                 x, y = center
                 return sage.all.polygon(
                     [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
-                    color=(CHIMERA_BLUE if idx in self.blue_set else CHIMERA_RED),
+                    color=(MEDIUM_BLUE if idx in self.blue_set else CHIMERA_RED),
                     edgecolor=BLACK,
                 ) + sage.all.line(
                     [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
@@ -281,17 +285,18 @@ class OctahedralBicolouring(Bicolouring):
         elif mode == "polyhedron":
             facets = _vertices_to_facets()
             (
-                sum(
-                    facets[i]
-                    .as_polyhedron()
-                    .plot(polygon=CHIMERA_BLUE if i in self.blue_set else CHIMERA_RED)
-                    for i in range(12)
-                )
-                + oligomer_structure()
+                #sum(
+                #    facets[i]
+                #    .as_polyhedron()
+                #    .plot(polygon=MEDIUM_BLUE if i in self.blue_set else CHIMERA_RED)
+                #    for i in range(12)
+                #)
+                #+ 
+                oligomer_structure(self.blue_set)
             ).show(frame=False)
         else:
             raise ValueError(
-                "Unknown mode for displaying the colouring, mode must be one of net, graph and polyhedron."
+                "Unknown mode for displaying the coloring, mode must be one of net, graph and polyhedron."
             )
 
     def print_Chimera_commands(self, interline: str = "\n") -> None:
@@ -307,22 +312,22 @@ class OctahedralBicolouring(Bicolouring):
             print(interline)
 
 
-def unique_colourings(
+def unique_colorings(
     nb_blue_vertices=6,
     *,
     default_graph=True,
     graph: Optional[Graph] = None,
     isomorphism=True,
-) -> Iterable[Bicolouring]:
-    """List the colourings with a given number of blue vertices in the directed graph,
+) -> Iterable[Bicoloring]:
+    """List the colorings with a given number of blue vertices in the directed graph,
     either up to rotations (if isomorphism is True) or not. Return either a list or a set.
 
     Keyword arguments:
-    nb_blue_vertices -- number of vertices to be coloured in blue
+    nb_blue_vertices -- number of vertices to be colored in blue
     default_graph -- whether to use the directed octahedral graph
-    graph -- graph to be coloured if default_graph is False
-    isomorphism -- if True, the colourings are counted up to colour-preserving automorphisms
-    of the graph. If False, all colourings are listed.
+    graph -- graph to be colored if default_graph is False
+    isomorphism -- if True, the colorings are counted up to color-preserving automorphisms
+    of the graph. If False, all colorings are listed.
     """
 
     if default_graph:
@@ -332,21 +337,21 @@ def unique_colourings(
 
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
-        OctahedralBicolouring(blue_set)
+        OctahedralBicoloring(blue_set)
         if default_graph
-        else Bicolouring(graph, blue_set)
+        else Bicoloring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
 
 def write_to_csv(
-    colourings: Iterable[Bicolouring],
+    colorings: Iterable[Bicoloring],
     csv_file: Optional[str] = None,
     *,
     csv_header=True,
     dialect="excel",
 ):
-    """Write the contents of colourings to csv_file.
+    """Write the contents of colorings to csv_file.
 
     Keyword arguments:
     csv_file -- a path-like object (such as a string corresponding to a filename) or None.
@@ -369,16 +374,16 @@ def write_to_csv(
                     "symmetry number",
                 ]
             )
-        for colouring in colourings:
+        for coloring in colorings:
             writer.writerow(
                 [
-                    len(colouring.blue_set),
-                    len(colouring.red_set),
-                    colouring.adjacencies.BR,
-                    colouring.adjacencies.BB,
-                    colouring.adjacencies.RR,
-                    colouring.adjacencies.RB,
-                    colouring.automorphism_group.order(),
+                    len(coloring.blue_set),
+                    len(coloring.red_set),
+                    coloring.adjacencies.BR,
+                    coloring.adjacencies.BB,
+                    coloring.adjacencies.RR,
+                    coloring.adjacencies.RB,
+                    coloring.automorphism_group.order(),
                 ]
             )
 
@@ -395,52 +400,52 @@ def short_display(
     graph: Graph = directed_cuboctahedral_graph(),
     **csv_options,
 ):
-    """Display the unique colourings for a given number of blue vertices.
+    """Display the unique colorings for a given number of blue vertices.
 
     Keyword arguments:
     csv_ -- whether to output in the csv format
     csv_options -- options passed to write_to_csv if csv_ is True
     """
-    colourings = unique_colourings(
+    colorings = unique_colorings(
         nb_blue_vertices=nb_blue_vertices, graph=graph, **options
     )
 
     if csv_:
-        write_to_csv(colourings, **csv_options)
+        write_to_csv(colorings, **csv_options)
     else:
-        colourings = sorted(colourings, key=lambda c: c.adjacencies.BR, reverse=True)
-        lines = Counter(str(c) for c in colourings)
+        colorings = sorted(colorings, key=lambda c: c.adjacencies.BR, reverse=True)
+        lines = Counter(str(c) for c in colorings)
         print(
             f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices} orange vertices,"
-            f" the number of distinct arrangements is {len(colourings)}."
+            f" the number of distinct arrangements is {len(colorings)}."
         )
         for val, key in lines.items():
             print(val + f"\t({key} such arrangements)" if key > 1 else val)
 
 
-def overlap() -> dict[Bicolouring]:
+def overlap() -> dict[Bicoloring]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
-    vertices and c2 is obtained from c1 by changing a single vertex colour.
+    vertices and c2 is obtained from c1 by changing a single vertex color.
     """
-    colourings1 = (
-        c for c in unique_colourings(6, isomorphism=False) if c.adjacencies.BR == 8
+    colorings1 = (
+        c for c in unique_colorings(6, isomorphism=False) if c.adjacencies.BR == 8
     )
-    colourings2 = [
-        c for c in unique_colourings(7, isomorphism=False) if c.adjacencies.BR == 8
+    colorings2 = [
+        c for c in unique_colorings(7, isomorphism=False) if c.adjacencies.BR == 8
     ]
     return {
-        c1: {c2 for c2 in colourings2 if c1.distance(c2) == 1} for c1 in colourings1
+        c1: {c2 for c2 in colorings2 if c1.distance(c2) == 1} for c1 in colorings1
     }
 
 
-def _experimental_colouring(switch=True) -> Bicolouring:
-    """Return the colouring which the data seem to indicate, with the last vertex either
+def _experimental_coloring(switch=True) -> Bicoloring:
+    """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
-    return Bicolouring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [7]))
+    return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5, 7] + ([] if switch else [0]))
 
 
 if __name__ == "__main__":
-    for c in unique_colourings(3):
+    for c in unique_colorings(6):
         c.show(mode="net")
         c.show(mode="graph")
         c.show(mode="polyhedron")
