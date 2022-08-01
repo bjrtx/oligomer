@@ -132,7 +132,7 @@ def oligomer_structure(blue_set: set = frozenset()):
             ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
-                online = True
+                online=True,
             )
 
     return graphics_object
