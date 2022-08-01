@@ -17,7 +17,7 @@ import sys
 # colors, including those matching UCSF Chimera's
 BLACK = (0, 0, 0)
 CHIMERA_RED = (0.776, 0.208, 0.031)
-MEDIUM_BLUE = sage.plot.colors.Color('#3232cd').rgb() # from Chimera
+MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()  # from Chimera
 
 # type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
@@ -58,6 +58,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
     ]
     return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True)
 
+
 @cache
 def _vertices_to_dimers() -> dict[str]:
     """Return a dict mapping each vertex of the directed octahedral graph to the two letters
@@ -78,6 +79,7 @@ def _vertices_to_dimers() -> dict[str]:
         6: "qa",
     }
 
+
 @cache
 def _vertices_to_facets() -> dict:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
@@ -94,7 +96,8 @@ def _vertices_to_facets() -> dict:
     )
     return {isomorphism[i]: f for i, f in facets.items()}
 
-def oligomer_structure(blue_set: set=frozenset()):
+
+def oligomer_structure(blue_set: set = frozenset()):
     facets = _vertices_to_facets()
     g = directed_cuboctahedral_graph()
     struct = []
@@ -110,11 +113,15 @@ def oligomer_structure(blue_set: set=frozenset()):
             for j in g.neighbors_in(i)
         ]
         for e in edges_in:
-            struct.append(Polyhedron(vertices= chain(e.vertices(), midpoints)).plot(
-                line={'color': BLACK, 'thickness': 8},
-                polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED))
+            struct.append(
+                Polyhedron(vertices=chain(e.vertices(), midpoints)).plot(
+                    line={"color": BLACK, "thickness": 8},
+                    polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
+                )
+            )
 
     return sum(struct)
+
 
 @cache
 def more_complicated_graph() -> DiGraph:
@@ -285,13 +292,13 @@ class OctahedralBicoloring(Bicoloring):
         elif mode == "polyhedron":
             facets = _vertices_to_facets()
             (
-                #sum(
+                # sum(
                 #    facets[i]
                 #    .as_polyhedron()
                 #    .plot(polygon=MEDIUM_BLUE if i in self.blue_set else CHIMERA_RED)
                 #    for i in range(12)
-                #)
-                #+ 
+                # )
+                # +
                 oligomer_structure(self.blue_set)
             ).show(frame=False)
         else:
@@ -337,9 +344,7 @@ def unique_colorings(
 
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
-        OctahedralBicoloring(blue_set)
-        if default_graph
-        else Bicoloring(graph, blue_set)
+        OctahedralBicoloring(blue_set) if default_graph else Bicoloring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
@@ -433,15 +438,15 @@ def overlap() -> dict[Bicoloring]:
     colorings2 = [
         c for c in unique_colorings(7, isomorphism=False) if c.adjacencies.BR == 8
     ]
-    return {
-        c1: {c2 for c2 in colorings2 if c1.distance(c2) == 1} for c1 in colorings1
-    }
+    return {c1: {c2 for c2 in colorings2 if c1.distance(c2) == 1} for c1 in colorings1}
 
 
 def _experimental_coloring(switch=True) -> Bicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
-    return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5, 7] + ([] if switch else [0]))
+    return OctahedralBicoloring(
+        blue_set=[10, 2, 1, 11, 4, 5, 7] + ([] if switch else [0])
+    )
 
 
 if __name__ == "__main__":
