@@ -25,8 +25,9 @@ DiGraph = sage.graphs.digraph.DiGraph
 
 @cache
 def directed_cuboctahedral_graph() -> DiGraph:
-    """Return an immutable copy of the cuboctahedral graph with a specific edge orientation,
-    as described in the companion paper.
+    """Return the cuboctahedral graph with a specific edge orientation,
+    as described in the companion paper. The vertices of this directed graph are labeled from
+    0 to 11 inclusive. The graph cannot be modified.
     """
 
     out_neighbours = {
@@ -44,7 +45,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
         11: [3, 4],
     }
     # fixing vertex positions for drawing the graph
-    pos = [
+    vertex_positions = dict(enumerate([
         [-1, -1],
         [-1, 1],
         [1, 1],
@@ -57,16 +58,17 @@ def directed_cuboctahedral_graph() -> DiGraph:
         [0, 3],
         [3, 0],
         [0, -3],
-    ]
+    ]))
     return DiGraph(
-        out_neighbours, pos=dict(enumerate(pos)), immutable=True, format="dict_of_lists"
+        out_neighbours, pos=vertex_positions, immutable=True, format="dict_of_lists"
     )
 
 
 @cache
 def _vertices_to_dimers() -> dict[str]:
-    """Return a dict mapping each vertex of the directed octahedral graph to the two letters
-    designing its dimers (top then bottom) in the Chimera-generated net pictures.
+    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed 
+    octahedral graph to the two letters designing its dimers (first top then bottom) in 
+    Chimera-generated net pictures.
     """
     return {
         10: "ob",
@@ -105,26 +107,31 @@ def oligomer_structure(blue_set: set = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored according
     to blue_set.
     """
-    facets = {i: f.as_polyhedron() for i, f in _vertices_to_facets().items()}
-    g = directed_cuboctahedral_graph()
-    struct = 0
+    # the facets correspond to dimers
+    facets = {idx: facet.as_polyhedron() for idx, facet in _vertices_to_facets().items()}
+    graph = directed_cuboctahedral_graph()
+    graphics_object = 0
 
-    for i, f in facets.items():
-        edges_out = [f.intersection(facets[j]) for j in g.neighbors_out(i)]
+    for i, f in facets.items(): # for each dimer
+        # build the two 'outgoing' edges of the dimer, and their two midpoints
+        edges_out = (f.intersection(facets[j]) for j in graph.neighbors_out(i))
         midpoints = [e.center() for e in edges_out]
-        edges_in = [f.intersection(facets[j]) for j in g.neighbors_in(i)]
-        for e in edges_in:
-            struct += Polyhedron(vertices=chain(e.vertices(), midpoints)).plot(
+        # build the two 'ingoing' edges
+        edges_in = [f.intersection(facets[j]) for j in graph.neighbors_in(i)]
+        # add the two quadrilaterals corresponding to the dimer's chains
+        # to the Graphics object
+        for edge in edges_in:
+            graphics_object += Polyhedron(vertices=chain(edge.vertices(), midpoints)).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
             )
 
-    return struct
+    return graphics_object
 
 
 @cache
 def more_complicated_graph() -> DiGraph:
-    """Return a digraph that encodes dimer-dimer junctions (for the case of heterodimers)."""
+    """Return a digraph that encodes dimer-dimer junctions for the case of heterodimers."""
     out_neighbours = {
         0: [(1, 1), (11, 0)],
         1: [(2, 0), (8, 0)],
@@ -139,6 +146,7 @@ def more_complicated_graph() -> DiGraph:
         10: [(2, 1), (7, 1)],
         11: [(3, 1), (4, 1)],
     }
+    # here a monomer is a tuple (k, i) where k is a dimer and i is either 0 or 1
     out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
     out_neighbours = dict(chain(out_neighbours))
     return DiGraph(out_neighbours, immutable=True)
@@ -173,13 +181,14 @@ class Bicoloring:
     blue_set: frozenset = frozenset()
 
     def __post_init__(self):
-        object.__setattr__(
-            self,
-            "graph",
-            self.graph
-            if self.graph.is_immutable()
-            else self.graph.copy(immutable=True),
-        )
+        # using __setattr__ because the class if frozen (its values cannot be modified
+        # in the standard way)
+        if not self.graph.is_immutable(): 
+            object.__setattr__(
+                self,
+                "graph",
+                self.graph.copy(immutable=True)
+            )
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
         vertices = frozenset(self.graph.vertices())
         object.__setattr__(self, "red_set", vertices - self.blue_set)
@@ -190,6 +199,7 @@ class Bicoloring:
         relabelling of self.graph in which the vertices of self.blue_set come first. This relabelling is the
         same for two colorings of the same graph with a color-preserving isomorphism.
         """
+        # canon is self.graph relabeled and mapping is a dictionary describing the relabelling
         canon, mapping = self.graph.canonical_label(
             partition=[self.blue_set, self.red_set], certificate=True
         )
@@ -221,6 +231,8 @@ class Bicoloring:
         )
 
     def __eq__(self, other: Bicoloring):
+        # Two colorings are equal if the have the same canonical_form.graph,
+        # that is, __eq__ tests for isomorphism
         return self.canonical_form.graph == other.canonical_form.graph
 
     def __hash__(self):
@@ -253,7 +265,7 @@ class OctahedralBicoloring(Bicoloring):
         mode -- one of "net", "graph", "polyhedron"
         """
         if mode == "net":
-
+            # Build a diamond shape for each dimer
             def diamond(center, idx):
                 x, y = center
                 return sage.all.polygon(
@@ -289,23 +301,13 @@ class OctahedralBicoloring(Bicoloring):
         elif mode == "graph":
             super().show()
         elif mode == "polyhedron":
-            facets = _vertices_to_facets()
-            (
-                # sum(
-                #    facets[i]
-                #    .as_polyhedron()
-                #    .plot(polygon=MEDIUM_BLUE if i in self.blue_set else CHIMERA_RED)
-                #    for i in range(12)
-                # )
-                # +
-                oligomer_structure(self.blue_set)
-            ).show(frame=False)
+            oligomer_structure(self.blue_set).show(frame=False)
         else:
             raise ValueError(
-                "Unknown mode for displaying the coloring, mode must be one of net, graph and polyhedron."
+                "Unknown mode for displaying the coloring: mode must be one of net, graph and polyhedron."
             )
 
-    def print_Chimera_commands(self, interline: str = "\n") -> None:
+    def print_Chimera_commands(self, end: str = "\n") -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
@@ -314,12 +316,12 @@ class OctahedralBicoloring(Bicoloring):
             print(f"sel #1:.{':.'.join(blue_letters)}")
         if self.red_set:
             print(f"sel #2:.{':.'.join(red_letters)}")
-        if interline:
-            print(interline)
+        if end:
+            print(end)
 
 
 def unique_colorings(
-    nb_blue_vertices=6,
+    nb_blue_vertices: int,
     *,
     default_graph=True,
     graph: Graph | None = None,
@@ -355,13 +357,13 @@ def write_to_csv(
     csv_header=True,
     dialect="excel",
 ):
-    """Write the contents of colorings to csv_file.
+    """Write the contents of colorings in the CSV format to csv_file.
 
     Keyword arguments:
-    csv_file -- a path-like object (such as a string corresponding to a filename) or None.
+    csv_file -- optional: a path-like object (such as a string corresponding to a filename) 
     If None, the output will be written to the standard output.
     csv_header -- if True, add a header with column names as the first row
-    dialect -- csv format, see Python csv documentation
+    dialect -- specific CSV format, see Python's csv module documentation
     """
 
     def write(file):
@@ -417,27 +419,28 @@ def short_display(
     if csv_:
         write_to_csv(colorings, **csv_options)
     else:
+        # sort the colorings by decreasing number of blue->red adjacencies
         colorings = sorted(colorings, key=lambda c: c.adjacencies.BR, reverse=True)
-        lines = Counter(str(c) for c in colorings)
+        descriptions = Counter(str(c) for c in colorings)
         print(
             f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices} orange vertices,"
             f" the number of distinct arrangements is {len(colorings)}."
         )
-        for val, key in lines.items():
-            print(val + f"\t({key} such arrangements)" if key > 1 else val)
+        for desc, count in descriptions.items():
+            print(desc + f"\t({count} such arrangements)" if desc > 1 else count)
 
 
 def overlap() -> dict[Bicoloring]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex color.
     """
-    colorings1 = (
+    colorings6 = (
         c for c in unique_colorings(6, isomorphism=False) if c.adjacencies.BR == 8
     )
-    colorings2 = [
+    colorings7 = [
         c for c in unique_colorings(7, isomorphism=False) if c.adjacencies.BR == 8
     ]
-    return {c1: {c2 for c2 in colorings2 if c1.distance(c2) == 1} for c1 in colorings1}
+    return {c1: {c2 for c2 in colorings7 if c1.distance(c2) == 1} for c1 in colorings6}
 
 
 def _experimental_coloring(switch=True) -> Bicoloring:
