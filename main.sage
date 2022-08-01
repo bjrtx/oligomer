@@ -69,9 +69,9 @@ def directed_cuboctahedral_graph() -> DiGraph:
 
 
 @cache
-def _vertices_to_dimers() -> dict[str]:
-    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed
-    octahedral graph to the two letters designing its dimers (first top then bottom) in
+def _vertices_to_dimers() -> dict[int, str]:
+    """Return a dict mapping each vertex label (integers from 0 to 12) of the directed 
+    octahedral graph to the two letters designing its dimers (first top then bottom) in 
     Chimera-generated net pictures.
     """
     return {
@@ -434,7 +434,7 @@ def short_display(
             print(desc + f"\t({count} such arrangements)" if desc > 1 else count)
 
 
-def overlap() -> dict[Bicoloring]:
+def overlap() -> dict[Bicoloring, set(Bicoloring)]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex color.
     """
@@ -447,7 +447,7 @@ def overlap() -> dict[Bicoloring]:
     return {c1: {c2 for c2 in colorings7 if c1.distance(c2) == 1} for c1 in colorings6}
 
 
-def _experimental_coloring(switch=True) -> Bicoloring:
+def _experimental_coloring(switch=True) -> OctahedralBicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
