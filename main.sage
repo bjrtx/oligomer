@@ -443,11 +443,9 @@ def overlap() -> dict[Bicoloring]:
 def _experimental_coloring(switch=True) -> Bicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
-    return OctahedralBicoloring(
-        blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0])
-    )
+    return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
 
 
 if __name__ == "__main__":
-    a , b = _experimental_coloring(), _experimental_coloring(False)
+    a, b = _experimental_coloring(), _experimental_coloring(False)
     print(a, b)
