@@ -22,6 +22,7 @@ MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()  # from Chimera
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
 
+
 @cache
 def directed_cuboctahedral_graph() -> DiGraph:
     """Return an immutable copy of the cuboctahedral graph with a specific edge orientation,
@@ -57,7 +58,9 @@ def directed_cuboctahedral_graph() -> DiGraph:
         [3, 0],
         [0, -3],
     ]
-    return DiGraph(out_neighbours, pos=dict(enumerate(pos)), immutable=True, format='dict_of_lists')
+    return DiGraph(
+        out_neighbours, pos=dict(enumerate(pos)), immutable=True, format="dict_of_lists"
+    )
 
 
 @cache
@@ -102,23 +105,17 @@ def oligomer_structure(blue_set: set = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored according
     to blue_set.
     """
-    facets = {i :f.as_polyhedron() for i, f in _vertices_to_facets().items()}
+    facets = {i: f.as_polyhedron() for i, f in _vertices_to_facets().items()}
     g = directed_cuboctahedral_graph()
     struct = 0
 
     for i, f in facets.items():
-        edges_out = [
-            f.intersection(facets[j])
-            for j in g.neighbors_out(i)
-        ]
+        edges_out = [f.intersection(facets[j]) for j in g.neighbors_out(i)]
         midpoints = [e.center() for e in edges_out]
-        edges_in = [
-            f.intersection(facets[j])
-            for j in g.neighbors_in(i)
-        ]
+        edges_in = [f.intersection(facets[j]) for j in g.neighbors_in(i)]
         for e in edges_in:
             struct += Polyhedron(vertices=chain(e.vertices(), midpoints)).plot(
-                line={"color": 'black', "thickness": 8},
+                line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
             )
 
@@ -262,12 +259,12 @@ class OctahedralBicoloring(Bicoloring):
                 return sage.all.polygon(
                     [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
                     color=(MEDIUM_BLUE if idx in self.blue_set else CHIMERA_RED),
-                    edgecolor='black',
+                    edgecolor="black",
                 ) + sage.all.line(
                     [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
                     if y == 1
                     else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
-                    rgbcolor='black',
+                    rgbcolor="black",
                 )
 
             centers = {
@@ -308,7 +305,7 @@ class OctahedralBicoloring(Bicoloring):
                 "Unknown mode for displaying the coloring, mode must be one of net, graph and polyhedron."
             )
 
-    def print_Chimera_commands(self, interline: str="\n") -> None:
+    def print_Chimera_commands(self, interline: str = "\n") -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
