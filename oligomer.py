@@ -8,7 +8,7 @@ from __future__ import annotations
 from itertools import chain, combinations
 from functools import cache, cached_property
 from collections import Counter, namedtuple
-from collections.abc import Iterable
+from collections.abc import Iterable, Collection
 from dataclasses import dataclass, field
 
 import csv
@@ -22,7 +22,7 @@ from sage.geometry.polyhedron.constructor import Polyhedron
 
 # colors matching UCSF Chimera's
 CHIMERA_RED = (0.776, 0.208, 0.031)
-MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()  # from Chimera
+MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
 # type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
@@ -97,7 +97,7 @@ def _vertices_to_dimers() -> dict[int, str]:
 
 
 @cache
-def _vertices_to_facets() -> dict:
+def _vertices_to_facets() -> dict[int, Polyhedron]:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
     facets = {
@@ -116,7 +116,7 @@ def _vertices_to_facets() -> dict:
     return {isomorphism[i]: f for i, f in facets.items()}
 
 
-def oligomer_structure(blue_set: set = frozenset()):
+def oligomer_structure(blue_set: Iterable = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored according
     to blue_set.
     """
@@ -141,7 +141,7 @@ def oligomer_structure(blue_set: set = frozenset()):
             ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
-                online=True,
+                online=True
             )
 
     return graphics_object
@@ -196,8 +196,8 @@ class Bicoloring:
     """
 
     graph: Graph
-    blue_set: frozenset = frozenset()
-    red_set: frozenset = field(init=False)
+    blue_set: Iterable = frozenset()
+    red_set: Iterable = field(init=False)
 
     def __post_init__(self):
         # using __setattr__ because the class if frozen (its values cannot be modified
@@ -246,7 +246,7 @@ class Bicoloring:
             f"symmetry number {self.automorphism_group.order()}"
         )
 
-    def __eq__(self, other: Bicoloring):
+    def __eq__(self, other: Bicoloring) -> bool:
         # Two colorings are equal if the have the same canonical_form.graph,
         # that is, __eq__ tests for isomorphism
         return self.canonical_form.graph == other.canonical_form.graph
@@ -271,7 +271,7 @@ class Bicoloring:
 class OctahedralBicoloring(Bicoloring):
     """Provide methods specific to bicolorings of the directed octahedral graph."""
 
-    def __init__(self, blue_set: frozenset[int] = frozenset()):
+    def __init__(self, blue_set: Iterable[int] = frozenset()):
         super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
 
     def show(self, mode="net") -> None:
@@ -324,7 +324,7 @@ class OctahedralBicoloring(Bicoloring):
                 "graph and polyhedron."
             )
 
-    def print_Chimera_commands(self, end: str = "\n") -> None:
+    def print_Chimera_commands(self, end: str="\n") -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
@@ -343,7 +343,7 @@ def unique_colorings(
     default_graph=True,
     graph: Graph | None = None,
     isomorphism=True,
-) -> Iterable[Bicoloring]:
+) -> Collection[Bicoloring]:
     """List the colorings with a given number of blue vertices in the directed graph,
     either up to rotations (if isomorphism is True) or not. Return either a list or a set.
 
