@@ -141,7 +141,7 @@ def oligomer_structure(blue_set: Iterable = frozenset()):
             ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
-                online=True
+                online=True,
             )
 
     return graphics_object
@@ -324,7 +324,7 @@ class OctahedralBicoloring(Bicoloring):
                 "graph and polyhedron."
             )
 
-    def print_Chimera_commands(self, end: str="\n") -> None:
+    def print_Chimera_commands(self, end: str = "\n") -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
