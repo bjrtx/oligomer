@@ -9,7 +9,7 @@ from itertools import chain, combinations
 from functools import cache, cached_property
 from collections import Counter, namedtuple
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import csv
 import sys
