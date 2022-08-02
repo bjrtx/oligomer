@@ -2,11 +2,14 @@
 
 ## SageMath language
 
-The code in this project is contained in main.sage and written in the SageMath language. This language is documented at https://www.sagemath.org/. It is very similar to, and based on, Python.
+The code in this project is contained in `oligomer.py` and written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
 
 ## Executing code
 
-For the time being, the recommended method for using this code is to copy-paste the contents of main.sage into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
+1. For the time being, the recommended method for using this code is to copy-paste the contents of main.sage into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
+2. Alternatively, one can install SageMath as a standalone software then write Python code in a file, say `main.py`, containing the line `import oligomer`, then run `sage main`.
+3. Finally one could get SageMath as a Python package via some package manager and try to `import oligomer` in standard Python code. This is not tested yet.
+
 
 ## Example commands
 
