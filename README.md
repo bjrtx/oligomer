@@ -13,7 +13,7 @@ For the time being, the recommended method for using this code is to copy-paste 
 For each of the unique colourings with 6 blue dimers, up to rotations, display it as a net, as a graph, as a polyhedron, then print the corresponding Chimera code.
 
 ```python
-for c in unique_colourings(6):
+for c in unique_colorings(6):
     c.show('net')
     c.show('graph')
     c.show('polyhedron')
@@ -23,7 +23,7 @@ for c in unique_colourings(6):
 For each of the unique colourings with 7 blue dimers, up to rotations, display information about its junctions, but only if it has 8 blue -> red junctions.
 
 ```python
-for c in unique_colourings(7):
+for c in unique_colorings(7):
     if c.adjacencies.BR == 8:
         print(c)
 ```
