@@ -100,7 +100,10 @@ def _vertices_to_dimers() -> dict[int, str]:
 def _vertices_to_facets() -> dict:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
-    facets = {i: f.polyhedron() for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
+    facets = {
+        i: f.polyhedron()
+        for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())
+    }
     edges = [
         (i, j)
         for (i, f), (j, g) in combinations(facets.items(), 2)
@@ -207,9 +210,9 @@ class Bicoloring:
 
     @cached_property
     def canonical_form(self) -> Bicoloring:
-        """Return an object that characterises the coloring up to automorphisms. 
-        In practice, this is a relabelling of self.graph in which the vertices of 
-        self.blue_set come first. This relabelling is the same for two colorings of 
+        """Return an object that characterises the coloring up to automorphisms.
+        In practice, this is a relabelling of self.graph in which the vertices of
+        self.blue_set come first. This relabelling is the same for two colorings of
         the same graph with a color-preserving isomorphism.
         """
         # canon is self.graph relabeled and mapping is a dictionary describing the relabelling
@@ -461,4 +464,3 @@ def _experimental_coloring(switch=True) -> OctahedralBicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
-    
