@@ -10,7 +10,7 @@ jobs:
       - name: Format files
         uses: psf/black@stable
         with:
-          options: '--include \.(sage|(pyi?)$'
+          options: '--include \.(sage|pyi?)$'
       - name: Commit changes
         run: |
           git config user.name github-actions
