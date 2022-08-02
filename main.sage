@@ -14,6 +14,12 @@ from dataclasses import dataclass
 import csv
 import sys
 
+# explicit imports to allow use as Python code
+import sage
+from sage.geometry.polyhedron.library import polytopes
+from sage.geometry.polyhedron.constructor import Polyhedron
+
+
 # colors matching UCSF Chimera's
 CHIMERA_RED = (0.776, 0.208, 0.031)
 MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()  # from Chimera
@@ -94,11 +100,11 @@ def _vertices_to_dimers() -> dict[int, str]:
 def _vertices_to_facets() -> dict:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
-    facets = {i: f for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
+    facets = {i: f.polyhedron() for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())}
     edges = [
         (i, j)
         for (i, f), (j, g) in combinations(facets.items(), 2)
-        if f.as_polyhedron().intersection(g.as_polyhedron()).dimension() == 1
+        if f.intersection(g).dimension() == 1
     ]
     assert len(edges) == 24 and len(facets) == 12
     _, isomorphism = sage.graphs.graph.Graph(data=edges).is_isomorphic(
@@ -118,12 +124,12 @@ def oligomer_structure(blue_set: set = frozenset()):
     graph = directed_cuboctahedral_graph()
     graphics_object = 0
 
-    for i, f in facets.items():  # for each dimer
+    for i, facet in facets.items():  # for each dimer
         # build the two 'outgoing' edges of the dimer, and their two midpoints
-        edges_out = (f.intersection(facets[j]) for j in graph.neighbors_out(i))
+        edges_out = (facet.intersection(facets[j]) for j in graph.neighbors_out(i))
         midpoints = [e.center() for e in edges_out]
         # build the two 'ingoing' edges
-        edges_in = [f.intersection(facets[j]) for j in graph.neighbors_in(i)]
+        edges_in = [facet.intersection(facets[j]) for j in graph.neighbors_in(i)]
         # add the two quadrilaterals corresponding to the dimer's chains
         # to the Graphics object
         for edge in edges_in:
@@ -188,6 +194,7 @@ class Bicoloring:
 
     graph: Graph
     blue_set: frozenset = frozenset()
+    red_set: frozenset = field(init=False)
 
     def __post_init__(self):
         # using __setattr__ because the class if frozen (its values cannot be modified
@@ -200,9 +207,10 @@ class Bicoloring:
 
     @cached_property
     def canonical_form(self) -> Bicoloring:
-        """Return an object that characterises the coloring up to automorphisms. In practice, this is a
-        relabelling of self.graph in which the vertices of self.blue_set come first. This relabelling is the
-        same for two colorings of the same graph with a color-preserving isomorphism.
+        """Return an object that characterises the coloring up to automorphisms. 
+        In practice, this is a relabelling of self.graph in which the vertices of 
+        self.blue_set come first. This relabelling is the same for two colorings of 
+        the same graph with a color-preserving isomorphism.
         """
         # canon is self.graph relabeled and mapping is a dictionary describing the relabelling
         canon, mapping = self.graph.canonical_label(
@@ -309,7 +317,8 @@ class OctahedralBicoloring(Bicoloring):
             oligomer_structure(self.blue_set).show(frame=False)
         else:
             raise ValueError(
-                "Unknown mode for displaying the coloring: mode must be one of net, graph and polyhedron."
+                "Unknown mode for displaying the coloring: mode must be one of net,"
+                "graph and polyhedron."
             )
 
     def print_Chimera_commands(self, end: str = "\n") -> None:
@@ -418,7 +427,7 @@ def short_display(
     csv_options -- options passed to write_to_csv if csv_ is True
     """
     colorings = unique_colorings(
-        nb_blue_vertices=nb_blue_vertices, graph=graph, **options
+        nb_blue_vertices=nb_blue_vertices, graph=graph, **csv_options
     )
 
     if csv_:
@@ -428,8 +437,8 @@ def short_display(
         colorings = sorted(colorings, key=lambda c: c.adjacencies.BR, reverse=True)
         descriptions = Counter(str(c) for c in colorings)
         print(
-            f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices} orange vertices,"
-            f" the number of distinct arrangements is {len(colorings)}."
+            f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices}"
+            f" orange vertices, the number of distinct arrangements is {len(colorings)}."
         )
         for desc, count in descriptions.items():
             print(desc + f"\t({count} such arrangements)" if desc > 1 else count)
@@ -452,8 +461,4 @@ def _experimental_coloring(switch=True) -> OctahedralBicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
-
-
-if __name__ == "__main__":
-    a, b = _experimental_coloring(), _experimental_coloring(False)
-    print(a, b)
+    
