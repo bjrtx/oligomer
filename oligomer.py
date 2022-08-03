@@ -101,7 +101,7 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
     """Return a dict mapping each vertex of the directed octahedral graph to a facet of
     the rhombic dodecahedron."""
     facets = {
-        i: f.polyhedron()
+        i: f.as_polyhedron()
         for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())
     }
     edges = [
