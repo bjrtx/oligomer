@@ -7,7 +7,11 @@ The code in this project is contained in `oligomer.py` and written in Python wit
 ## Executing code
 
 1. For the time being, the recommended method for using this code is to copy-paste the contents of main.sage into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
-2. Alternatively, one can install SageMath as a standalone software then write Python code in a file, say `main.py`, containing the line `import oligomer`, then run `sage main`.
+2. Alternative method: 
+    1. Install SageMath as a standalone software.
+    2. Write SageMath code (in particular, almost any Python code is valid SageMath code) in a file, say `main.sage`, containing the line `import oligomer`.
+    3. Place `oligomer.py` in the same directory.
+    4. Run `sage main.sage`.
 3. Finally one could get SageMath as a Python package via some package manager and try to `import oligomer` in standard Python code. This is not tested yet.
 
 
