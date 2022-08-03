@@ -121,9 +121,7 @@ def oligomer_structure(blue_set: Iterable = frozenset()):
     to blue_set.
     """
     # the facets correspond to dimers
-    facets = {
-        idx: facet.as_polyhedron() for idx, facet in _vertices_to_facets().items()
-    }
+    facets = _vertices_to_facets()
     graph = directed_cuboctahedral_graph()
     graphics_object = 0
 
