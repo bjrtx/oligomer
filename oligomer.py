@@ -16,13 +16,14 @@ import sys
 
 # explicit imports to allow use as Python code
 import sage
+import sage.all
 from sage.geometry.polyhedron.library import polytopes
 from sage.geometry.polyhedron.constructor import Polyhedron
 
 
 # colors matching UCSF Chimera's
-CHIMERA_RED = (0.776, 0.208, 0.031)
-MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
+_CHIMERA_RED = (0.776, 0.208, 0.031)
+_MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
 # type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
@@ -32,7 +33,7 @@ DiGraph = sage.graphs.digraph.DiGraph
 @cache
 def directed_cuboctahedral_graph() -> DiGraph:
     """Return the cuboctahedral graph with a specific edge orientation,
-    as described in the companion paper. The vertices of this directed graph are labeled from
+    as described in the companion paper. Its vertices are labeled from
     0 to 11 inclusive. The graph cannot be modified.
     """
 
@@ -138,7 +139,7 @@ def oligomer_structure(blue_set: Iterable = frozenset()):
                 vertices=chain(edge.vertices(), midpoints)
             ).plot(
                 line={"color": "black", "thickness": 8},
-                polygon=MEDIUM_BLUE if i in blue_set else CHIMERA_RED,
+                polygon=_MEDIUM_BLUE if i in blue_set else _CHIMERA_RED,
                 online=True,
             )
 
@@ -245,8 +246,7 @@ class Bicoloring:
         )
 
     def __eq__(self, other: Bicoloring) -> bool:
-        # Two colorings are equal if the have the same canonical_form.graph,
-        # that is, __eq__ tests for isomorphism
+        """Tests for isomorphism with respect to the color classes."""
         return self.canonical_form.graph == other.canonical_form.graph
 
     def __hash__(self):
@@ -260,8 +260,8 @@ class Bicoloring:
         """Displays a picture of the coloring."""
         self.graph.plot(
             vertex_labels=None,
-            vertex_color=CHIMERA_RED,
-            vertex_colors={MEDIUM_BLUE: self.blue_set},
+            vertex_color=_CHIMERA_RED,
+            vertex_colors={_MEDIUM_BLUE: self.blue_set},
         ).show()
 
 
@@ -284,7 +284,7 @@ class OctahedralBicoloring(Bicoloring):
                 x, y = center
                 return sage.all.polygon(
                     [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
-                    color=(MEDIUM_BLUE if idx in self.blue_set else CHIMERA_RED),
+                    color=(_MEDIUM_BLUE if idx in self.blue_set else _CHIMERA_RED),
                     edgecolor="black",
                 ) + sage.all.line(
                     [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
