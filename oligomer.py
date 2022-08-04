@@ -1,8 +1,9 @@
 #!/usr/bin/env sage
-
-# This script must be run with SageMath
-# See installation instructions at https://www.sagemath.org/
-# or use an online interpreter such as https://sagecell.sagemath.org/
+"""The behaviour of this code is described in [companion paper].
+It requires the SageMath library and can be run with SageMath
+See installation instructions at https://www.sagemath.org/
+or use an online interpreter such as https://sagecell.sagemath.org/
+"""
 
 from __future__ import annotations
 from itertools import chain, combinations
@@ -111,10 +112,10 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
         if f.intersection(g).dimension() == 1
     ]
     assert len(edges) == 24 and len(facets) == 12
-    _, isomorphism = sage.graphs.graph.Graph(data=edges).is_isomorphic(
+    _, isomorphism_map = sage.graphs.graph.Graph(data=edges).is_isomorphic(
         directed_cuboctahedral_graph().to_undirected(), certificate=True
     )
-    return {isomorphism[i]: f for i, f in facets.items()}
+    return {isomorphism_map[i]: f for i, f in facets.items()}
 
 
 def oligomer_structure(blue_set: Iterable = frozenset()):
