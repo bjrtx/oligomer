@@ -32,8 +32,8 @@ DiGraph = sage.graphs.digraph.DiGraph
 
 
 @cache
-def directed_cuboctahedral_graph() -> DiGraph:
-    """Return the cuboctahedral graph with a specific edge orientation,
+def bfr_graph() -> DiGraph:
+    """Return the BFR graph with a specific edge orientation,
     as described in the companion paper. Its vertices are labeled from
     0 to 11 inclusive. The graph cannot be modified.
     """
@@ -79,7 +79,7 @@ def directed_cuboctahedral_graph() -> DiGraph:
 @cache
 def _vertices_to_dimers() -> dict[int, str]:
     """Return a dict mapping each vertex label (integers from 0 to 12) of the directed
-    octahedral graph to the two letters designing its dimers (first top then bottom) in
+    BFR graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
     return {
@@ -100,7 +100,7 @@ def _vertices_to_dimers() -> dict[int, str]:
 
 @cache
 def _vertices_to_facets() -> dict[int, Polyhedron]:
-    """Return a dict mapping each vertex of the directed octahedral graph to a facet of
+    """Return a dict mapping each vertex of the directed BFR graph to a facet of
     the rhombic dodecahedron."""
     facets = {
         i: f.as_polyhedron()
@@ -113,7 +113,7 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
     ]
     assert len(edges) == 24 and len(facets) == 12
     _, isomorphism_map = sage.graphs.graph.Graph(data=edges).is_isomorphic(
-        directed_cuboctahedral_graph().to_undirected(), certificate=True
+        bfr_graph().to_undirected(), certificate=True
     )
     return {isomorphism_map[i]: f for i, f in facets.items()}
 
@@ -124,7 +124,7 @@ def oligomer_structure(blue_set: Iterable = frozenset()):
     """
     # the facets correspond to dimers
     facets = _vertices_to_facets()
-    graph = directed_cuboctahedral_graph()
+    graph = bfr_graph()
     graphics_object = 0
 
     for i, facet in facets.items():  # for each dimer
@@ -172,7 +172,7 @@ def more_complicated_graph() -> DiGraph:
 
 # Several assertions concerning this directed graph
 if __name__ == "__main__":
-    dg = directed_cuboctahedral_graph()
+    dg = bfr_graph()
     assert dg.is_isomorphic(
         sage.all.AlternatingGroup(4).cayley_graph(), edge_labels=False
     )
@@ -267,11 +267,11 @@ class Bicoloring:
 
 
 @dataclass(frozen=True, eq=False)  # inherit inequality from the parent class
-class OctahedralBicoloring(Bicoloring):
-    """Provide methods specific to bicolorings of the directed octahedral graph."""
+class BfrBicoloring(Bicoloring):
+    """Provide methods specific to bicolorings of the directed BFR graph."""
 
     def __init__(self, blue_set: Iterable[int] = frozenset()):
-        super().__init__(graph=directed_cuboctahedral_graph(), blue_set=blue_set)
+        super().__init__(graph=bfr_graph(), blue_set=blue_set)
 
     def show(self, mode="net") -> None:
         """Displays a picture of the coloring.
@@ -348,20 +348,20 @@ def unique_colorings(
 
     Keyword arguments:
     nb_blue_vertices -- number of vertices to be colored in blue
-    default_graph -- whether to use the directed octahedral graph
+    default_graph -- whether to use the directed BFR graph
     graph -- graph to be colored if default_graph is False
     isomorphism -- if True, the colorings are counted up to color-preserving automorphisms
     of the graph. If False, all colorings are listed.
     """
 
     if default_graph:
-        graph = directed_cuboctahedral_graph()
+        graph = bfr_graph()
     elif graph is None:
         raise ValueError("Set default_graph to True or provide graph.")
 
     assert 0 <= nb_blue_vertices <= graph.order()
     return (set if isomorphism else list)(
-        OctahedralBicoloring(blue_set) if default_graph else Bicoloring(graph, blue_set)
+        BfrBicoloring(blue_set) if default_graph else Bicoloring(graph, blue_set)
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
@@ -419,7 +419,7 @@ def write_to_csv(
 def short_display(
     nb_blue_vertices: int,
     csv_=False,
-    graph: Graph = directed_cuboctahedral_graph(),
+    graph: Graph = bfr_graph(),
     **csv_options,
 ):
     """Display the unique colorings for a given number of blue vertices.
@@ -459,7 +459,7 @@ def overlap() -> dict[Bicoloring, set(Bicoloring)]:
     return {c1: {c2 for c2 in colorings7 if c1.distance(c2) == 1} for c1 in colorings6}
 
 
-def _experimental_coloring(switch=True) -> OctahedralBicoloring:
+def _experimental_coloring(switch=True) -> BfrBicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
-    return OctahedralBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
+    return BfrBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
