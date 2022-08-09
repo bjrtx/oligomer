@@ -102,7 +102,7 @@ def _vertices_to_dimers() -> dict[int, str]:
 def _vertices_to_facets() -> dict[int, Polyhedron]:
     """Return a dict mapping each vertex of the directed Bfr graph to a facet of
     the rhombic dodecahedron."""
-    facets = [f.as_polyhedron() for f in polytopes.rhombic_dodecahedron().facets())]
+    facets = [f.as_polyhedron() for f in polytopes.rhombic_dodecahedron().facets()]
     edges = [
         (i, j)
         for (i, f), (j, g) in combinations(enumerate(facets), 2)
@@ -135,11 +135,11 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
         for edge in edges_in:
             graphics_object += Polyhedron(
                 vertices=chain(edge.vertices(), midpoints)
-            ).plot(
+                ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=_MEDIUM_BLUE if i in blue_set else _CHIMERA_RED,
                 online=True,
-            )
+                )
 
     return graphics_object
 
