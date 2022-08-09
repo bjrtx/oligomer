@@ -33,7 +33,7 @@ DiGraph = sage.graphs.digraph.DiGraph
 
 @cache
 def bfr_graph() -> DiGraph:
-    """Return the BFR graph with a specific edge orientation,
+    """Return the Bfr graph with a specific edge orientation,
     as described in the companion paper. Its vertices are labeled from
     0 to 11 inclusive. The graph cannot be modified.
     """
@@ -79,7 +79,7 @@ def bfr_graph() -> DiGraph:
 @cache
 def _vertices_to_dimers() -> dict[int, str]:
     """Return a dict mapping each vertex label (integers from 0 to 12) of the directed
-    BFR graph to the two letters designing its dimers (first top then bottom) in
+    Bfr graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
     return {
@@ -100,25 +100,22 @@ def _vertices_to_dimers() -> dict[int, str]:
 
 @cache
 def _vertices_to_facets() -> dict[int, Polyhedron]:
-    """Return a dict mapping each vertex of the directed BFR graph to a facet of
+    """Return a dict mapping each vertex of the directed Bfr graph to a facet of
     the rhombic dodecahedron."""
-    facets = {
-        i: f.as_polyhedron()
-        for i, f in enumerate(polytopes.rhombic_dodecahedron().facets())
-    }
+    facets = [f.as_polyhedron() for f in polytopes.rhombic_dodecahedron().facets())]
     edges = [
         (i, j)
-        for (i, f), (j, g) in combinations(facets.items(), 2)
+        for (i, f), (j, g) in combinations(enumerate(facets), 2)
         if f.intersection(g).dimension() == 1
     ]
     assert len(edges) == 24 and len(facets) == 12
     _, isomorphism_map = sage.graphs.graph.Graph(data=edges).is_isomorphic(
         bfr_graph().to_undirected(), certificate=True
     )
-    return {isomorphism_map[i]: f for i, f in facets.items()}
+    return {isomorphism_map[i]: f for i, f in enumerate(facets)}
 
 
-def oligomer_structure(blue_set: Iterable = frozenset()):
+def oligomer_structure(blue_set: Iterable[int] = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored according
     to blue_set.
     """
@@ -268,7 +265,7 @@ class Bicoloring:
 
 @dataclass(frozen=True, eq=False)  # inherit inequality from the parent class
 class BfrBicoloring(Bicoloring):
-    """Provide methods specific to bicolorings of the directed BFR graph."""
+    """Provide methods specific to bicolorings of the directed Bfr graph."""
 
     def __init__(self, blue_set: Iterable[int] = frozenset()):
         super().__init__(graph=bfr_graph(), blue_set=blue_set)
@@ -348,7 +345,7 @@ def unique_colorings(
 
     Keyword arguments:
     nb_blue_vertices -- number of vertices to be colored in blue
-    default_graph -- whether to use the directed BFR graph
+    default_graph -- whether to use the directed Bfr graph
     graph -- graph to be colored if default_graph is False
     isomorphism -- if True, the colorings are counted up to color-preserving automorphisms
     of the graph. If False, all colorings are listed.
@@ -446,7 +443,7 @@ def short_display(
             print(desc + f"\t({count} such arrangements)" if desc > 1 else count)
 
 
-def overlap() -> dict[Bicoloring, set(Bicoloring)]:
+def overlap() -> dict[Bicoloring, set[Bicoloring]]:
     """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex color.
     """
