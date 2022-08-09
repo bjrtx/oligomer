@@ -135,11 +135,11 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
         for edge in edges_in:
             graphics_object += Polyhedron(
                 vertices=chain(edge.vertices(), midpoints)
-                ).plot(
+            ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=_MEDIUM_BLUE if i in blue_set else _CHIMERA_RED,
                 online=True,
-                )
+            )
 
     return graphics_object
 
