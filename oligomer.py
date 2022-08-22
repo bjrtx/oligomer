@@ -362,6 +362,7 @@ def unique_colorings(
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
+
 def write_to_csv(
     colorings: Iterable[Bicoloring],
     csv_file: str | None = None,
