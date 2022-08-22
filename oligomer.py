@@ -320,17 +320,17 @@ class BfrBicoloring(Bicoloring):
                 "graph and polyhedron."
             )
 
-    def print_Chimera_commands(self, end: str = "\n") -> None:
+    def print_Chimera_commands(self, end: str = "\n", file=sys.stdout) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         alphabet = _vertices_to_dimers()
         blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
         red_letters = chain.from_iterable(alphabet[v].upper() for v in self.red_set)
         if self.blue_set:
-            print(f"sel #1:.{':.'.join(blue_letters)}")
+            print(f"sel #1:.{':.'.join(blue_letters)}", file=file)
         if self.red_set:
-            print(f"sel #2:.{':.'.join(red_letters)}")
+            print(f"sel #2:.{':.'.join(red_letters)}", file=file)
         if end:
-            print(end)
+            print(end, file=file)
 
 
 def unique_colorings(
@@ -362,6 +362,13 @@ def unique_colorings(
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
+def print_Chimera_commands_to_file(
+    colorings: Iterable[Bicoloring],
+    filename: str
+):
+    with open(filename, "a") as file:
+        for c in colorings:
+            c.print_Chimera_commands(file=file)
 
 def write_to_csv(
     colorings: Iterable[Bicoloring],
