@@ -38,6 +38,8 @@ for c in unique_colorings(7):
 Print the Chimera commands that describe all unique colourings with 6 blue dimers, up to rotations, in a file `tmp.txt`.
 
 ```python
-col = unique_colorings(6)
-print_Chimera_commands_to_file(col, 'tmp.txt')
+with open('tmp.txt', 'a') as file:
+    print('Arrangements with 6 blue dimers up to rotation:\n', file=file)
+    for c in unique_colorings(6):
+        c.print_Chimera_commands(file=file)
 ````
