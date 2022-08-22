@@ -34,3 +34,10 @@ for c in unique_colorings(7):
     if c.adjacencies.BR == 8:
         print(c)
 ```
+
+Print the Chimera commands that describe all unique colourings with 6 blue dimers, up to rotations, in a file `temp.txt`.
+
+```python
+col = unique_colorings(6)
+print_Chimera_commands_to_file(col, 'tmp.txt')
+````
