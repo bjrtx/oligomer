@@ -362,13 +362,6 @@ def unique_colorings(
         for blue_set in combinations(graph.vertices(), nb_blue_vertices)
     )
 
-
-def print_Chimera_commands_to_file(colorings: Iterable[Bicoloring], filename: str):
-    with open(filename, "a") as file:
-        for c in colorings:
-            c.print_Chimera_commands(file=file)
-
-
 def write_to_csv(
     colorings: Iterable[Bicoloring],
     csv_file: str | None = None,
