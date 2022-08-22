@@ -35,7 +35,7 @@ for c in unique_colorings(7):
         print(c)
 ```
 
-Print the Chimera commands that describe all unique colourings with 6 blue dimers, up to rotations, in a file `temp.txt`.
+Print the Chimera commands that describe all unique colourings with 6 blue dimers, up to rotations, in a file `tmp.txt`.
 
 ```python
 col = unique_colorings(6)
