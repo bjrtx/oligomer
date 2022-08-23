@@ -43,3 +43,21 @@ with open('tmp.txt', 'a') as file:
     for c in unique_colorings(6):
         c.print_Chimera_commands(file=file)
 ````
+
+Print each unique 6:6 colouring with its rotation class. 
+
+````python
+from collections import defaultdict
+dictionary = defaultdict(list)
+for c in unique_colorings(6, isomorphism=False):
+    dictionary[c].append(c)
+# dictionary has 48 entries, each being a list of isomorphic colourings
+for c, l in dictionary.items():
+    print('Canonical representation:')
+    c.show('net')
+    c.print_Chimera_commands()
+    print('Alternate representations:')
+    for alternate_colouring in l:
+        alternate_colouring.show('net')
+        alternate_colouring.print_Chimera_commands()
+````
