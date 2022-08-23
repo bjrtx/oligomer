@@ -16,6 +16,6 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          if git commit -m "Auto-formatted code using black"; then
+          if git commit -m "Auto-format code using black"; then
             git push;
           fi
