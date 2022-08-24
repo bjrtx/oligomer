@@ -15,18 +15,18 @@ from dataclasses import dataclass, field
 import csv
 import sys
 
-# explicit imports to allow use as Python code
+# Import explicitly to allow use as Python code
 import sage
 import sage.all
 from sage.geometry.polyhedron.library import polytopes
 from sage.geometry.polyhedron.constructor import Polyhedron
 
 
-# colors matching UCSF Chimera's
+# Define colors matching UCSF Chimera's
 _CHIMERA_RED = (0.776, 0.208, 0.031)
 _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
-# type aliases
+# Define ype aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
 
@@ -52,7 +52,7 @@ def bfr_graph() -> DiGraph:
         10: [2, 7],
         11: [3, 4],
     }
-    # fixing vertex positions for drawing the graph
+    # Fix vertex positions for drawing the graph
     vertex_positions = dict(
         enumerate(
             [
@@ -119,27 +119,29 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored according
     to blue_set.
     """
-    # the facets correspond to dimers
+    # The facets correspond to dimers
     facets = _vertices_to_facets()
     graph = bfr_graph()
     graphics_object = 0
 
     for i, facet in facets.items():  # for each dimer
-        # build the two 'outgoing' edges of the dimer, and their two midpoints
+        # Build the two 'outgoing' edges of the dimer, and their two midpoints
         edges_out = (facet.intersection(facets[j]) for j in graph.neighbors_out(i))
         midpoints = [e.center() for e in edges_out]
-        # build the two 'ingoing' edges
+        # Build the two 'ingoing' edges
         edges_in = [facet.intersection(facets[j]) for j in graph.neighbors_in(i)]
-        # add the two quadrilaterals corresponding to the dimer's chains
+        # Add the two quadrilaterals corresponding to the dimer's chains
         # to the Graphics object
-        for edge in edges_in:
-            graphics_object += Polyhedron(
+        graphics_object +=  sum(
+            Polyhedron(
                 vertices=chain(edge.vertices(), midpoints)
             ).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=_MEDIUM_BLUE if i in blue_set else _CHIMERA_RED,
                 online=True,
-            )
+            ) 
+            for edge in edges_in
+        )
 
     return graphics_object
 
@@ -322,9 +324,8 @@ class BfrBicoloring(Bicoloring):
 
     def print_Chimera_commands(self, end: str = "\n", file=sys.stdout) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
-        alphabet = _vertices_to_dimers()
-        blue_letters = chain.from_iterable(alphabet[v] for v in self.blue_set)
-        red_letters = chain.from_iterable(alphabet[v].upper() for v in self.red_set)
+        blue_letters = chain.from_iterable(_vertices_to_dimers()[v] for v in self.blue_set)
+        red_letters = chain.from_iterable(_vertices_to_dimers()[v].upper() for v in self.red_set)
         if self.blue_set:
             print(f"sel #1:.{':.'.join(blue_letters)}", file=file)
         if self.red_set:
