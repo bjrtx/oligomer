@@ -1,4 +1,5 @@
 #!/usr/bin/env sage
+# pylint: disable=import-error
 """The behaviour of this code is described in [companion paper].
 It requires the SageMath library and can be run with SageMath
 See installation instructions at https://www.sagemath.org/
@@ -16,8 +17,8 @@ import csv
 import sys
 
 # Import explicitly to allow use as Python code
-import sage  # pylint: disable=import-error
-import sage.all  # pylint: disable=import-error
+import sage  
+import sage.all 
 from sage.geometry.polyhedron.library import polytopes
 from sage.geometry.polyhedron.constructor import Polyhedron
 
