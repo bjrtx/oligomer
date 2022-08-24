@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - name: Format files
@@ -19,6 +22,10 @@ jobs:
           if git commit -m "Auto-format code using black"; then
             git push;
           fi
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           sudo apt-get install sagemath
