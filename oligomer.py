@@ -16,8 +16,8 @@ import csv
 import sys
 
 # Import explicitly to allow use as Python code
-import sage
-import sage.all
+import sage     # pylint: disable=import-error
+import sage.all   # pylint: disable=import-error
 from sage.geometry.polyhedron.library import polytopes
 from sage.geometry.polyhedron.constructor import Polyhedron
 
