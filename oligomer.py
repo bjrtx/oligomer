@@ -132,14 +132,12 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
         edges_in = [facet.intersection(facets[j]) for j in graph.neighbors_in(i)]
         # Add the two quadrilaterals corresponding to the dimer's chains
         # to the Graphics object
-        graphics_object +=  sum(
-            Polyhedron(
-                vertices=chain(edge.vertices(), midpoints)
-            ).plot(
+        graphics_object += sum(
+            Polyhedron(vertices=chain(edge.vertices(), midpoints)).plot(
                 line={"color": "black", "thickness": 8},
                 polygon=_MEDIUM_BLUE if i in blue_set else _CHIMERA_RED,
                 online=True,
-            ) 
+            )
             for edge in edges_in
         )
 
@@ -324,8 +322,12 @@ class BfrBicoloring(Bicoloring):
 
     def print_Chimera_commands(self, end: str = "\n", file=sys.stdout) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
-        blue_letters = chain.from_iterable(_vertices_to_dimers()[v] for v in self.blue_set)
-        red_letters = chain.from_iterable(_vertices_to_dimers()[v].upper() for v in self.red_set)
+        blue_letters = chain.from_iterable(
+            _vertices_to_dimers()[v] for v in self.blue_set
+        )
+        red_letters = chain.from_iterable(
+            _vertices_to_dimers()[v].upper() for v in self.red_set
+        )
         if self.blue_set:
             print(f"sel #1:.{':.'.join(blue_letters)}", file=file)
         if self.red_set:
