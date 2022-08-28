@@ -320,7 +320,8 @@ class BfrBicoloring(Bicoloring):
                 "Unknown mode for displaying the coloring: mode must be one of net,"
                 "graph and polyhedron."
             )
-
+    
+    # pylint: disable-next=invalid-name
     def print_Chimera_commands(self, end: str = "\n", file=sys.stdout) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
         blue_letters = chain.from_iterable(
@@ -411,7 +412,7 @@ def write_to_csv(
             )
 
     if csv_file:
-        with open(csv_file, "a") as file:
+        with open(csv_file, "a", encoding="locale") as file:
             write(file)
     else:
         write(sys.stdout)
