@@ -320,7 +320,7 @@ class BfrBicoloring(Bicoloring):
                 "Unknown mode for displaying the coloring: mode must be one of net,"
                 "graph and polyhedron."
             )
-    
+
     # pylint: disable-next=invalid-name
     def print_Chimera_commands(self, end: str = "\n", file=sys.stdout) -> None:
         """Print the Chimera UCSF commands that generate the corresponding oligomer."""
