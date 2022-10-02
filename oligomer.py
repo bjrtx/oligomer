@@ -169,22 +169,26 @@ def more_complicated_graph() -> DiGraph:
     # Fix vertex positions for drawing the graph
     eps = 0.3
     vertex_positions = dict(
-         enumerate(
-   [([-1-eps, -1-eps], [-1+eps, -1+eps]), 
-   ([-1-eps, 1+eps], [-1+eps, 1-eps]), 
-   ([1-eps, 1-eps], [1+eps, 1+eps]), 
-   ([1-eps, -1+eps], [1+eps, -1-eps]), 
-   ([-5 -eps, -5 - eps], [-5 + eps, -5+eps]), 
-   ([-5+eps, 5-eps], [-5-eps, 5+eps]), 
-   ([5-eps, 5-eps], [5+eps, 5+eps]), 
-   ([5+eps, -5-eps], [5-eps, -5+eps]), 
-   ([-3+eps, 0], [-3-2*eps, 0]), 
-   ([0, 3+2*eps], [0, 3-eps]), 
-   ([3+2*eps, 0], [3-eps, 0]), 
-   ([0, -3 + eps], [0, -3-2*eps])]
+        enumerate(
+            [
+                ([-1 - eps, -1 - eps], [-1 + eps, -1 + eps]),
+                ([-1 - eps, 1 + eps], [-1 + eps, 1 - eps]),
+                ([1 - eps, 1 - eps], [1 + eps, 1 + eps]),
+                ([1 - eps, -1 + eps], [1 + eps, -1 - eps]),
+                ([-5 - eps, -5 - eps], [-5 + eps, -5 + eps]),
+                ([-5 + eps, 5 - eps], [-5 - eps, 5 + eps]),
+                ([5 - eps, 5 - eps], [5 + eps, 5 + eps]),
+                ([5 + eps, -5 - eps], [5 - eps, -5 + eps]),
+                ([-3 + eps, 0], [-3 - 2 * eps, 0]),
+                ([0, 3 + 2 * eps], [0, 3 - eps]),
+                ([3 + 2 * eps, 0], [3 - eps, 0]),
+                ([0, -3 + eps], [0, -3 - 2 * eps]),
+            ]
         )
     )
-    vertex_positions = {(k, i): pos[i] for k, pos in vertex_positions.items() for i in (0, 1)}
+    vertex_positions = {
+        (k, i): pos[i] for k, pos in vertex_positions.items() for i in (0, 1)
+    }
 
     return DiGraph(out_neighbours, pos=vertex_positions, immutable=True)
 
