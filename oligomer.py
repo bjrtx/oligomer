@@ -27,7 +27,7 @@ from sage.geometry.polyhedron.constructor import Polyhedron
 _CHIMERA_RED = (0.776, 0.208, 0.031)
 _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
-# Define ype aliases
+# Define type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
 
@@ -165,7 +165,28 @@ def more_complicated_graph() -> DiGraph:
     # here a monomer is a tuple (k, i) where k is a dimer and i is either 0 or 1
     out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
     out_neighbours = dict(chain(out_neighbours))
-    return DiGraph(out_neighbours, immutable=True)
+
+    # Fix vertex positions for drawing the graph
+    eps = 0.3
+    vertex_positions = dict(
+         enumerate(
+   [([-1-eps, -1-eps], [-1+eps, -1+eps]), 
+   ([-1-eps, 1+eps], [-1+eps, 1-eps]), 
+   ([1-eps, 1-eps], [1+eps, 1+eps]), 
+   ([1-eps, -1+eps], [1+eps, -1-eps]), 
+   ([-5 -eps, -5 - eps], [-5 + eps, -5+eps]), 
+   ([-5+eps, 5-eps], [-5-eps, 5+eps]), 
+   ([5-eps, 5-eps], [5+eps, 5+eps]), 
+   ([5+eps, -5-eps], [5-eps, -5+eps]), 
+   ([-3+eps, 0], [-3-2*eps, 0]), 
+   ([0, 3+2*eps], [0, 3-eps]), 
+   ([3+2*eps, 0], [3-eps, 0]), 
+   ([0, -3 + eps], [0, -3-2*eps])]
+        )
+    )
+    vertex_positions = {(k, i): pos[i] for k, pos in vertex_positions.items() for i in (0, 1)}
+
+    return DiGraph(out_neighbours, pos=vertex_positions, immutable=True)
 
 
 # Several assertions concerning this directed graph
