@@ -9,7 +9,7 @@ or use an online interpreter such as https://sagecell.sagemath.org/
 from __future__ import annotations
 from itertools import chain, combinations
 from functools import cache, cached_property
-from collections import Counter, namedtuple
+import collections
 from collections.abc import Iterable, Collection
 from dataclasses import dataclass, field
 
@@ -189,7 +189,6 @@ def more_complicated_graph() -> DiGraph:
     vertex_positions = {
         (k, i): pos[i] for k, pos in vertex_positions.items() for i in (0, 1)
     }
-
     return DiGraph(out_neighbours, pos=vertex_positions, immutable=True)
 
 
@@ -204,7 +203,7 @@ if __name__ == "__main__":
     # rotational octahedral symmetry group (O, 432, etc.).
     assert sage.all.SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
-Adjacencies = namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
+Adjacencies = collections.namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
 Adjacencies.__str__ = lambda self: (
     f"junctions: blue->orange {self.BR}, blue->blue {self.BB}, "
     f"orange->orange {self.RR}, orange->blue {self.RB}"
@@ -446,7 +445,7 @@ def write_to_csv(
 def short_display(
     nb_blue_vertices: int,
     csv_=False,
-    graph: Graph = bfr_graph(),
+    graph: Graph | None = None,
     **csv_options,
 ):
     """Display the unique colorings for a given number of blue vertices.
@@ -458,13 +457,13 @@ def short_display(
     colorings = unique_colorings(
         nb_blue_vertices=nb_blue_vertices, graph=graph, **csv_options
     )
-
+    graph = graph or bfr_graph()
     if csv_:
         write_to_csv(colorings, **csv_options)
     else:
         # sort the colorings by decreasing number of blue->red adjacencies
         colorings = sorted(colorings, key=lambda c: c.adjacencies.BR, reverse=True)
-        descriptions = Counter(str(c) for c in colorings)
+        descriptions = collections.Counter(str(c) for c in colorings)
         print(
             f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices}"
             f" orange vertices, the number of distinct arrangements is {len(colorings)}."
