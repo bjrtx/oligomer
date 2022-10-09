@@ -473,7 +473,8 @@ def short_display(
 
 
 def overlap() -> dict[Bicoloring, set[Bicoloring]]:
-    """List the pairs (c1, c2) where c1 has 6 blue vertices, c2 has 7 blue
+    """Return a dictionary whose value are sets. The Bicoloring c2 appears in the
+    set value associated with c1 if and only if c1 has 6 blue vertices, c2 has 7 blue
     vertices and c2 is obtained from c1 by changing a single vertex color.
     """
     colorings6 = (
