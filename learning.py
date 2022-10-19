@@ -11,7 +11,7 @@ for fname in (
     data = numpy.loadtxt(fname, delimiter=",").transpose()
     for method in (KMeans, SpectralClustering):
         labels = method(n_clusters=2).fit(data).labels_
-        #by convention, the first data point will always be in cluster 0
+        # by convention, the first data point will always be in cluster 0
         if labels[0]:
             labels = 1 - labels
         print(labels)
