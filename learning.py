@@ -17,13 +17,11 @@ for fname in (
     "OUT_sum_by_chain_comb.csv",
 ):
     data = numpy.loadtxt(fname, delimiter=",").transpose()
-    chain_names = string.ascii_uppercase[:24] # A to X
+    chain_names = string.ascii_uppercase[:24]  # A to X
     pca = PCA(n_components=2).fit(data)
     reduced = pca.transform(data)
 
-    for method, name in zip(
-        (KMeans, SpectralClustering), ("k-means", "spectral")
-    ):
+    for method, name in zip((KMeans, SpectralClustering), ("k-means", "spectral")):
         labels = method(n_clusters=2).fit(data).labels_
         # by convention, the first data point will always be in cluster 0
         if labels[0]:
