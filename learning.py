@@ -15,9 +15,9 @@ for fname in (
     "OUT_sum_by_chain_comb.csv",
 ):
     data = numpy.loadtxt(fname, delimiter=",").transpose()
-    chain_names = [chr(ord("a") + i) for i in range(24)]
+    chain_names = [chr(ord('A') + i) for i in range(24)]
     for method, name in zip(
-        (KMeans, SpectralClustering), ("kmeans", "spectral clustering")
+        (KMeans, SpectralClustering), ("k-means", "spectral")
     ):
         labels = method(n_clusters=2).fit(data).labels_
         # by convention, the first data point will always be in cluster 0
