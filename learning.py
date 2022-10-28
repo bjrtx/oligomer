@@ -29,14 +29,14 @@ for filename in (
         plt.subplot(3, 3, next(plot_index))
         plt.scatter(reduced[:, 0], reduced[:, 1], color=colors, alpha=0.8)
         for chain, xy in zip(chain_names, reduced):
-            plt.annotate(chain, xy, textcoords="offset points", xytext=(3,3))
+            plt.annotate(chain, xy, textcoords="offset points", xytext=(3, 3))
         plt.title(
             f"""
             Data: {filename.split(".")[0]}.
             Clustering: {name}.
             Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
             """,
-            loc='left'
+            loc="left",
         )
 
 
