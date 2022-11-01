@@ -23,9 +23,8 @@ for filename in (
     for method, name in zip((KMeans, SpectralClustering), ("k-means", "spectral")):
         labels = method(n_clusters=2).fit(data).labels_
         # by convention, the first data point will always be in cluster 0
-        if labels[0]:
-            labels = 1 - labels
-        colors = [("navy", "darkorange")[l] for l in labels]
+        labels = labels != labels[0]
+        colors = [("darkorange", "navy")[l] for l in labels]
         plt.subplot(3, 3, next(plot_index))
         plt.scatter(reduced[:, 0], reduced[:, 1], color=colors, alpha=0.8)
         for chain, xy in zip(chain_names, reduced):
