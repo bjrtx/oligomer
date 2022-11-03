@@ -19,7 +19,20 @@ filenames = (
     "OUT_sum_by_chain_comb.csv",
 )
 dim = 1 + math.isqrt(3 * len(filenames) - 1)
-shuffler = [(0, 16), (1, 14), (2, 21), (3, 20), (4, 15), (5, 17), (6, 10), (7, 13), (8, 18), (9, 19), (11, 22), (12, 23)]
+shuffler = [
+    (0, 16),
+    (1, 14),
+    (2, 21),
+    (3, 20),
+    (4, 15),
+    (5, 17),
+    (6, 10),
+    (7, 13),
+    (8, 18),
+    (9, 19),
+    (11, 22),
+    (12, 23),
+]
 first, second = zip(*shuffler)
 group_data = True
 
@@ -34,7 +47,9 @@ for filename in filenames:
         data_left = data[first, :]
         data_right = data[second, :]
         data = numpy.hstack((data_left, data_right))
-        chain_names = [chain_names[a] + chain_names[b] for a, b in shuffler]  # list of letters A to X inclusive
+        chain_names = [
+            chain_names[a] + chain_names[b] for a, b in shuffler
+        ]  # list of letters A to X inclusive
     pca = PCA(n_components=2).fit(data)
     reduced = pca.transform(data)
     color_range = ("darkorange", "navy", "green")
