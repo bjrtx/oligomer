@@ -72,7 +72,7 @@ for filename in filenames:
             loc="left",
         )
     for n_components in (2, 3):
-        gm = GaussianMixture(n_components, n_init=20, max_iter=2000).fit(data)
+        gm = GaussianMixture(n_components, n_init=20, max_iter=2000, covariance_type="spherical").fit(data)
         labels = gm.predict(data)
         colors = [color_range[l] for l in labels]
         plt.subplot(dim, dim, next(plot_index))
