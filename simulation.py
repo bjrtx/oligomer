@@ -32,11 +32,15 @@ def to_Chimera(blue):
     }
 
     blue_line = f"sel #1:.{':.'.join(d[b] for b in blue)}" if blue else ""
-    red_line = f"sel #2:.{':.'.join(v for i, v in d.items() if i not in blue)}" if len(blue) < 12 else ""
+    red_line = (
+        f"sel #2:.{':.'.join(v for i, v in d.items() if i not in blue)}"
+        if len(blue) < 12
+        else ""
+    )
 
 
 def generate(Bfr1_lines, Bfr2_lines, basename, path):
-    for z, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines,Bfr2_lines), start=1):
+    for z, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines, Bfr2_lines), start=1):
         rc(line_Bfr1)
         rc("write selected #1 path/sel_Bfr1.pdb")
         rc("~select")
