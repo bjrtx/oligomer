@@ -1,7 +1,6 @@
 # Oligomer
 
 
-
 ## Modules and libraries
 
 The code in `learning.py` depends on the standard Python packages NumPy and scikit-learn. Both are installable through tools such as pip or conda.
