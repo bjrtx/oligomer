@@ -1,12 +1,19 @@
 # Oligomer
 
-## SageMath language
 
-The code in this project is contained in `oligomer.py` and written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
+
+## Modules and libraries
+
+The code in `learning.py` depends on the standard Python packages NumPy and scikit-learn. Both are installable through tools such as pip or conda.
+
+The code in `oligomer.py` and written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
 
 ## Executing code
 
-1. For the time being, the recommended method for using this code is to copy-paste the contents of `oligomer.py` into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
+The code in `learning.py` is standard Python3 code.
+
+### SageMath
+1. For the time being, the recommended method for using `oligomer.py` is to paste its contents into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
 2. Alternative method: 
     1. Install SageMath as a standalone software.
     2. Write SageMath code (in particular, almost any Python code is valid SageMath code) in a file, say `main.sage`, containing the line `import oligomer`.
@@ -15,7 +22,7 @@ The code in this project is contained in `oligomer.py` and written in Python wit
 3. Finally one could get SageMath as a Python package via some package manager and try to `import oligomer` in standard Python code. This is not tested yet.
 
 
-## Example commands
+## Example commands for `oligomer.py`
 
 For each of the unique colourings with 6 blue dimers, up to rotations, display it as a net, as a graph, as a polyhedron, then print the corresponding Chimera code.
 
