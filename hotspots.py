@@ -6,19 +6,20 @@ import skimage
 # There must be a better way.
 filenames = ["284postprocess.mrc"]
 thresholds = [0.04]
-hotspot_list = ... #load from xls
+hotspot_list = ...  # load from xls
 
-chain_names = (f"Bfr_molmap_chain{char}_res5.mrc" for char in string.ascii_lowercase[:24])
+chain_names = (
+    f"Bfr_molmap_chain{char}_res5.mrc" for char in string.ascii_lowercase[:24]
+)
+
 
 def read_mrc(filename):
     with mrcfile.open(filename) as f:
         return f.data
 
+
 TH_chains = 0.42
-logical_chains = [
-    read_mrc(filename) > TH_chains
-    for filename in chain_names
-]
+logical_chains = [read_mrc(filename) > TH_chains for filename in chain_names]
 
 for filename, threshold in zip(filenames, thresholds):
     map = read_mrc(filename)
