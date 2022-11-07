@@ -10,29 +10,31 @@ def read_mrc(filename) -> np.ndarray:
     with mrcfile.open(filename) as mrc:
         return mrc.data
 
+
 def gloves(hotspot):
     try:
-        bfr1_glove = read_mrc(hotspot['Bfr1_file_name']) > float(hotspot['Bfr1_Molmap_TH'])
+        bfr1_glove = read_mrc(hotspot["Bfr1_file_name"]) > float(
+            hotspot["Bfr1_Molmap_TH"]
+        )
     except (FileNotFoundError, ValueError):
         # This happens if the CSV file does not have either bfr info or a threshold
         bfr1_glove = 0
     try:
-        bfr2_glove = read_mrc(hotspot['Bfr2_file_name']) > float(hotspot['Bfr2_Molmap_TH'])
+        bfr2_glove = read_mrc(hotspot["Bfr2_file_name"]) > float(
+            hotspot["Bfr2_Molmap_TH"]
+        )
     except (FileNotFoundError, ValueError):
         bfr2_glove = 0
     return bfr1_glove, bfr2_glove
-    
 
-def biggest_blob(logical : 'np.ndarray[bool]'):
+
+def biggest_blob(logical: "np.ndarray[bool]"):
     # labeled is an ndarray of the same size with each pixel labeled by its connected component
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
     try:
-        biggest = max(
-            regions,
-            key=lambda r: np.sum(r.image)
-        ).label
-    except ValueError: # empty list
+        biggest = max(regions, key=lambda r: np.sum(r.image)).label
+    except ValueError:  # empty list
         return 0
     return logical == biggest
     # raise an error if max of empty list
@@ -61,7 +63,10 @@ def process(hotspot_filename, map_filenames, map_thresholds):
                 bfr2_spot = biggest_blob(bfr2_glove & chain)
                 comb_size = np.sum(bfr1_spot ^ bfr2_spot)
                 output = (np.sum(map[bfr1_spot]) - np.sum(map[bfr2_spot])) / comb_size
-                print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}")
+                print(
+                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}"
+                )
+
 
 if __name__ == "__main__":
     # There must be a better way.
