@@ -34,6 +34,7 @@ shuffler = [
     (12, 23),
 ]
 
+
 def analyze(data, group_data=True):
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
     if group_data:
@@ -92,4 +93,3 @@ if __name__ == "__main__":
             print("Files not found")
             exit()
         analyze(data)
-        

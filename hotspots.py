@@ -91,4 +91,5 @@ if __name__ == "__main__":
     hotspot_filename = "RefinedHotSpotsListDaniel.csv"
     out = process(hotspot_filename, map_filenames, map_thresholds)
     import learning
+
     learning.analyze(out)
