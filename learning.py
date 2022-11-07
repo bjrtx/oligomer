@@ -33,20 +33,12 @@ shuffler = [
     (11, 22),
     (12, 23),
 ]
-first, second = zip(*shuffler)
-group_data = True
 
-for filename in filenames:
-    try:
-        data = numpy.loadtxt(filename, delimiter=",").transpose()
-    except OSError:
-        print("Files not found")
-        exit()
+def analyze(data, group_data=True):
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
     if group_data:
-        data_left = data[first, :]
-        data_right = data[second, :]
-        data = numpy.hstack((data_left, data_right))
+        first, second = zip(*shuffler)
+        data = numpy.hstack((data[first, :], data[second, :]))
         chain_names = [
             chain_names[a] + chain_names[b] for a, b in shuffler
         ]  # list of letters A to X inclusive
@@ -89,6 +81,15 @@ for filename in filenames:
             """,
             loc="left",
         )
+    plt.show()
 
 
-plt.show()
+if __name__ == "__main__":
+    for filename in filenames:
+        try:
+            data = numpy.loadtxt(filename, delimiter=",").transpose()
+        except OSError:
+            print("Files not found")
+            exit()
+        analyze(data)
+        

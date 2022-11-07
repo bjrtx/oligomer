@@ -89,4 +89,6 @@ if __name__ == "__main__":
     map_filenames = ["284postprocess.mrc"]
     map_thresholds = [0.04]
     hotspot_filename = "RefinedHotSpotsListDaniel.csv"
-    process(hotspot_filename, map_filenames, map_thresholds)
+    out = process(hotspot_filename, map_filenames, map_thresholds)
+    import learning
+    learning.analyze(out)
