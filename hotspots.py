@@ -11,6 +11,7 @@ def read_mrc(filename: str) -> np.ndarray:
     with mrcfile.open(filename) as mrc:
         return mrc.data
 
+
 def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
     try:
         bfr1_glove = read_mrc(hotspot["Bfr1_file_name"]) > float(
@@ -27,7 +28,8 @@ def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
         bfr2_glove = 0
     return bfr1_glove, bfr2_glove
 
-def biggest_blob(logical : 'np.ndarray[bool]') -> 'np.ndarray[bool]':
+
+def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
     # labeled is an ndarray of the same size with each pixel labeled by its connected component
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
@@ -39,7 +41,9 @@ def biggest_blob(logical : 'np.ndarray[bool]') -> 'np.ndarray[bool]':
     # raise an error if max of empty list
 
 
-def process(hotspot_filename: str, map_filenames: Iterable[str], map_thresholds: Iterable[float]):
+def process(
+    hotspot_filename: str, map_filenames: Iterable[str], map_thresholds: Iterable[float]
+):
 
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
@@ -63,9 +67,11 @@ def process(hotspot_filename: str, map_filenames: Iterable[str], map_thresholds:
                 bfr2_spot = biggest_blob(bfr2_glove & chain)
                 comb_size = np.sum(bfr1_spot ^ bfr2_spot)
                 output = (np.sum(map[bfr1_spot]) - np.sum(map[bfr2_spot])) / comb_size
-                print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}")
+                print(
+                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}"
+                )
                 out[i, j] = output
-    
+
     return out
 
 
