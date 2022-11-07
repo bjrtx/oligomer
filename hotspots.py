@@ -34,7 +34,8 @@ def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
         bfr2_glove = 0
     return bfr1_glove, bfr2_glove
 
-def biggest_blob(logical : 'np.ndarray[bool]') -> 'np.ndarray[bool]':
+
+def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
     """
     Given a logical multidimensional array, find the largest connected region and return it as a logical array.
     """
@@ -72,8 +73,12 @@ def process(
                 bfr1_spot = biggest_blob(bfr1_glove & chain)
                 bfr2_spot = biggest_blob(bfr2_glove & chain)
                 comb_size = (bfr1_spot ^ bfr2_spot).sum()
-                output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
-                print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}")
+                output = (
+                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
+                ) / comb_size
+                print(
+                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}"
+                )
                 out[i, j] = output
 
     return out
