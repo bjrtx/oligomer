@@ -12,15 +12,35 @@ Bfr2_lines = lines[2::3]
 basename = "Structure6-6"  # set a base name as you want
 path = "C:/Users/danist/Desktop/not_drive/Hotspots_284/simulations/"
 
+# do we really want dimers?
+# pylint: disable-next=invalid-name
+def to_Chimera(blue):
+    """Print the Chimera UCSF commands that generate the corresponding oligomer."""
+    d = {
+        10: "ob",
+        9: "nh",
+        2: "cv",
+        3: "kg",
+        1: "xm",
+        0: "fr",
+        11: "is",
+        8: "ud",
+        4: "tj",
+        7: "wl",
+        5: "pe",
+        6: "qa",
+    }
+
+    blue_line = f"sel #1:.{':.'.join(d[b] for b in blue)}" if blue else ""
+    red_line = f"sel #2:.{':.'.join(v for i, v in d.items() if i not in blue)}" if len(blue) < 12 else ""
+
 
 def generate(Bfr1_lines, Bfr2_lines, basename, path):
-    for z, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines, Bfr2_lines), start=1):
-        sel_Bfr1_chains = str(line_Bfr1)
-        sel_Bfr2_chains = str(line_Bfr2)
-        rc(sel_Bfr1_chains)
+    for z, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines,Bfr2_lines), start=1):
+        rc(line_Bfr1)
         rc("write selected #1 path/sel_Bfr1.pdb")
         rc("~select")
-        rc(sel_Bfr2_chains)
+        rc(line_Bfr2)
         rc("write selected #2 path/sel_Bfr2.pdb")
         rc("~select")
         rc("open #31 path/sel_Bfr1.pdb")
