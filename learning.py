@@ -8,17 +8,11 @@ from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 
-plot_index = itertools.count(1)
-plt.subplots(layout="constrained")
+
 
 # You need to be in the directory containing those files.
-filenames = (
-    "OUT_above_TH_by_chain_dom1.csv",
-    "OUT_above_TH_by_chain_comb.csv",
-    "OUT_sum_by_chain_dom1.csv",
-    "OUT_sum_by_chain_comb.csv",
-)
-dim = 1 + math.isqrt(3 * len(filenames) - 1)
+
+dim = 3 # arbitrary
 shuffler = [
     (0, 16),
     (1, 14),
@@ -36,6 +30,7 @@ shuffler = [
 
 
 def analyze(data, group_data=True):
+    plot_index = itertools.count(1)
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
     if group_data:
         first, second = zip(*shuffler)
@@ -46,6 +41,7 @@ def analyze(data, group_data=True):
     pca = PCA(n_components=2).fit(data)
     reduced = pca.transform(data)
     color_range = ("darkorange", "navy", "green")
+    plt.subplots(layout="constrained")
     # for method, name in zip((KMeans, SpectralClustering), ("k-means", "spectral")):
     for method, name in zip((KMeans,), ("k-means",)):
         labels = method(n_clusters=2).fit(data).labels_
@@ -88,6 +84,13 @@ def analyze(data, group_data=True):
 
 
 if __name__ == "__main__":
+    filenames = (
+    "OUT_above_TH_by_chain_dom1.csv",
+    "OUT_above_TH_by_chain_comb.csv",
+    "OUT_sum_by_chain_dom1.csv",
+    "OUT_sum_by_chain_comb.csv",
+    )
+    dim = 1 + math.isqrt(3 * len(filenames) - 1)
     for filename in filenames:
         try:
             data = numpy.loadtxt(filename, delimiter=",").transpose()
