@@ -61,7 +61,7 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
     columns are chains, entries are scores).
 
     hotspot_filename: CSV file containing the hotspot information, must be saved
-        in the UTF8 encoding. It has at least the following named columns: 
+        in the UTF8 encoding. It has at least the following named columns:
         - "Bfr1_file_name" and "Bfr2_file_name" contain the paths of MRC files,
         - "Bfr1_Molmap_TH" and "Bfr2_Molmap_TH" contain floating point numbers
           between 0 and 1 intended as thresholds.

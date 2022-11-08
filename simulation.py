@@ -51,7 +51,7 @@ def generate(Bfr1_lines, Bfr2_lines, basename, path):
         rc("~select")
         rc("open #31 path/sel_Bfr1.pdb")
         rc("open #32 path/sel_Bfr2.pdb")
-        new_name = "{}_{}".format(basename, idx)  
+        new_name = "{}_{}".format(basename, idx)
         # add the basename numbers from 1 to the number of structures
         rc(
             "combine #31-#32 modelId #33 name {}".format(new_name)
@@ -77,6 +77,6 @@ with open("path/chimera_commands.txt") as f:
 # the first line is ignored and there is a blank line between any two entries
 Bfr1_lines = lines[1::3]
 Bfr2_lines = lines[2::3]
-basename = "simulated" 
+basename = "simulated"
 path = "./chimera_simulations/"
 generate(Bfr1_lines, Bfr2_lines, basename, path)
