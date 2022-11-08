@@ -57,8 +57,9 @@ def analyze(data, group_data=True):
         for chain, xy in zip(chain_names, reduced):
             plt.annotate(chain, xy, textcoords="offset points", xytext=(3, 3))
         plt.title(
+            # Data: {filename.split(".")[0]}.
             f"""
-            Data: {filename.split(".")[0]}.
+            Data: sum by chain.
             Clustering: {name}.
             Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
             """,
@@ -75,8 +76,9 @@ def analyze(data, group_data=True):
         for chain, xy in zip(chain_names, reduced):
             plt.annotate(chain, xy, textcoords="offset points", xytext=(3, 3))
         plt.title(
+            # Data: {filename.split(".")[0]}.
             f"""
-            Data: {filename.split(".")[0]}.
+            Data: sum by chain.
             Gaussian mixture: {n_components} components.
             Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
             """,

@@ -12,8 +12,7 @@ def read_mrc(filename: str) -> np.ndarray:
     Read an MRC map and return a Numpy multidimensional array.
     """
     with mrcfile.open(filename) as mrc:
-        return mrc.data
-
+        return mrc.data.astype(np.float16) # rounding to half floats
 
 def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -65,7 +64,7 @@ def process(
 
     for filename, threshold in zip(map_filenames, map_thresholds):
         map = read_mrc(filename)
-        out = np.empty([len(hotspots), len(chains)])
+        out = np.empty([len(hotspots), len(chains)], dtype=np.float16)
         for i, hotspot in enumerate(hotspots):
             bfr1_glove, bfr2_glove = gloves(hotspot)
             for j, chain in enumerate(chains):
@@ -77,7 +76,7 @@ def process(
                     map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
                 ) / comb_size
                 print(
-                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output}"
+                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}"
                 )
                 out[i, j] = output
 
@@ -91,5 +90,4 @@ if __name__ == "__main__":
     hotspot_filename = "RefinedHotSpotsListDaniel.csv"
     out = process(hotspot_filename, map_filenames, map_thresholds)
     import learning
-
-    learning.analyze(out)
+    learning.analyze(out.transpose())
