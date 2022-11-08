@@ -2,6 +2,39 @@ import sys
 
 import learning
 import hotspots
+import string
+import numpy
+import sklearn
+
+def blue_dimers(map_filename, hotspot_filename):
+
+    data = hotspots.process(hotspot_filename, map_filename, 0.04).transpose()
+    chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
+    shuffler = [
+    (0, 16),
+    (1, 14),
+    (2, 21),
+    (3, 20),
+    (4, 15),
+    (5, 17),
+    (6, 10),
+    (7, 13),
+    (8, 18),
+    (9, 19),
+    (11, 22),
+    (12, 23),
+]
+    first, second = zip(*shuffler)
+    data = numpy.hstack((data[first, :], data[second, :]))
+    chain_names = [
+        chain_names[a] + chain_names[b] for a, b in shuffler
+    ]
+    labels = sklearn.cluster.KMeans(n_clusters=2).fit(data).labels_
+    # by convention, the first data point will always be in cluster 0
+    labels = labels != labels[0]
+    return [name for name, label in zip(chain_names, labels) if label]
+
+
 
 if __name__ == "__main__":
     if (
