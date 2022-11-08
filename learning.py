@@ -60,6 +60,7 @@ def analyze(data, group_data=True):
             f"""
             Data: sum by chain.
             Clustering: {name}.
+            Var. expl. by 1-D PCA: {pca.explained_variance_ratio_[0]:.1%}.
             Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
             """,
             loc="left",
@@ -79,6 +80,7 @@ def analyze(data, group_data=True):
             f"""
             Data: sum by chain.
             Gaussian mixture: {n_components} components.
+            Var. expl. by 1-D PCA: {pca.explained_variance_ratio_[0]:.1%}.
             Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
             """,
             loc="left",
