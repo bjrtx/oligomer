@@ -67,6 +67,9 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
     map_filename: MRC file containing an electronic density map.
     map_threshold: this parameter seems unused.
     """
+
+    logging.info(f"Processing {map_filename}. Hotspot information: {hotspot_filename}.")
+
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
 
