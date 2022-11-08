@@ -3,6 +3,7 @@ import operator
 import string
 import logging
 from collections.abc import Iterable
+from __future__ import annotations # should avoid some typing problems in Python 3.8
 
 import numpy as np
 import skimage
@@ -30,14 +31,14 @@ def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
     except (FileNotFoundError, ValueError):
         # This happens if the CSV file does not have either bfr info or a threshold
         bfr1_glove = 0
-        logging.warn(f"One glove was empty: {hotspot}.")
+        logging.warning(f"One glove was empty: {hotspot}.")
     try:
         bfr2_glove = read_mrc(hotspot["Bfr2_file_name"]) > float(
             hotspot["Bfr2_Molmap_TH"]
         )
     except (FileNotFoundError, ValueError):
         bfr2_glove = 0
-        logging.warn(f"One glove was empty: {hotspot}.")
+        logging.warning(f"One glove was empty: {hotspot}.")
     return bfr1_glove, bfr2_glove
 
 
@@ -52,14 +53,23 @@ def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
         biggest = max(regions, key=lambda r: np.sum(r.image)).label
     except ValueError:  # empty list
         return 0
-        logging.warn("A chain does not intersect a hotspot.")
+        logging.warning("A chain does not intersect a hotspot.")
     return logical == biggest
 
 
 def process(hotspot_filename: str, map_filename: str, map_threshold: float):
+    """
+    Process a density map and return a 2-dimensional array (rows are hotspots,
+    columns are chains, entries are scores).
 
+    hotspot_filename: CSV file containing the hotspot information, must be saved
+        in the UTF8 encoding.
+    map_filename: MRC file containing an electronic density map.
+    map_threshold: this parameter seems unused.
+    """
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
+    
 
     TH_chains = 0.42
     chains = [
@@ -69,20 +79,22 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
 
     map = read_mrc(map_filename)
     out = np.empty([len(hotspots), len(chains)], dtype=np.float16)
+
     for i, hotspot in enumerate(hotspots):
         bfr1_glove, bfr2_glove = gloves(hotspot)
         for j, chain in enumerate(chains):
-            # biggest_blob is used to avoid parts of hotspots coming from other chains
+            # To avoid parts of hotspots coming from other chains, only the 
+            # largest connected component of the hotspot-chain intersection
+            # is kept.
             bfr1_spot = biggest_blob(bfr1_glove & chain)
             bfr2_spot = biggest_blob(bfr2_glove & chain)
             comb_size = np.sum(bfr1_spot ^ bfr2_spot)
             if not comb_size:
                 output = 0
+                logging.warning("A residue has two identical gloves.")
             else:
-                output = (
-                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
-                ) / comb_size
-            # print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
+                output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
+            logging.info(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
             out[i, j] = output
 
     return out
