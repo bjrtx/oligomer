@@ -1,5 +1,8 @@
 from chimera import runCommand as rc
 
+# This file is not intended to be run as a standalone Python script, but must be opened
+# in Chimera and interpreted by Chimera's own Python:
+# $ chimera --nogui simulation.py
 # String formats are all wrong because this is Python2.7
 
 # do we really want dimers?
@@ -27,6 +30,7 @@ def to_Chimera(blue):
         if len(blue) < 12
         else ""
     )
+    return blue_line, red_line
 
 
 def generate(Bfr1_lines, Bfr2_lines, basename, path):
@@ -38,7 +42,7 @@ def generate(Bfr1_lines, Bfr2_lines, basename, path):
     rc("open " + Bfr1_pdb)
     rc("open " + Bfr2_pdb)
     rc("volume all step 1")  # not sure if useful outside graphical display?
-    for z, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines, Bfr2_lines), start=1):
+    for idx, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines, Bfr2_lines), start=1):
         rc(line_Bfr1)
         rc("write selected #1 path/sel_Bfr1.pdb")
         rc("~select")
@@ -47,9 +51,8 @@ def generate(Bfr1_lines, Bfr2_lines, basename, path):
         rc("~select")
         rc("open #31 path/sel_Bfr1.pdb")
         rc("open #32 path/sel_Bfr2.pdb")
-        new_name = "{}_{}".format(
-            basename, z
-        )  # add the basename numbers from 1 to the number of structures
+        new_name = "{}_{}".format(basename, idx)  
+        # add the basename numbers from 1 to the number of structures
         rc(
             "combine #31-#32 modelId #33 name {}".format(new_name)
         )  # combine the selections of Bfr1 and Bfr2
@@ -74,6 +77,6 @@ with open("path/chimera_commands.txt") as f:
 # the first line is ignored and there is a blank line between any two entries
 Bfr1_lines = lines[1::3]
 Bfr2_lines = lines[2::3]
-basename = "simulated"  # set a base name as you want
+basename = "simulated" 
 path = "./chimera_simulations/"
 generate(Bfr1_lines, Bfr2_lines, basename, path)

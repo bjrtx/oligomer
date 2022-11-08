@@ -1,9 +1,10 @@
+from __future__ import annotations  # should avoid some typing problems in Python 3.8
+
 import csv
 import operator
 import string
 import logging
 from collections.abc import Iterable
-from __future__ import annotations  # should avoid some typing problems in Python 3.8
 
 import numpy as np
 import skimage
@@ -12,41 +13,38 @@ import mrcfile
 import learning
 
 
-def read_mrc(filename: str) -> np.ndarray:
+def read_mrc(filename: str, dtype=np.float16) -> np.ndarray:
     """
-    Read an MRC map and return a Numpy multidimensional array.
+    Read an MRC map from a file and convert it into a Numpy multidimensional array.
+    The values are cast to the specified data type, by default 16-bit floats.
     """
     with mrcfile.open(filename) as mrc:
-        return mrc.data.astype(np.float16)  # rounding to half floats
+        return mrc.data.astype(dtype)
 
 
-def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
+def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two gloves associated with a given hotspot.
     """
-    try:
-        bfr1_glove = read_mrc(hotspot["Bfr1_file_name"]) > float(
-            hotspot["Bfr1_Molmap_TH"]
-        )
-    except (FileNotFoundError, ValueError):
-        # This happens if the CSV file does not have either bfr info or a threshold
-        bfr1_glove = 0
-        logging.warning(f"One glove was empty: {hotspot}.")
-    try:
-        bfr2_glove = read_mrc(hotspot["Bfr2_file_name"]) > float(
-            hotspot["Bfr2_Molmap_TH"]
-        )
-    except (FileNotFoundError, ValueError):
-        bfr2_glove = 0
-        logging.warning(f"One glove was empty: {hotspot}.")
-    return bfr1_glove, bfr2_glove
+    gloves = [0, 0]
+
+    for i in (1, 2):
+        try:
+            gloves[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
+                hotspot[f"Bfr{i}_Molmap_TH"]
+            )
+        except (FileNotFoundError, ValueError):
+            # This happens if the CSV file does not have either bfr info or a threshold,
+            # in which case the glove is identically zero.
+            logging.warning(f"One glove was empty: {hotspot}.")
+
+    return gloves
 
 
 def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
     """
     Given a logical multidimensional array, find the largest connected region and return it as a logical array.
     """
-    # labeled is an ndarray of the same size with each pixel labeled by its connected component
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
     try:
@@ -63,7 +61,11 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
     columns are chains, entries are scores).
 
     hotspot_filename: CSV file containing the hotspot information, must be saved
-        in the UTF8 encoding.
+        in the UTF8 encoding. It has at least the following named columns: 
+        - "Bfr1_file_name" and "Bfr2_file_name" contain the paths of MRC files,
+        - "Bfr1_Molmap_TH" and "Bfr2_Molmap_TH" contain floating point numbers
+          between 0 and 1 intended as thresholds.
+
     map_filename: MRC file containing an electronic density map.
     map_threshold: this parameter seems unused.
     """
@@ -91,6 +93,7 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
             bfr1_spot = biggest_blob(bfr1_glove & chain)
             bfr2_spot = biggest_blob(bfr2_glove & chain)
             comb_size = np.sum(bfr1_spot ^ bfr2_spot)
+            # The disjoint union is empty if the two domains are equal - very unlikely.
             if not comb_size:
                 output = 0
                 logging.warning("A residue has two identical gloves.")
@@ -102,7 +105,6 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
                 f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}"
             )
             out[i, j] = output
-
     return out
 
 
@@ -112,5 +114,4 @@ if __name__ == "__main__":
     map_threshold = 0.04
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
     out = process(hotspot_filename, map_filename, map_threshold)
-
     learning.analyze(out.transpose())
