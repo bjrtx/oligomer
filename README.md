@@ -9,9 +9,11 @@ The code in `oligomer.py` and written in Python with references to the SageMath 
 
 ## Executing code
 
-The code in `learning.py` is standard Python3 code.
+### `learning.py` and `hotspots.py`
 
-### SageMath
+The code in these files can be run by the standard Python 3 interpreter though it requires installing some third-party packages.
+
+### `oligomer.py` and SageMath
 1. For the time being, the recommended method for using `oligomer.py` is to paste its contents into the cell at https://sagecell.sagemath.org/, then add the commands you want to be executed below.
 2. Alternative method: 
     1. Install SageMath as a standalone software.
@@ -20,6 +22,15 @@ The code in `learning.py` is standard Python3 code.
     4. Run `sage main.sage`.
 3. Finally one could get SageMath as a Python package via some package manager and try to `import oligomer` in standard Python code. This is not tested yet.
 
+### `simulation.py` and Chimera
+
+The code in `simulation.py` must be run from inside the UCSF Chimera software (https://www.cgl.ucsf.edu/chimera/). From the command line, this is done by:
+
+```bash
+chimera --nogui simulation.py
+```
+
+It is also possible to open `simulation.py` inside Chimera's graphical interface via its `File > Open` menu.
 
 ## Example commands for `oligomer.py`
 
