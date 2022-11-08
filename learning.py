@@ -9,10 +9,9 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 
 
-
 # You need to be in the directory containing those files.
 
-dim = 3 # arbitrary
+dim = 3  # arbitrary
 shuffler = [
     (0, 16),
     (1, 14),
@@ -85,10 +84,10 @@ def analyze(data, group_data=True):
 
 if __name__ == "__main__":
     filenames = (
-    "OUT_above_TH_by_chain_dom1.csv",
-    "OUT_above_TH_by_chain_comb.csv",
-    "OUT_sum_by_chain_dom1.csv",
-    "OUT_sum_by_chain_comb.csv",
+        "OUT_above_TH_by_chain_dom1.csv",
+        "OUT_above_TH_by_chain_comb.csv",
+        "OUT_sum_by_chain_dom1.csv",
+        "OUT_sum_by_chain_comb.csv",
     )
     dim = 1 + math.isqrt(3 * len(filenames) - 1)
     for filename in filenames:
