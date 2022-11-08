@@ -2,9 +2,12 @@ import csv
 import operator
 import string
 from collections.abc import Iterable
+
 import numpy as np
 import skimage
 import mrcfile
+
+import learning
 
 
 def read_mrc(filename: str) -> np.ndarray:
@@ -47,11 +50,9 @@ def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
     except ValueError:  # empty list
         return 0
     return logical == biggest
-    # raise an error if max of empty list
-
 
 def process(
-    hotspot_filename: str, map_filenames: Iterable[str], map_thresholds: Iterable[float]
+    hotspot_filename: str, map_filename: str, map_threshold: float
 ):
 
     with open(hotspot_filename) as hotspot_file:
@@ -63,33 +64,29 @@ def process(
         for char in string.ascii_uppercase[:24]
     ]
 
-    for filename, threshold in zip(map_filenames, map_thresholds):
-        map = read_mrc(filename)
-        out = np.empty([len(hotspots), len(chains)], dtype=np.float16)
-        for i, hotspot in enumerate(hotspots):
-            bfr1_glove, bfr2_glove = gloves(hotspot)
-            for j, chain in enumerate(chains):
-                # biggest_blob is used to avoid parts of hotspots coming from other chains
-                bfr1_spot = biggest_blob(bfr1_glove & chain)
-                bfr2_spot = biggest_blob(bfr2_glove & chain)
-                comb_size = (bfr1_spot ^ bfr2_spot).sum()
-                output = (
-                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
-                ) / comb_size
-                print(
-                    f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}"
-                )
-                out[i, j] = output
+    map = read_mrc(map_filename)
+    out = np.empty([len(hotspots), len(chains)], dtype=np.float16)
+    for i, hotspot in enumerate(hotspots):
+        bfr1_glove, bfr2_glove = gloves(hotspot)
+        for j, chain in enumerate(chains):
+            # biggest_blob is used to avoid parts of hotspots coming from other chains
+            bfr1_spot = biggest_blob(bfr1_glove & chain)
+            bfr2_spot = biggest_blob(bfr2_glove & chain)
+            comb_size = (bfr1_spot ^ bfr2_spot).sum()
+            output = (
+                map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
+            ) / comb_size
+            # print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
+            out[i, j] = output
 
     return out
 
 
 if __name__ == "__main__":
     # There must be a better way.
-    map_filenames = ["284postprocess.mrc"]
-    map_thresholds = [0.04]
-    hotspot_filename = "RefinedHotSpotsListDaniel.csv"
-    out = process(hotspot_filename, map_filenames, map_thresholds)
-    import learning
+    map_filename = "284postprocess.mrc"
+    map_threshold = 0.04
+    hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
+    out = process(hotspot_filename, map_filename, map_threshold)
 
     learning.analyze(out.transpose())

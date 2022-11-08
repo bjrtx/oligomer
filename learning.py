@@ -29,6 +29,10 @@ shuffler = [
 
 
 def analyze(data, group_data=True):
+    """
+    Read a data file whose rows correspond to chains and whose columns correspond to hotspots. Conduct statistical analysis.
+    The analysis is conducted by dimer when group_data is True and otherwise by chain.
+    """
     plot_index = itertools.count(1)
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
     if group_data:
