@@ -75,8 +75,11 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
             # biggest_blob is used to avoid parts of hotspots coming from other chains
             bfr1_spot = biggest_blob(bfr1_glove & chain)
             bfr2_spot = biggest_blob(bfr2_glove & chain)
-            comb_size = (bfr1_spot ^ bfr2_spot).sum()
-            output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
+            comb_size = np.sum(bfr1_spot ^ bfr2_spot)
+            if not comb_size:
+                output = 0
+            else:
+                output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
             # print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
             out[i, j] = output
 

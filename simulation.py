@@ -1,5 +1,3 @@
-import chimera
-
 from chimera import runCommand as rc
 
 # String formats are all wrong because this is Python2.7
