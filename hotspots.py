@@ -3,7 +3,7 @@ import operator
 import string
 import logging
 from collections.abc import Iterable
-from __future__ import annotations # should avoid some typing problems in Python 3.8
+from __future__ import annotations  # should avoid some typing problems in Python 3.8
 
 import numpy as np
 import skimage
@@ -69,7 +69,6 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
     """
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
-    
 
     TH_chains = 0.42
     chains = [
@@ -83,7 +82,7 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
     for i, hotspot in enumerate(hotspots):
         bfr1_glove, bfr2_glove = gloves(hotspot)
         for j, chain in enumerate(chains):
-            # To avoid parts of hotspots coming from other chains, only the 
+            # To avoid parts of hotspots coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
             # is kept.
             bfr1_spot = biggest_blob(bfr1_glove & chain)
@@ -93,8 +92,12 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
                 output = 0
                 logging.warning("A residue has two identical gloves.")
             else:
-                output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
-            logging.info(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
+                output = (
+                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
+                ) / comb_size
+            logging.info(
+                f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}"
+            )
             out[i, j] = output
 
     return out
