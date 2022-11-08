@@ -79,7 +79,9 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
             if not comb_size:
                 output = 0
             else:
-                output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
+                output = (
+                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
+                ) / comb_size
             # print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
             out[i, j] = output
 
