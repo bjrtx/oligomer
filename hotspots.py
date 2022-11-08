@@ -12,7 +12,8 @@ def read_mrc(filename: str) -> np.ndarray:
     Read an MRC map and return a Numpy multidimensional array.
     """
     with mrcfile.open(filename) as mrc:
-        return mrc.data.astype(np.float16) # rounding to half floats
+        return mrc.data.astype(np.float16)  # rounding to half floats
+
 
 def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -90,4 +91,5 @@ if __name__ == "__main__":
     hotspot_filename = "RefinedHotSpotsListDaniel.csv"
     out = process(hotspot_filename, map_filenames, map_thresholds)
     import learning
+
     learning.analyze(out.transpose())
