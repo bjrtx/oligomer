@@ -1,6 +1,7 @@
 import csv
 import operator
 import string
+import logging
 from collections.abc import Iterable
 
 import numpy as np
@@ -29,12 +30,14 @@ def gloves(hotspot: dict) -> tuple[np.ndarray, np.ndarray]:
     except (FileNotFoundError, ValueError):
         # This happens if the CSV file does not have either bfr info or a threshold
         bfr1_glove = 0
+        logging.warn(f"One glove was empty: {hotspot}.")
     try:
         bfr2_glove = read_mrc(hotspot["Bfr2_file_name"]) > float(
             hotspot["Bfr2_Molmap_TH"]
         )
     except (FileNotFoundError, ValueError):
         bfr2_glove = 0
+        logging.warn(f"One glove was empty: {hotspot}.")
     return bfr1_glove, bfr2_glove
 
 
@@ -49,6 +52,7 @@ def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
         biggest = max(regions, key=lambda r: np.sum(r.image)).label
     except ValueError:  # empty list
         return 0
+        logging.warn("A chain does not intersect a hotspot.")
     return logical == biggest
 
 
