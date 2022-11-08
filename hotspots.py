@@ -51,9 +51,8 @@ def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
         return 0
     return logical == biggest
 
-def process(
-    hotspot_filename: str, map_filename: str, map_threshold: float
-):
+
+def process(hotspot_filename: str, map_filename: str, map_threshold: float):
 
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
@@ -73,9 +72,7 @@ def process(
             bfr1_spot = biggest_blob(bfr1_glove & chain)
             bfr2_spot = biggest_blob(bfr2_glove & chain)
             comb_size = (bfr1_spot ^ bfr2_spot).sum()
-            output = (
-                map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
-            ) / comb_size
+            output = (map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)) / comb_size
             # print(f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}")
             out[i, j] = output
 
