@@ -13,10 +13,12 @@ Finally one can prepare maps of the following form:
 """
 
 
-threshold = 0.04 # change threshold for smaller / larger hemes
+threshold = 0.04  # change threshold for smaller / larger hemes
 
 heme_filename = "Heme_rerefined_corrected.mrc"
-heme = hotspots.read_mrc(heme_filename, dtype=np.float32) #no truncating the floats here
+heme = hotspots.read_mrc(
+    heme_filename, dtype=np.float32
+)  # no truncating the floats here
 print("size of all hemes after threshold", np.count_nonzero(heme > threshold))
 
 heme_components = skimage.measure.label(heme > threshold)
@@ -32,7 +34,7 @@ for ab in dimers:
     ]
 
     intersection = heme_components[chains[0].astype(bool)]
-    assert len(set(intersection.flat)) == 2 # one connected component label and 0
+    assert len(set(intersection.flat)) == 2  # one connected component label and 0
     label = intersection.max()
 
     # Part of the heme where heme_components == label
