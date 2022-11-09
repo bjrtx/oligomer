@@ -40,7 +40,7 @@ def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
     return gloves
 
 
-def biggest_blob(logical: "np.ndarray[bool]", number: int=1) -> "np.ndarray[bool]":    
+def biggest_blob(logical: "np.ndarray[bool]", number: int = 1) -> "np.ndarray[bool]":
     """
     Given a logical multidimensional array, find the number largest connected regions
     and return them as a logical array. By default number is 1 and the result is a single
@@ -50,16 +50,22 @@ def biggest_blob(logical: "np.ndarray[bool]", number: int=1) -> "np.ndarray[bool
     regions = skimage.measure.regionprops(labeled)
 
     import heapq
+
     biggest = heapq.nlargest(number, regions, key=lambda r: np.sum(r.image))
     labels = [r.label for r in biggest]
     # Will raise an error if there are fewer than number connected components.
     import functools
+
     res = functools.reduce(np.logical_or, (labeled == l for l in labels))
     return res
 
+
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
-def process(hotspot_filename: str, map_filename: str, map_threshold: float, by_dimers=False):
+
+def process(
+    hotspot_filename: str, map_filename: str, map_threshold: float, by_dimers=False
+):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
@@ -102,12 +108,16 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float, by_d
             # To avoid parts of hotspots coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
             # is kept.
-            bfr1_spot = biggest_blob(bfr1_glove & chain_or_dimer, number=2 if by_dimers else 1)
-            bfr2_spot = biggest_blob(bfr2_glove & chain_or_dimer, number=2 if by_dimers else 1)
+            bfr1_spot = biggest_blob(
+                bfr1_glove & chain_or_dimer, number=2 if by_dimers else 1
+            )
+            bfr2_spot = biggest_blob(
+                bfr2_glove & chain_or_dimer, number=2 if by_dimers else 1
+            )
             comb_size = np.sum(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal - very unlikely.
             if not comb_size:
-                output = .0
+                output = 0.0
                 logging.warning("A residue has two identical gloves.")
             else:
                 output = (

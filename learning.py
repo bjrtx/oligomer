@@ -33,9 +33,22 @@ def analyze(data, group_data=True):
     Read a data file whose rows correspond to chains and whose columns correspond to hotspots. Conduct statistical analysis.
     The analysis is conducted by dimer when group_data is True and otherwise by chain.
     """
-    by_dimers = data.shape[0] == 12 # the rows are in fact dimers
+    by_dimers = data.shape[0] == 12  # the rows are in fact dimers
     plot_index = itertools.count(1)
-    dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
+    dimer_names = [
+        "aq",
+        "bo",
+        "cv",
+        "du",
+        "ep",
+        "fr",
+        "gk",
+        "hn",
+        "is",
+        "jt",
+        "lw",
+        "mx",
+    ]
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
     if not by_dimers and group_data:
         first, second = zip(*shuffler)
