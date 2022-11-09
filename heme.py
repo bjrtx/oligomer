@@ -12,18 +12,16 @@ Finally one can prepare maps of the following form:
 - a dimer plus the location of its heme
 """
 
-heme_filename = "Heme_rerefined_corrected.mrc"
-heme = hotspots.read_mrc(
-    heme_filename, dtype=np.float32
-)  # no truncating the floats here
-print(np.count_nonzero(heme))
-from collections import Counter
 
-threshold = 0.04  # change threshold for smaller hemes
+threshold = 0.04 # change threshold for smaller / larger hemes
+
+heme_filename = "Heme_rerefined_corrected.mrc"
+heme = hotspots.read_mrc(heme_filename, dtype=np.float32) #no truncating the floats here
+print("size of all hemes after threshold", np.count_nonzero(heme > threshold))
+
 heme_components = skimage.measure.label(heme > threshold)
 assert set(heme_components.flat) == set(range(13))
 # there are 12 connected components (1-12) plus 0 for empty regions
-print(Counter(heme_components.flat))
 
 dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
@@ -34,13 +32,12 @@ for ab in dimers:
     ]
 
     intersection = heme_components[chains[0].astype(bool)]
-    print("intersection_length", np.count_nonzero(intersection))
-    assert len(set(intersection.flat)) == 2  # one connected component label and 0
+    assert len(set(intersection.flat)) == 2 # one connected component label and 0
     label = intersection.max()
 
     # Part of the heme where heme_components == label
     right_component = np.where(heme, heme_components == label, 0)
-    print(np.count_nonzero(right_component))
+    print("heme size", np.count_nonzero(right_component))
     # Add the heme component to the chain by taking maxima element-wise.
     chains = [np.maximum(chain, right_component) for chain in chains]
     dimer = np.maximum(*chains)
