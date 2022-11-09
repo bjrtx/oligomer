@@ -13,6 +13,9 @@ import mrcfile
 import learning
 
 
+# This is still missing: specified heme threshold and heme in csv.
+
+
 def read_mrc(filename: str, dtype=np.float16) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
