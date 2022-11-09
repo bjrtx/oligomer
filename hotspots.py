@@ -37,28 +37,33 @@ def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
             # This happens if the CSV file does not have either bfr info or a threshold,
             # in which case the glove is identically zero.
             logging.warning(f"One glove was empty: {hotspot}.")
-
     return gloves
 
 
-def biggest_blob(logical: "np.ndarray[bool]") -> "np.ndarray[bool]":
+def biggest_blob(logical: "np.ndarray[bool]", number: int=1) -> "np.ndarray[bool]":    
     """
-    Given a logical multidimensional array, find the largest connected region and return it as a logical array.
+    Given a logical multidimensional array, find the number largest connected regions
+    and return them as a logical array. By default number is 1 and the result is a single
+    array. If number is higher the arrays are added to each other.
     """
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
-    try:
-        biggest = max(regions, key=lambda r: np.sum(r.image)).label
-    except ValueError:  # empty list
-        return 0
-        logging.warning("A chain does not intersect a hotspot.")
-    return logical == biggest
 
+    import heapq
+    biggest = heapq.nlargest(number, regions, key=lambda r: np.sum(r.image))
+    labels = [r.label for r in biggest]
+    # Will raise an error if there are fewer than number connected components.
+    import functools
+    res = functools.reduce(np.logical_or, (labeled == l for l in labels))
+    return res
 
-def process(hotspot_filename: str, map_filename: str, map_threshold: float):
+dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
+
+def process(hotspot_filename: str, map_filename: str, map_threshold: float, by_dimers=False):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
-    columns are chains, entries are scores).
+    columns are chains, entries are scores). Alternatively, if by_dimers is True
+    then the columns are dimers.
 
     hotspot_filename: CSV file containing the hotspot information, must be saved
         in the UTF8 encoding. It has at least the following named columns:
@@ -76,33 +81,42 @@ def process(hotspot_filename: str, map_filename: str, map_threshold: float):
         hotspots = list(csv.DictReader(hotspot_file))
 
     TH_chains = 0.42
-    chains = [
-        read_mrc(f"Bfr_molmap_chain{char}_res5.mrc") > TH_chains
-        for char in string.ascii_uppercase[:24]
-    ]
+
+    if not by_dimers:
+        columns = [
+            read_mrc(f"Bfr_molmap_chain{char}_res5.mrc") > TH_chains
+            for char in string.ascii_uppercase[:24]
+        ]
+    else:
+        columns = [
+            read_mrc(f"dimer_plus_heme_{d.upper()}.mrc") > TH_chains
+            for d in dimer_names
+        ]
 
     map = read_mrc(map_filename)
-    out = np.empty([len(hotspots), len(chains)], dtype=np.float16)
+    out = np.empty([len(hotspots), len(columns)], dtype=np.float16)
 
     for i, hotspot in enumerate(hotspots):
         bfr1_glove, bfr2_glove = gloves(hotspot)
-        for j, chain in enumerate(chains):
+        for j, chain_or_dimer in enumerate(columns):
             # To avoid parts of hotspots coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
             # is kept.
-            bfr1_spot = biggest_blob(bfr1_glove & chain)
-            bfr2_spot = biggest_blob(bfr2_glove & chain)
+            bfr1_spot = biggest_blob(bfr1_glove & chain_or_dimer, number=2 if by_dimers else 1)
+            bfr2_spot = biggest_blob(bfr2_glove & chain_or_dimer, number=2 if by_dimers else 1)
             comb_size = np.sum(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal - very unlikely.
             if not comb_size:
-                output = 0
+                output = .0
                 logging.warning("A residue has two identical gloves.")
             else:
                 output = (
                     map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
                 ) / comb_size
             logging.info(
-                f"hotspot {i + 1} chain {string.ascii_uppercase[j]} comb. value {output:.4}"
+                f"hotspot {i + 1} chain "
+                f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
+                f"comb. value {output:.4}"
             )
             out[i, j] = output
     return out
@@ -113,5 +127,5 @@ if __name__ == "__main__":
     map_filename = "284postprocess.mrc"
     map_threshold = 0.04
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
-    out = process(hotspot_filename, map_filename, map_threshold)
+    out = process(hotspot_filename, map_filename, map_threshold, by_dimers=True)
     learning.analyze(out.transpose())
