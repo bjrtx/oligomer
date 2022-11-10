@@ -58,7 +58,9 @@ def biggest_blob(logical: "np.ndarray[bool]", number: int = 1) -> "np.ndarray[bo
     biggest = heapq.nlargest(number, regions, key=lambda r: np.sum(r.image))
     labels = [r.label for r in biggest]
     if len(labels) < number:
-        logging.warning(f"Fewer connected components than expected ({len(labels)}/{number}), perhaps due to an empty glove.")
+        logging.warning(
+            f"Fewer connected components than expected ({len(labels)}/{number}), perhaps due to an empty glove."
+        )
     import functools
 
     return functools.reduce(np.logical_or, (labeled == l for l in labels), 0)
@@ -126,7 +128,8 @@ def process(
                     """
                     A residue has two identical gloves - very unlikely.
                     Hotspot number {i}: {hotspot}. Chain or dimer number {j}. 
-                    """)
+                    """
+                )
             else:
                 output = (
                     map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)

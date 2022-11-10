@@ -30,8 +30,7 @@ dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"
 
 for ab in dimers:
     chains = [
-        hotspots.read_mrc(f"Bfr_molmap_chain{char.upper()}_res5.mrc")
-        for char in ab
+        hotspots.read_mrc(f"Bfr_molmap_chain{char.upper()}_res5.mrc") for char in ab
     ]
 
     intersection = heme_components[chains[0].astype(bool)]
@@ -40,7 +39,12 @@ for ab in dimers:
 
     # Part of the heme where heme_components == label
     right_component = np.where(heme_components == label, heme, np.float32(0))
-    print("component dtype", right_component.dtype, right_component.shape, right_component.max())
+    print(
+        "component dtype",
+        right_component.dtype,
+        right_component.shape,
+        right_component.max(),
+    )
     print("heme size", np.count_nonzero(right_component))
     # Add the heme component to the chain by taking maxima element-wise.
     aug_chains = [np.maximum(chain, right_component) for chain in chains]
@@ -48,15 +52,19 @@ for ab in dimers:
         print("chain", c.dtype, c.shape)
     dimer = np.maximum(*aug_chains)
 
-
     for char, chain in zip(ab, aug_chains):
         # preserve the headers
-        shutil.copyfile(f"Bfr_molmap_chain{char.upper()}_res5.mrc", f"chain_plus_heme_{char.upper()}.mrc")
-        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", 'r+') as file:
-            file.set_volume() # chimera is doing something wrong here?
+        shutil.copyfile(
+            f"Bfr_molmap_chain{char.upper()}_res5.mrc",
+            f"chain_plus_heme_{char.upper()}.mrc",
+        )
+        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", "r+") as file:
+            file.set_volume()  # chimera is doing something wrong here?
             file.set_data(chain)
 
-    shutil.copyfile(f"Bfr_molmap_chain{char.upper()}_res5.mrc", f"dimer_plus_heme_{ab.upper()}.mrc")
-    with mrcfile.open(f"dimer_plus_heme_{ab.upper()}.mrc", 'r+') as file:
+    shutil.copyfile(
+        f"Bfr_molmap_chain{char.upper()}_res5.mrc", f"dimer_plus_heme_{ab.upper()}.mrc"
+    )
+    with mrcfile.open(f"dimer_plus_heme_{ab.upper()}.mrc", "r+") as file:
         file.set_volume()
         file.set_data(dimer)
