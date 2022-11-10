@@ -38,9 +38,9 @@ heme_components = skimage.measure.label(heme > threshold)
 assert set(heme_components.flat) == set(range(13))
 # there are 12 connected components (1-12) plus 0 for empty regions
 
-# dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"] 
+# dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
-example_file = chain_file_name.replace('?', 'A')
+example_file = chain_file_name.replace("?", "A")
 
 for ab in hotspots.dimer_names:
     chains = [
@@ -61,8 +61,8 @@ for ab in hotspots.dimer_names:
     for char, chain in zip(ab, aug_chains):
         # preserve the headers
         shutil.copyfile(example_file, f"chain_plus_heme_{char.upper()}.mrc")
-        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", 'r+') as file:
-            file.set_volume() # chimera seems not to set its headers properly
+        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", "r+") as file:
+            file.set_volume()  # chimera seems not to set its headers properly
             file.set_data(chain)
 
     shutil.copyfile(example_file, f"dimer_plus_heme_{ab.upper()}.mrc")
