@@ -4,6 +4,7 @@ import csv
 import operator
 import string
 import logging
+import heapq
 from collections.abc import Iterable
 
 import numpy as np
@@ -13,16 +14,16 @@ import mrcfile
 import learning
 
 
-# This is still missing: specified heme threshold and heme in csv.
-
-
-def read_mrc(filename: str, dtype=np.float16) -> np.ndarray:
+def read_mrc(filename: str, dtype=None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
     The values are cast to the specified data type, by default 16-bit floats.
     """
     with mrcfile.open(filename) as mrc:
-        return mrc.data.astype(dtype)
+        if dtype is None:
+            return mrc.data
+        else:
+            return mrc.data.astype(dtype)
 
 
 def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
@@ -48,19 +49,19 @@ def biggest_blob(logical: "np.ndarray[bool]", number: int = 1) -> "np.ndarray[bo
     Given a logical multidimensional array, find the number largest connected regions
     and return them as a logical array. By default number is 1 and the result is a single
     array. If number is higher the arrays are added to each other.
+
+    If the input array is all-zero then so is the output.
     """
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
 
-    import heapq
-
     biggest = heapq.nlargest(number, regions, key=lambda r: np.sum(r.image))
     labels = [r.label for r in biggest]
-    # Will raise an error if there are fewer than number connected components.
+    if len(labels) < number:
+        logging.warning(f"Fewer connected components than expected ({len(labels)}/{number}), perhaps due to an empty glove.")
     import functools
 
-    res = functools.reduce(np.logical_or, (labeled == l for l in labels))
-    return res
+    return functools.reduce(np.logical_or, (labeled == l for l in labels), 0)
 
 
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
@@ -121,7 +122,11 @@ def process(
             # The disjoint union is empty if the two domains are equal - very unlikely.
             if not comb_size:
                 output = 0.0
-                logging.warning("A residue has two identical gloves.")
+                logging.warning(
+                    """
+                    A residue has two identical gloves - very unlikely.
+                    Hotspot number {i}: {hotspot}. Chain or dimer number {j}. 
+                    """)
             else:
                 output = (
                     map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
