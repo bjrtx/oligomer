@@ -5,6 +5,7 @@ import operator
 import string
 import logging
 import heapq
+import functools
 from collections.abc import Iterable
 
 import numpy as np
@@ -20,10 +21,7 @@ def read_mrc(filename: str, dtype=None) -> np.ndarray:
     The values are cast to the specified data type, by default 16-bit floats.
     """
     with mrcfile.open(filename) as mrc:
-        if dtype is None:
-            return mrc.data
-        else:
-            return mrc.data.astype(dtype)
+        return mrc.data if dtype is None else mrc.data.astype(dtype)
 
 
 def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
@@ -47,9 +45,8 @@ def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
 def biggest_blob(logical: "np.ndarray[bool]", number: int = 1) -> "np.ndarray[bool]":
     """
     Given a logical multidimensional array, find the number largest connected regions
-    and return them as a logical array. By default number is 1 and the result is a single
-    array. If number is higher the arrays are added to each other.
-
+    and return them as a logical array. By default number is 1.
+    If number is higher the elementwise maximum of the arrays is returned.
     If the input array is all-zero then so is the output.
     """
     labeled = skimage.measure.label(logical)
@@ -61,8 +58,6 @@ def biggest_blob(logical: "np.ndarray[bool]", number: int = 1) -> "np.ndarray[bo
         logging.warning(
             f"Fewer connected components than expected ({len(labels)}/{number}), perhaps due to an empty glove."
         )
-    import functools
-
     return functools.reduce(np.logical_or, (labeled == l for l in labels), 0)
 
 
@@ -92,16 +87,16 @@ def process(
     with open(hotspot_filename) as hotspot_file:
         hotspots = list(csv.DictReader(hotspot_file))
 
-    TH_chains = 0.42
+    chain_threshold = 0.42
 
     if not by_dimers:
         columns = [
-            read_mrc(f"Bfr_molmap_chain{char}_res5.mrc") > TH_chains
+            read_mrc(f"Bfr_molmap_chain{char}_res5.mrc") > chain_threshold
             for char in string.ascii_uppercase[:24]
         ]
     else:
         columns = [
-            read_mrc(f"dimer_plus_heme_{d.upper()}.mrc") > TH_chains
+            read_mrc(f"dimer_plus_heme_{d.upper()}.mrc") > chain_threshold
             for d in dimer_names
         ]
 
@@ -120,11 +115,11 @@ def process(
             bfr2_spot = biggest_blob(
                 bfr2_glove & chain_or_dimer, number=2 if by_dimers else 1
             )
-            comb_size = np.sum(bfr1_spot ^ bfr2_spot)
+            comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal - very unlikely.
             if not comb_size:
                 output = 0.0
-                logging.warning(
+                logging.error(
                     """
                     A residue has two identical gloves - very unlikely.
                     Hotspot number {i}: {hotspot}. Chain or dimer number {j}. 
@@ -144,7 +139,6 @@ def process(
 
 
 if __name__ == "__main__":
-    # There must be a better way.
     map_filename = "284postprocess.mrc"
     map_threshold = 0.04
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
