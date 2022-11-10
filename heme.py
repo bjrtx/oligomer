@@ -31,7 +31,7 @@ chain_file_name = "Bfr_molmap_chain?_res5.mrc"
 heme_filename = "Heme_rerefined_corrected.mrc"
 
 heme = hotspots.read_mrc(heme_filename)
-heme = np.where(heme > threshold, heme, 0) # thresholding the heme map
+heme = np.where(heme > threshold, heme, 0)  # thresholding the heme map
 
 if heme.dtype != np.float32:
     logging.warning(
@@ -54,7 +54,9 @@ for ab in hotspots.dimer_names:
     ]
     # There is exactly one nonzero label in the intersection of chains[0] and the heme.
     label = max(labels := set(heme_components[chains[0].astype(bool)].flat))
-    assert labels == {0, label} and 1 <= label <= 12 # one connected component label and 0
+    assert (
+        labels == {0, label} and 1 <= label <= 12
+    )  # one connected component label and 0
 
     right_component = np.where(heme_components == label, heme, 0)
     logging.info(f"Processing a heme of size {np.count_nonzero(right_component)}.")
