@@ -58,9 +58,12 @@ for ab in dimers:
 
     for char, chain in zip(ab, aug_chains):
         # preserve the headers
-        shutil.copyfile(chain_file_name.replace('?', char.upper()), f"chain_plus_heme_{char.upper()}.mrc")
-        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", 'r+') as file:
-            file.set_volume() # chimera seems not to set its headers properly
+        shutil.copyfile(
+            chain_file_name.replace("?", char.upper()),
+            f"chain_plus_heme_{char.upper()}.mrc",
+        )
+        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", "r+") as file:
+            file.set_volume()  # chimera seems not to set its headers properly
             file.set_data(chain)
 
     shutil.copyfile(
