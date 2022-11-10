@@ -38,9 +38,11 @@ heme_components = skimage.measure.label(heme > threshold)
 assert set(heme_components.flat) == set(range(13))
 # there are 12 connected components (1-12) plus 0 for empty regions
 
-dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
+# dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"] 
 
-for ab in dimers:
+example_file = chain_file_name.replace('?', 'A')
+
+for ab in hotspots.dimer_names:
     chains = [
         hotspots.read_mrc(chain_file_name.replace("?", char.upper())) for char in ab
     ]
@@ -50,7 +52,7 @@ for ab in dimers:
     label = intersection.max()
 
     # Part of the heme where heme_components == label
-    right_component = np.where(heme_components == label, heme, np.float32(0))
+    right_component = np.where(heme_components == label, heme, 0)
     logging.info("Processing a heme of size {np.count_nonzero(right_component)}.")
     # Add the heme component to the chain by taking maxima element-wise.
     aug_chains = [np.maximum(chain, right_component) for chain in chains]
@@ -58,17 +60,12 @@ for ab in dimers:
 
     for char, chain in zip(ab, aug_chains):
         # preserve the headers
-        shutil.copyfile(
-            chain_file_name.replace("?", char.upper()),
-            f"chain_plus_heme_{char.upper()}.mrc",
-        )
-        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", "r+") as file:
-            file.set_volume()  # chimera seems not to set its headers properly
+        shutil.copyfile(example_file, f"chain_plus_heme_{char.upper()}.mrc")
+        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", 'r+') as file:
+            file.set_volume() # chimera seems not to set its headers properly
             file.set_data(chain)
 
-    shutil.copyfile(
-        chain_file_name.replace("?", char.upper()), f"dimer_plus_heme_{ab.upper()}.mrc"
-    )
+    shutil.copyfile(example_file, f"dimer_plus_heme_{ab.upper()}.mrc")
     with mrcfile.open(f"dimer_plus_heme_{ab.upper()}.mrc", "r+") as file:
         file.set_volume()
         file.set_data(dimer)
