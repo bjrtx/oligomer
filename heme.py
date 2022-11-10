@@ -3,6 +3,7 @@ import mrcfile
 import numpy as np
 import hotspots
 import shutil
+import logging
 
 """
 This script is not intended to be run frequently. It contains a method for taking one MRC file containing
@@ -11,16 +12,27 @@ Each map is then associated with its corresponding dimers.
 Finally one can prepare maps of the following form:
 - a chain plus the location of its heme
 - a dimer plus the location of its heme
+
+The script needs to be run in the folder containing
+- the chain maps, named as in the variable chain_filename below
+- the heme map, named as in the variable heme_filename.
+
+The outputs will be named "chain_plus_heme_A.mrc" and so on, "dimer_plus_heme_AQ.mrc" and so on.
 """
 
+# small threshold to erase background noise when reading hemes
+threshold = 0.0001
 
-threshold = 0.0001  # change threshold for smaller / larger hemes
-
+# in  the next variable, '?' will range from A to X
+chain_file_name = "Bfr_molmap_chain?_res5.mrc"
 heme_filename = "Heme_rerefined_corrected.mrc"
 heme = hotspots.read_mrc(heme_filename)
-print("heme", heme.dtype)
+if heme.dtype != np.float32:
+    logging.warning("Read a file with unexpected numerical data type: {heme_filename}, {heme.dtype}.")
 
-print("size of all hemes after threshold", np.count_nonzero(heme > threshold))
+logging.info(
+"size of all hemes after threshold", np.count_nonzero(heme > threshold)
+)
 
 heme_components = skimage.measure.label(heme > threshold)
 assert set(heme_components.flat) == set(range(13))
@@ -30,7 +42,8 @@ dimers = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"
 
 for ab in dimers:
     chains = [
-        hotspots.read_mrc(f"Bfr_molmap_chain{char.upper()}_res5.mrc") for char in ab
+        hotspots.read_mrc(chain_file_name.replace('?', char.upper()))
+        for char in ab
     ]
 
     intersection = heme_components[chains[0].astype(bool)]
@@ -39,32 +52,19 @@ for ab in dimers:
 
     # Part of the heme where heme_components == label
     right_component = np.where(heme_components == label, heme, np.float32(0))
-    print(
-        "component dtype",
-        right_component.dtype,
-        right_component.shape,
-        right_component.max(),
-    )
-    print("heme size", np.count_nonzero(right_component))
+    logging.info("Processing a heme of size {np.count_nonzero(right_component)}.")
     # Add the heme component to the chain by taking maxima element-wise.
     aug_chains = [np.maximum(chain, right_component) for chain in chains]
-    for c in aug_chains:
-        print("chain", c.dtype, c.shape)
     dimer = np.maximum(*aug_chains)
 
     for char, chain in zip(ab, aug_chains):
         # preserve the headers
-        shutil.copyfile(
-            f"Bfr_molmap_chain{char.upper()}_res5.mrc",
-            f"chain_plus_heme_{char.upper()}.mrc",
-        )
-        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", "r+") as file:
-            file.set_volume()  # chimera is doing something wrong here?
+        shutil.copyfile(chain_file_name.replace('?', char.upper()), f"chain_plus_heme_{char.upper()}.mrc")
+        with mrcfile.open(f"chain_plus_heme_{char.upper()}.mrc", 'r+') as file:
+            file.set_volume() # chimera is doing something wrong here?
             file.set_data(chain)
 
-    shutil.copyfile(
-        f"Bfr_molmap_chain{char.upper()}_res5.mrc", f"dimer_plus_heme_{ab.upper()}.mrc"
-    )
-    with mrcfile.open(f"dimer_plus_heme_{ab.upper()}.mrc", "r+") as file:
+    shutil.copyfile(chain_file_name.replace('?', char.upper()), f"dimer_plus_heme_{ab.upper()}.mrc")
+    with mrcfile.open(f"dimer_plus_heme_{ab.upper()}.mrc", 'r+') as file:
         file.set_volume()
         file.set_data(dimer)
