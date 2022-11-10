@@ -38,7 +38,9 @@ def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
         except (FileNotFoundError, ValueError):
             # This happens if the CSV file does not have either bfr info or a threshold,
             # in which case the glove is identically zero.
-            logging.warning(f"One glove was empty: {hotspot}. This will create more warnings.")
+            logging.warning(
+                f"One glove was empty: {hotspot}. This will create more warnings."
+            )
     return gloves
 
 
@@ -64,9 +66,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
 
-def process(
-    hotspot_filename: str, map_filename: str, by_dimers=False
-):
+def process(hotspot_filename: str, map_filename: str, by_dimers=False):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
@@ -87,16 +87,16 @@ def process(
         hotspots = list(csv.DictReader(hotspot_file))
 
     chain_threshold = 0.42
-    chain_filename = "chain_plus_heme_?.mrc" #"Bfr_molmap_chain?_res5.mrc"
+    chain_filename = "chain_plus_heme_?.mrc"  # "Bfr_molmap_chain?_res5.mrc"
     dimer_filename = "dimer_plus_heme_?.mrc"
     if not by_dimers:
         columns = [
-            read_mrc(chain_filename.replace('?', char)) > chain_threshold
+            read_mrc(chain_filename.replace("?", char)) > chain_threshold
             for char in string.ascii_uppercase[:24]
         ]
     else:
         columns = [
-            read_mrc(dimer_filename.replace('?', d.upper())) > chain_threshold
+            read_mrc(dimer_filename.replace("?", d.upper())) > chain_threshold
             for d in dimer_names
         ]
 
