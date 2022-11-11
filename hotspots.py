@@ -66,9 +66,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
 
-def process(
-    hotspot_data: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False
-):
+def process(hotspot_data: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False, truncate=True):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
@@ -82,10 +80,16 @@ def process(
           between 0 and 1 intended as thresholds.
 
     map_filename: either the patn of an MRC file containing an electronic density map.
+
+    truncate: if this is set to true  then the maps are cast to 16-bit floats, shortening
+    computation time.
     """
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
         map_ = read_mrc(map_)
+    
+    if truncate:
+        map = map.astype(numpy.float16, casting="same-kind")
 
     if isinstance(hotspot_data, str):
         logging.info(f"Reading hotspot information: {hotspot_data}.")
