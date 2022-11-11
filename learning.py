@@ -12,21 +12,6 @@ from sklearn.mixture import GaussianMixture
 # You need to be in the directory containing those files.
 
 dim = 3  # arbitrary
-shuffler = [
-    (0, 16),
-    (1, 14),
-    (2, 21),
-    (3, 20),
-    (4, 15),
-    (5, 17),
-    (6, 10),
-    (7, 13),
-    (8, 18),
-    (9, 19),
-    (11, 22),
-    (12, 23),
-]
-
 
 def analyze(data, group_data=True):
     """
@@ -50,6 +35,7 @@ def analyze(data, group_data=True):
         "mx",
     ]
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
+    shuffler = [(ord(x) - ord('a'), ord(y) - ord('a')) for x, y in dimer_names]
     if not by_dimers and group_data:
         first, second = zip(*shuffler)
         data = numpy.hstack((data[first, :], data[second, :]))

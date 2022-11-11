@@ -6,14 +6,13 @@ import string
 import logging
 import heapq
 import functools
-from collections.abc import Iterable
+from collections.abc import Iterable, Collection
 
 import numpy as np
 import skimage
 import mrcfile
 
 import learning
-
 
 def read_mrc(filename: str, dtype=None) -> np.ndarray:
     """
@@ -66,25 +65,29 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
 
-def process(hotspot_filename: str, map_filename: str, by_dimers=False):
+def process(hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
     then the columns are dimers.
 
-    hotspot_filename: CSV file containing the hotspot information, _must_ be saved
+    hotspot_filename: either a CSV file or a list of rows from a previously read file.
+        The CSV file contains hotspot information. It _must_ be saved
         in the UTF8 encoding. It has at least the following named columns:
         - "Bfr1_file_name" and "Bfr2_file_name" contain the paths of MRC files,
         - "Bfr1_Molmap_TH" and "Bfr2_Molmap_TH" contain floating point numbers
           between 0 and 1 intended as thresholds.
 
-    map_filename: MRC file containing an electronic density map.
+    map_filename: either the patn of an MRC file containing an electronic density map.
     """
+    if map_.isinstance(str):
+        logging.info(f"Processing new map: {map_}.")
+        map_ = read_mrc(map_)
 
-    logging.info(f"Processing {map_filename}. Hotspot information: {hotspot_filename}.")
-
-    with open(hotspot_filename, encoding="utf-8") as hotspot_file:
-        hotspots = list(csv.DictReader(hotspot_file))
+    if hotspots.isinstance(str):
+        logging.info(f"Reading hotspot information: {hotspots}.")
+        with open(hotspots, encoding="utf-8") as hotspot_file:
+            hotspots = list(csv.DictReader(hotspot_file))
 
     chain_threshold = 0.42
     chain_filename = "chain_plus_heme_?.mrc"  # "Bfr_molmap_chain?_res5.mrc"
@@ -100,7 +103,7 @@ def process(hotspot_filename: str, map_filename: str, by_dimers=False):
             for d in dimer_names
         ]
 
-    map = read_mrc(map_filename)
+    
     out = np.empty([len(hotspots), len(columns)], dtype=np.float16)
 
     for i, hotspot in enumerate(hotspots):
@@ -116,19 +119,11 @@ def process(hotspot_filename: str, map_filename: str, by_dimers=False):
                 bfr2_glove & chain_or_dimer, n=2 if by_dimers else 1
             )
             comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
-            # The disjoint union is empty if the two domains are equal - very unlikely.
-            if not comb_size:
-                output = 0
-                logging.error(
-                    """
-                    A residue has two identical gloves - very unlikely.
-                    Hotspot number {i}: {hotspot}. Chain or dimer number {j}. 
-                    """
-                )
-            else:
-                output = (
-                    map.sum(where=bfr1_spot) - map.sum(where=bfr2_spot)
-                ) / comb_size
+            # The disjoint union is empty if the two domains are equal, which should not happen.
+            assert comb_size > 0
+            output = (
+                map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
+            ) / comb_size
             logging.info(
                 f"hotspot {i + 1} chain "
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
