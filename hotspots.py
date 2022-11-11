@@ -14,6 +14,7 @@ import mrcfile
 
 import learning
 
+
 def read_mrc(filename: str, dtype=None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
@@ -65,7 +66,9 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
 
-def process(hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False):
+def process(
+    hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False
+):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
@@ -103,7 +106,6 @@ def process(hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_di
             for d in dimer_names
         ]
 
-    
     out = np.empty([len(hotspots), len(columns)], dtype=np.float16)
 
     for i, hotspot in enumerate(hotspots):
@@ -121,9 +123,7 @@ def process(hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_di
             comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal, which should not happen.
             assert comb_size > 0
-            output = (
-                map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
-            ) / comb_size
+            output = (map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)) / comb_size
             logging.info(
                 f"hotspot {i + 1} chain "
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "

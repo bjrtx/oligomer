@@ -13,6 +13,7 @@ from sklearn.mixture import GaussianMixture
 
 dim = 3  # arbitrary
 
+
 def analyze(data, group_data=True):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to hotspots. Conduct statistical analysis.
@@ -35,7 +36,7 @@ def analyze(data, group_data=True):
         "mx",
     ]
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
-    shuffler = [(ord(x) - ord('a'), ord(y) - ord('a')) for x, y in dimer_names]
+    shuffler = [(ord(x) - ord("a"), ord(y) - ord("a")) for x, y in dimer_names]
     if not by_dimers and group_data:
         first, second = zip(*shuffler)
         data = numpy.hstack((data[first, :], data[second, :]))
