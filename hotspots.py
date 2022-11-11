@@ -69,8 +69,8 @@ dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw",
 def process(
     hotspot_data: str | Collection[dict[str]],
     map_: str | np.ndarray,
-    by_dimers=False,
-    truncate=True,
+    by_dimers: bool=False,
+    truncate: bool=True,
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
