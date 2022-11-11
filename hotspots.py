@@ -70,7 +70,7 @@ def process(
     hotspot_data: str | Collection[dict[str]],
     map_: str | np.ndarray,
     by_dimers: bool = False,
-    truncate: bool = True,
+    truncate: bool = True
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
@@ -94,7 +94,7 @@ def process(
         map_ = read_mrc(map_)
 
     if truncate:
-        map = map.astype(np.float16, casting="same-kind")
+        map_ = map_.astype(np.float16, casting="same_kind")
 
     if isinstance(hotspot_data, str):
         logging.info(f"Reading hotspot information: {hotspot_data}.")
