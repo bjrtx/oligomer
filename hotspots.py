@@ -94,7 +94,7 @@ def process(
         map_ = read_mrc(map_)
 
     if truncate:
-        map = map.astype(numpy.float16, casting="same-kind")
+        map = map.astype(np.float16, casting="same-kind")
 
     if isinstance(hotspot_data, str):
         logging.info(f"Reading hotspot information: {hotspot_data}.")
