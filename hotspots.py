@@ -70,7 +70,8 @@ def process(
     hotspot_data: str | Collection[dict[str]],
     map_: str | np.ndarray,
     by_dimers: bool = False,
-    truncate: bool = True
+    truncate: bool = True,
+    gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None=None
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
@@ -118,7 +119,7 @@ def process(
     out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     for i, hotspot in enumerate(hotspot_data):
-        bfr1_glove, bfr2_glove = gloves(hotspot)
+        bfr1_glove, bfr2_glove = gloves(hotspot) if gloves_data is None else gloves_data[i]
         for j, chain_or_dimer in enumerate(columns):
             # To avoid parts of hotspots coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
