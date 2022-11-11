@@ -66,9 +66,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
 
 
-def process(
-    hotspots: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False
-):
+def process(hotspot_data: str | Collection[dict[str]], map_: str | np.ndarray, by_dimers=False):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
@@ -83,14 +81,14 @@ def process(
 
     map_filename: either the patn of an MRC file containing an electronic density map.
     """
-    if map_.isinstance(str):
+    if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
         map_ = read_mrc(map_)
 
-    if hotspots.isinstance(str):
-        logging.info(f"Reading hotspot information: {hotspots}.")
-        with open(hotspots, encoding="utf-8") as hotspot_file:
-            hotspots = list(csv.DictReader(hotspot_file))
+    if isinstance(hotspot_data, str):
+        logging.info(f"Reading hotspot information: {hotspot_data}.")
+        with open(hotspot_data, encoding="utf-8") as hotspot_file:
+            hotspot_data = list(csv.DictReader(hotspot_file))
 
     chain_threshold = 0.42
     chain_filename = "chain_plus_heme_?.mrc"  # "Bfr_molmap_chain?_res5.mrc"
@@ -106,9 +104,10 @@ def process(
             for d in dimer_names
         ]
 
-    out = np.empty([len(hotspots), len(columns)], dtype=np.float16)
+    
+    out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
-    for i, hotspot in enumerate(hotspots):
+    for i, hotspot in enumerate(hotspot_data):
         bfr1_glove, bfr2_glove = gloves(hotspot)
         for j, chain_or_dimer in enumerate(columns):
             # To avoid parts of hotspots coming from other chains, only the
