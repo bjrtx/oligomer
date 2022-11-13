@@ -16,18 +16,20 @@ dim = 3  # arbitrary
 
 def analyze(data, group_data=True):
     """
-    Read a data file whose rows correspond to chains and whose columns correspond to 
+    Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
     The analysis is conducted by dimer when group_data is True and otherwise by chain.
     """
     by_dimers = data.shape[0] == 12  # the rows are in fact dimers
     plot_index = itertools.count(1)
     if not by_dimers and group_data:
-        shuffler = [(ord(x) - ord("a"), ord(y) - ord("a")) for x, y in hotspots.dimer_names]
+        shuffler = [
+            (ord(x) - ord("a"), ord(y) - ord("a")) for x, y in hotspots.dimer_names
+        ]
         first, second = zip(*shuffler)
         data = numpy.hstack((data[first, :], data[second, :]))
         by_dimers = True
-    chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]  
+    chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
 
     pca = PCA(n_components=2, whiten=True).fit(data)
     reduced = pca.transform(data)

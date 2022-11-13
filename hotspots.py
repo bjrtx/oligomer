@@ -15,13 +15,14 @@ import mrcfile
 import learning
 
 
-def read_mrc(filename: str, dtype: type | None=None) -> np.ndarray:
+def read_mrc(filename: str, dtype: type | None = None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
     The values are cast to the specified data type if one is given.
     """
     with mrcfile.open(filename) as mrc:
         return mrc.data if dtype is None else mrc.data.astype(dtype)
+
 
 def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
@@ -69,7 +70,7 @@ def process(
     map_: str | np.ndarray,
     by_dimers: bool = False,
     truncate: bool = True,
-    gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None=None
+    gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
@@ -104,8 +105,7 @@ def process(
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
     indices = dimer_names if by_dimers else string.ascii_uppercase[:24]
     columns = [
-        read_mrc(filenames.replace("?", idx)) > chain_threshold
-        for idx in indices
+        read_mrc(filenames.replace("?", idx)) > chain_threshold for idx in indices
     ]
     out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
@@ -116,16 +116,14 @@ def process(
             # largest connected component of the hotspot-chain intersection
             # is kept.
             n = 2 if by_dimers else 1
-            bfr1_spot = biggest_blob(
-                bfr1 & chain_or_dimer, n
-            )
-            bfr2_spot = biggest_blob(
-                bfr2 & chain_or_dimer, n
-            )
+            bfr1_spot = biggest_blob(bfr1 & chain_or_dimer, n)
+            bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n)
             # comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal, which should not happen.
             # assert comb_size > 0
-            output = (map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot))# / comb_size
+            output = map_.sum(where=bfr1_spot) - map_.sum(
+                where=bfr2_spot
+            )  # / comb_size
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
