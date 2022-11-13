@@ -15,7 +15,7 @@ import mrcfile
 import learning
 
 
-def read_mrc(filename: str, dtype=None) -> np.ndarray:
+def read_mrc(filename: str, dtype: type | None=None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
     The values are cast to the specified data type if one is given.
@@ -23,8 +23,7 @@ def read_mrc(filename: str, dtype=None) -> np.ndarray:
     with mrcfile.open(filename) as mrc:
         return mrc.data if dtype is None else mrc.data.astype(dtype)
 
-
-def gloves(hotspot: dict) -> list[np.ndarray, np.ndarray]:
+def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two gloves associated with a given hotspot.
     """
@@ -53,14 +52,13 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
     """
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
-
-    biggest = heapq.nlargest(n, regions, key=lambda r: np.sum(r.image))
-    labels = [r.label for r in biggest]
-    if len(labels) < n:
+    biggest = heapq.nlargest(n, regions, key=operator.attrgetter("area"))
+    if len(biggest) < n:
         logging.warning(
-            f"Fewer connected components than expected ({len(labels)}/{n}), perhaps due to an empty glove."
+            f"Fewer connected components than expected ({len(biggest)}/{n}), "
+            f"perhaps due to an empty glove."
         )
-    return functools.reduce(np.logical_or, (labeled == l for l in labels), 0)
+    return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
 
 
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
@@ -87,7 +85,7 @@ def process(
 
     map_filename: either the patn of an MRC file containing an electronic density map.
 
-    truncate: if this is set to true  then the maps are cast to 16-bit floats, shortening
+    truncate: when this is set to truethe maps are cast to 16-bit floats, shortening
     computation time.
     """
     if isinstance(map_, str):
@@ -95,49 +93,43 @@ def process(
         map_ = read_mrc(map_)
 
     if truncate:
-        map_ = map_.astype(np.float16, casting="same_kind")
+        map_ = map_.astype(np.float16, casting="same_kind", copy=False)
 
     if isinstance(hotspot_data, str):
         logging.info(f"Reading hotspot information: {hotspot_data}.")
-        with open(hotspot_data, encoding="utf-8") as hotspot_file:
-            hotspot_data = list(csv.DictReader(hotspot_file))
+        with open(hotspot_data, encoding="utf-8") as file:
+            hotspot_data = list(csv.DictReader(file))
 
     chain_threshold = 0.42
-    chain_filename = "chain_plus_heme_?.mrc"  # "Bfr_molmap_chain?_res5.mrc"
-    dimer_filename = "dimer_plus_heme_?.mrc"
-    if not by_dimers:
-        columns = [
-            read_mrc(chain_filename.replace("?", char)) > chain_threshold
-            for char in string.ascii_uppercase[:24]
-        ]
-    else:
-        columns = [
-            read_mrc(dimer_filename.replace("?", d.upper())) > chain_threshold
-            for d in dimer_names
-        ]
-
+    filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
+    indices = dimer_names if by_dimers else string.ascii_uppercase[:24]
+    columns = [
+        read_mrc(filenames.replace("?", idx)) > chain_threshold
+        for idx in indices
+    ]
     out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     for i, hotspot in enumerate(hotspot_data):
-        bfr1_glove, bfr2_glove = gloves(hotspot) if gloves_data is None else gloves_data[i]
+        bfr1, bfr2 = gloves(hotspot) if gloves_data is None else gloves_data[i]
         for j, chain_or_dimer in enumerate(columns):
             # To avoid parts of hotspots coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
             # is kept.
+            n = 2 if by_dimers else 1
             bfr1_spot = biggest_blob(
-                bfr1_glove & chain_or_dimer, n=2 if by_dimers else 1
+                bfr1 & chain_or_dimer, n
             )
             bfr2_spot = biggest_blob(
-                bfr2_glove & chain_or_dimer, n=2 if by_dimers else 1
+                bfr2 & chain_or_dimer, n
             )
-            comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
+            # comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
             # The disjoint union is empty if the two domains are equal, which should not happen.
-            assert comb_size > 0
-            output = (map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)) / comb_size
+            # assert comb_size > 0
+            output = (map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot))# / comb_size
             logging.info(
-                f"hotspot {i + 1} chain "
+                f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
-                f"comb. value {output:.4}"
+                f"value {output:.4}"
             )
             out[i, j] = output
     return out
