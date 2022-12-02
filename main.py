@@ -11,9 +11,7 @@ def blue_dimers(map_filename, hotspot_filename):
 
     data = hotspots.process(hotspot_filename, map_filename, 0.04).transpose()
     chain_names = string.ascii_uppercase[:24]  # list of letters A to X inclusive
-    shuffler = [
-        (ord(x) - ord("a"), ord(y) - ord("a")) for x, y in hotspots.dimer_names
-    ]
+    shuffler = [(ord(x) - ord("a"), ord(y) - ord("a")) for x, y in hotspots.dimer_names]
     first, second = zip(*shuffler)
     data = numpy.hstack((data[first, :], data[second, :]))
     chain_names = [chain_names[a] + chain_names[b] for a, b in shuffler]

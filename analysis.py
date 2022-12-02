@@ -6,7 +6,8 @@ import numpy
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
-#from sklearn.mixture import GaussianMixture
+
+# from sklearn.mixture import GaussianMixture
 
 import hotspots
 

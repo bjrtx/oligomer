@@ -34,11 +34,10 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
 
     for i in (1, 2):
         try:
-            gloves[i - 1] = (
-                read_mrc(hotspot[f"Bfr{i}_file_name"])
-                > float(hotspot[f"Bfr{i}_Molmap_TH"])
+            gloves[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
+                hotspot[f"Bfr{i}_Molmap_TH"]
             )
-#            gloves[i - 1] = np.pad(gloves[i-1], pad_width=50)
+        #            gloves[i - 1] = np.pad(gloves[i-1], pad_width=50)
         except (FileNotFoundError, ValueError):
             # This happens if the CSV file does not have either bfr info or a threshold,
             # in which case the glove is identically zero.
@@ -75,7 +74,7 @@ def process(
     by_dimers: bool = False,
     truncate: bool = True,
     gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
-    scores: string = "sum"
+    scores: string = "sum",
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
@@ -114,9 +113,9 @@ def process(
             hotspot_data = list(csv.DictReader(file))
 
     map_ = abs(map_)
-    map_ = map_[50:250,50:250,50:250]
+    map_ = map_[50:250, 50:250, 50:250]
     map_ = map_ * (map_ > 0.0005)
-    
+
     chain_threshold = 0.42
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
     indices = dimer_names if by_dimers else string.ascii_uppercase[:24]
@@ -124,7 +123,6 @@ def process(
         read_mrc(filenames.replace("?", idx)) > chain_threshold for idx in indices
     ]
     out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
-
 
     ans = 0
     for i, hotspot in enumerate(hotspot_data):
@@ -136,10 +134,14 @@ def process(
 
 
 if __name__ == "__main__":
-    names = ["diff188-Bfr1_284_a06_b04_c-n00_o-x1.mrc", "diff188-Bfr1_284_a07_b03_c-n00_o-x1.mrc", "diff188-Bfr1_284_a05_b05_c-n00_o-x1.mrc"] 
+    names = [
+        "diff188-Bfr1_284_a06_b04_c-n00_o-x1.mrc",
+        "diff188-Bfr1_284_a07_b03_c-n00_o-x1.mrc",
+        "diff188-Bfr1_284_a05_b05_c-n00_o-x1.mrc",
+    ]
     logging.basicConfig(level=logging.INFO)
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
     for map_filename in names:
         out = process(hotspot_filename, map_filename, by_dimers=False)
         print(map_filename, out)
-    #analysis.analyze(out.transpose())
+    # analysis.analyze(out.transpose())
