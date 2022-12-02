@@ -1,4 +1,3 @@
-import string
 import itertools
 import math
 import logging
@@ -7,14 +6,12 @@ import numpy
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
-from sklearn.mixture import GaussianMixture
+#from sklearn.mixture import GaussianMixture
 
 import hotspots
 
-dim = 3  # arbitrary
 
-
-def analyze(data, group_data=True):
+def analyze(data: numpy.ndarray, group_data: bool = True):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
@@ -34,12 +31,10 @@ def analyze(data, group_data=True):
     pca = PCA(n_components=2, whiten=True).fit(data)
     reduced = pca.transform(data)
     color_range = ("darkorange", "navy")
-    plt.subplots(layout="constrained")
     labels = KMeans(n_clusters=2).fit(data).labels_
     # By convention, the first data point will always be in cluster 0
     labels = labels != labels[0]
     colors = [color_range[l] for l in labels]
-    plt.subplot(dim, dim, next(plot_index))
     plt.scatter(reduced[:, 0], reduced[:, 1], color=colors, alpha=0.8)
     for chain, xy in zip(chain_names, reduced):
         plt.annotate(chain, xy, textcoords="offset points", xytext=(3, 3))
@@ -74,21 +69,3 @@ def analyze(data, group_data=True):
     #         loc="left",
     #     )
     plt.show()
-
-
-if __name__ == "__main__":
-    # You need to be in the directory containing those files.
-    filenames = (
-        "OUT_above_TH_by_chain_dom1.csv",
-        "OUT_above_TH_by_chain_comb.csv",
-        "OUT_sum_by_chain_dom1.csv",
-        "OUT_sum_by_chain_comb.csv",
-    )
-    dim = 1 + math.isqrt(3 * len(filenames) - 1)
-    for filename in filenames:
-        try:
-            data = numpy.loadtxt(filename, delimiter=",").transpose()
-        except OSError:
-            print("Files not found")
-            exit()
-        analyze(data)

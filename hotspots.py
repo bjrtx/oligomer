@@ -12,7 +12,7 @@ import numpy as np
 import skimage
 import mrcfile
 
-import learning
+import analysis
 
 
 def read_mrc(filename: str, dtype: type | None = None) -> np.ndarray:
@@ -27,13 +27,16 @@ def read_mrc(filename: str, dtype: type | None = None) -> np.ndarray:
 def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two gloves associated with a given hotspot.
+
+    hotspot: dictionary with the same fields as those expected by the method process
     """
     gloves = [0, 0]
 
     for i in (1, 2):
         try:
-            gloves[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
-                hotspot[f"Bfr{i}_Molmap_TH"]
+            gloves[i - 1] = (
+                read_mrc(hotspot[f"Bfr{i}_file_name"])
+                > float(hotspot[f"Bfr{i}_Molmap_TH"])
             )
         except (FileNotFoundError, ValueError):
             # This happens if the CSV file does not have either bfr info or a threshold,
@@ -71,6 +74,7 @@ def process(
     by_dimers: bool = False,
     truncate: bool = True,
     gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
+    scores: string = "sum"
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
@@ -88,6 +92,12 @@ def process(
 
     truncate: when this is set to truethe maps are cast to 16-bit floats, shortening
     computation time.
+
+    gloves_data: either a collection of already computed hotspot gloves (3-dimensional
+    arrays of Boolean values) or None.
+
+    scores: whether to score by sum of electronic density ("sum", the default behaviour)
+    or by number of above-threshold values ("threshold")
     """
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
@@ -109,6 +119,10 @@ def process(
     ]
     out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
+    if scores == "threshold":
+        map_ = (map_ > 0.025).astype(np.float16) # for future precision printing
+        logging.warn("Using threshold scoring.")
+    
     for i, hotspot in enumerate(hotspot_data):
         bfr1, bfr2 = gloves(hotspot) if gloves_data is None else gloves_data[i]
         for j, chain_or_dimer in enumerate(columns):
@@ -118,12 +132,11 @@ def process(
             n = 2 if by_dimers else 1
             bfr1_spot = biggest_blob(bfr1 & chain_or_dimer, n)
             bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n)
-            # comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
-            # The disjoint union is empty if the two domains are equal, which should not happen.
-            # assert comb_size > 0
+            comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
+            assert comb_size > 0
             output = map_.sum(where=bfr1_spot) - map_.sum(
                 where=bfr2_spot
-            )  # / comb_size
+            )  #/ comb_size
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
@@ -137,5 +150,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     map_filename = "284postprocess.mrc"
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
-    out = process(hotspot_filename, map_filename, by_dimers=True)
-    learning.analyze(out.transpose())
+    out = process(hotspot_filename, map_filename, by_dimers=True, scores="threshold")
+    analysis.analyze(out.transpose())
