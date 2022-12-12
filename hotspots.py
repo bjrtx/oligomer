@@ -136,9 +136,7 @@ def process(
             bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n)
             comb_size = np.count_nonzero(bfr1_spot ^ bfr2_spot)
             assert comb_size > 0
-            output = map_.sum(where=bfr1_spot) - map_.sum(
-                where=bfr2_spot
-            )
+            output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
