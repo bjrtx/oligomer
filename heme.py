@@ -7,18 +7,19 @@ import numpy as np
 import hotspots
 
 """
-This script is not intended to be run frequently. It contains a method for taking one MRC file containing
-12 heme positions and splitting it into 12 maps, one per location.
-Each map is then associated with its corresponding dimers.
-Finally one can prepare maps of the following form:
-- a chain plus the location of its heme
-- a dimer plus the location of its heme
+This script is not intended to be run frequently. It contains a method for taking one
+MRC file containing 12 heme positions and splitting it into 12 maps, one per location.
+Each map is then associated with its corresponding dimers. Finally one can prepare maps
+of the following form:
+- a chain plus the location of its heme,
+- a dimer plus the location of its heme.
 
 The script needs to be run in the folder containing
-- the chain maps, named as in the variable chain_filename below
+- the chain maps, named as in the variable chain_filename below,
 - the heme map, named as in the variable heme_filename.
 
-The outputs will be named "chain_plus_heme_A.mrc" and so on, "dimer_plus_heme_AQ.mrc" and so on.
+The outputs will be named "chain_plus_heme_A.mrc" and so on, "dimer_plus_heme_AQ.mrc"
+and so on.
 """
 
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +36,8 @@ heme = np.where(heme > threshold, heme, 0)  # thresholding the heme map
 
 if heme.dtype != np.float32:
     logging.warning(
-        "Read a file with unexpected numerical data type: {heme_filename}, {heme.dtype}."
+        "Read a file with unexpected data type: {heme_filename}, {heme.dtype}. "
+        "Expected numpy.float32."
     )
 
 logging.info(f"Size of the thresholded heme map: {np.count_nonzero(heme)}")
@@ -65,11 +67,12 @@ for ab in hotspots.dimer_names:
     dimer = np.maximum(*aug_chains)
 
     for char, chain in zip(ab, aug_chains):
-        # Copy an existing file to preserve the header
+        # Copy an existing file to preserve the header. MRC headers have many parameters
+        # to set. (In fact, Chimera seems to omit some of them.)
         new_file = f"chain_plus_heme_{char.upper()}.mrc"
         shutil.copyfile(example_file, new_file)
         with mrcfile.open(new_file, "r+") as file:
-            file.set_volume()  # chimera seems not to set its headers properly
+            file.set_volume()  # Chimera seems not to set its headers properly
             file.set_data(chain)
 
     new_file = f"dimer_plus_heme_{ab.upper()}.mrc"

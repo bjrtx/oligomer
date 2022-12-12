@@ -6,7 +6,7 @@ import string
 import logging
 import heapq
 import functools
-from collections.abc import Iterable, Collection
+from collections.abc import Collection
 
 import numpy as np
 import skimage
@@ -55,12 +55,15 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
     """
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
+    # regions is a list of connected components.
+    # We select its n largest components.
     biggest = heapq.nlargest(n, regions, key=operator.attrgetter("area"))
     if len(biggest) < n:
         logging.warning(
             f"Fewer connected components than expected ({len(biggest)}/{n}), "
             f"perhaps due to an empty glove."
         )
+    # return the union (logical sum) of all n largest components
     return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
 
 
@@ -135,19 +138,20 @@ def process(
             assert comb_size > 0
             output = map_.sum(where=bfr1_spot) - map_.sum(
                 where=bfr2_spot
-            )  # / comb_size
+            )
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
                 f"value {output:.4}"
             )
             out[i, j] = output
-    return out
+    # transpose the output for compatibility with analysis methods
+    return out.transpose()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     map_filename = "284postprocess.mrc"
     hotspot_filename = "bbRefinedHotSpotsListDaniel.csv"
-    out = process(hotspot_filename, map_filename, by_dimers=True, scores="threshold")
-    analysis.analyze(out.transpose())
+    out = process(hotspot_filename, map_filename, by_dimers=True, scores="sum")
+    analysis.analyze(out)
