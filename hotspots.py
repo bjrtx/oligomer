@@ -103,7 +103,7 @@ def process(
     or by number of above-threshold values ("threshold")
     """
     assert scores in ("sum", "threshold")
-    
+
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
         map_ = read_mrc(map_)
@@ -138,9 +138,7 @@ def process(
             bfr1_spot = biggest_blob(bfr1 & chain_or_dimer, n_blobs)
             bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n_blobs)
             assert np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0
-            output = map_.sum(where=bfr1_spot) - map_.sum(
-                where=bfr2_spot
-            )
+            output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
@@ -153,23 +151,47 @@ def process(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process and analyze an MRC map.")
-    parser.add_argument("map_file", nargs="?", default="284postprocess.mrc",
-                        help="MRC file containing the map")
-    parser.add_argument("hotspot_file", nargs="?",
-                        default="bbRefinedHotSpotsListDaniel.csv",
-                        help="CSV file containing hotspot information")
-    parser.add_argument('--by_chain', dest='by_dimers', action='store_false',
-                        help='analyze the map chain by chain (default: by dimer)')
-    parser.add_argument('--scores', choices=("sum", "threshold"), default="sum",
-                        help='use threshold scoring (default: sum of densities)')
+    parser.add_argument(
+        "map_file",
+        nargs="?",
+        default="284postprocess.mrc",
+        help="MRC file containing the map",
+    )
+    parser.add_argument(
+        "hotspot_file",
+        nargs="?",
+        default="bbRefinedHotSpotsListDaniel.csv",
+        help="CSV file containing hotspot information",
+    )
+    parser.add_argument(
+        "--by_chain",
+        dest="by_dimers",
+        action="store_false",
+        help="analyze the map chain by chain (default: by dimer)",
+    )
+    parser.add_argument(
+        "--scores",
+        choices=("sum", "threshold"),
+        default="sum",
+        help="use threshold scoring (default: sum of densities)",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
-    out = process(args.hotspot_file, args.map_file, by_dimers=args.by_dimers,
-                  scores=args.scores)
-    kargs = {'axis': 0, 'keepdims': True}  # keepdims to keep a two-dimensional array
-    all_bfr1 = process(args.hotspot_file, "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
-                       by_dimers=args.by_dimers, scores=args.scores).mean(**kargs)
-    all_bfr2 = process(args.hotspot_file, "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
-                       by_dimers=args.by_dimers, scores=args.scores).mean(**kargs)
+    out = process(
+        args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
+    )
+    kargs = {"axis": 0, "keepdims": True}  # keepdims to keep a two-dimensional array
+    all_bfr1 = process(
+        args.hotspot_file,
+        "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
+        by_dimers=args.by_dimers,
+        scores=args.scores,
+    ).mean(**kargs)
+    all_bfr2 = process(
+        args.hotspot_file,
+        "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
+        by_dimers=args.by_dimers,
+        scores=args.scores,
+    ).mean(**kargs)
     print("out", out, "all_bfr1", all_bfr1, "all_bfr2", all_bfr2)
     analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2)

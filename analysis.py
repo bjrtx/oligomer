@@ -11,9 +11,12 @@ import sklearn.preprocessing
 import hotspots
 
 
-def analyze(data: numpy.ndarray, group_data: bool = True,
-            all_bfr1: numpy.ndarray | None = None,
-            all_bfr2: numpy.ndarray | None = None):
+def analyze(
+    data: numpy.ndarray,
+    group_data: bool = True,
+    all_bfr1: numpy.ndarray | None = None,
+    all_bfr2: numpy.ndarray | None = None,
+):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
@@ -43,9 +46,9 @@ def analyze(data: numpy.ndarray, group_data: bool = True,
         # generated all_bfr data is not to the same scale as cryo-EM data
         # thus we need to center and scale each dimer (losing two dimensions in the
         # process)
-        #sklearn.preprocessing.scale(data, axis=1, copy=False)
-        #sklearn.preprocessing.scale(all_bfr1, axis=1, copy=False)
-        #sklearn.preprocessing.scale(all_bfr2, axis=1, copy=False)
+        # sklearn.preprocessing.scale(data, axis=1, copy=False)
+        # sklearn.preprocessing.scale(all_bfr1, axis=1, copy=False)
+        # sklearn.preprocessing.scale(all_bfr2, axis=1, copy=False)
         print(all_bfr1.mean(axis=1), all_bfr2.mean(axis=1))
         data = numpy.vstack((data, all_bfr1, all_bfr2))
         print("augmented data", data)
