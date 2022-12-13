@@ -132,3 +132,4 @@ dmypy.json
 path/chimera_commands.txt
 bbRefinedHotSpotsListDaniel.csv
 *.py~
+*.txt

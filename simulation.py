@@ -5,7 +5,7 @@ from chimera import runCommand as rc
 # $ chimera --nogui simulation.py
 # String formats are all wrong because this is Python2.7
 
-# do we really want dimers?
+
 # pylint: disable-next=invalid-name
 def to_Chimera(blue):
     """Print the Chimera UCSF commands that generate the corresponding oligomer."""
@@ -41,16 +41,23 @@ def generate(Bfr1_lines, Bfr2_lines, basename, path):
     rc("open " + map_name)
     rc("open " + Bfr1_pdb)
     rc("open " + Bfr2_pdb)
-    rc("volume all step 1")  # not sure if useful outside graphical display?
     for idx, (line_Bfr1, line_Bfr2) in enumerate(zip(Bfr1_lines, Bfr2_lines), start=1):
-        rc(line_Bfr1)
-        rc("write selected #1 path/sel_Bfr1.pdb")
-        rc("~select")
-        rc(line_Bfr2)
-        rc("write selected #2 path/sel_Bfr2.pdb")
-        rc("~select")
-        rc("open #31 path/sel_Bfr1.pdb")
-        rc("open #32 path/sel_Bfr2.pdb")
+        if line_Bfr1:
+            rc(line_Bfr1)
+            rc("write selected #1 path/sel_Bfr1.pdb")
+            rc("~select")
+        if line_Bfr2:
+            rc(line_Bfr2)
+            rc("write selected #2 path/sel_Bfr2.pdb")
+            rc("~select")
+        if line_Bfr1:
+            rc("open #31 path/sel_Bfr1.pdb")
+        else:
+            rc("open #31 path/sel_Bfr2.pdb")  # trick!
+        if line_Bfr2:
+            rc("open #32 path/sel_Bfr2.pdb")
+        else:
+            rc("open #32 path/sel_Bfr1.pdb")  # trick!
         new_name = "{}_{}".format(basename, idx)
         # add the basename numbers from 1 to the number of structures
         rc(

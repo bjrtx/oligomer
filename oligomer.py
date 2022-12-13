@@ -117,8 +117,8 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
 
 
 def oligomer_structure(blue_set: Iterable[int] = frozenset()):
-    """Return a Sage Graphics object representing a 24-mer whose facets are colored according
-    to blue_set.
+    """Return a Sage Graphics object representing a 24-mer whose facets are colored
+    according to blue_set.
     """
     # The facets correspond to dimers
     facets = _vertices_to_facets()
@@ -147,7 +147,7 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
 
 @cache
 def more_complicated_graph() -> DiGraph:
-    """Return a digraph that encodes dimer-dimer junctions for the case of heterodimers."""
+    """Return a digraph encoding dimer-dimer junctions for the case of heterodimers."""
     out_neighbours = {
         0: [(1, 1), (11, 0)],
         1: [(2, 0), (8, 0)],
@@ -237,7 +237,8 @@ class Bicoloring:
         self.blue_set come first. This relabelling is the same for two colorings of
         the same graph with a color-preserving isomorphism.
         """
-        # canon is self.graph relabeled and mapping is a dictionary describing the relabelling
+        # canon is self.graph relabeled and mapping is a dictionary describing the
+        # relabelling
         canon, mapping = self.graph.canonical_label(
             partition=[self.blue_set, self.red_set], certificate=True
         )
@@ -370,13 +371,13 @@ def unique_colorings(
     isomorphism=True,
 ) -> Collection[Bicoloring]:
     """List the colorings with a given number of blue vertices in the directed graph,
-    either up to rotations (if isomorphism is True) or not. Return either a list or a set.
+    either up to rotations (if isomorphism is True) or not. Return a list or a set.
 
     Keyword arguments:
     nb_blue_vertices -- number of vertices to be colored in blue
     default_graph -- whether to use the directed Bfr graph
     graph -- graph to be colored if default_graph is False
-    isomorphism -- if True, the colorings are counted up to color-preserving automorphisms
+    isomorphism -- if True, colorings are counted up to color-preserving automorphisms
     of the graph. If False, all colorings are listed.
     """
 
@@ -402,7 +403,7 @@ def write_to_csv(
     """Write the contents of colorings in the CSV format to csv_file.
 
     Keyword arguments:
-    csv_file -- optional: a path-like object (such as a string corresponding to a filename)
+    csv_file -- optional: a path-like object (such as a filename string)
     If None, the output will be written to the standard output.
     csv_header -- if True, add a header with column names as the first row
     dialect -- specific CSV format, see Python's csv module documentation
@@ -465,8 +466,9 @@ def short_display(
         colorings = sorted(colorings, key=lambda c: c.adjacencies.BR, reverse=True)
         descriptions = collections.Counter(str(c) for c in colorings)
         print(
-            f"With {nb_blue_vertices} blue vertices and {graph.order() - nb_blue_vertices}"
-            f" orange vertices, the number of distinct arrangements is {len(colorings)}."
+            f"With {nb_blue_vertices} blue vertices and "
+            f"{graph.order() - nb_blue_vertices} orange vertices, the number of "
+            f"distinct arrangements is {len(colorings)}."
         )
         for desc, count in descriptions.items():
             print(desc + f"\t({count} such arrangements)" if desc > 1 else count)

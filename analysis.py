@@ -6,15 +6,21 @@ import seaborn
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+import sklearn.preprocessing
 
 import hotspots
 
 
-def analyze(data: numpy.ndarray, group_data: bool = True):
+def analyze(data: numpy.ndarray, group_data: bool = True,
+            all_bfr1: numpy.ndarray | None = None,
+            all_bfr2: numpy.ndarray | None = None):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
     The analysis is conducted by dimer when group_data is True and otherwise by chain.
+    If both all_bfr1 and all_bfr2 are passed, they should contain hotspot data for an
+    all-bfr1 and an all-bfr2 map. In this case, two data points for all_bfr1 and
+    all_bfr2 are added.
     """
     assert data.shape[0] in (12, 24)  # dimers or chains
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers
@@ -27,10 +33,29 @@ def analyze(data: numpy.ndarray, group_data: bool = True):
         first, second = zip(*shuffler)
         data = numpy.hstack((data[first, :], data[second, :]))
         by_dimers = True
+    # The dimer names are found in hotspots. The chains alone have names from A to X.
     chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
 
+    all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
+    # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
+    if all_bfr:
+        logging.log("Received additiona data for homogeneous structures.")
+        # generated all_bfr data is not to the same scale as cryo-EM data
+        # thus we need to center and scale each dimer (losing two dimensions in the
+        # process)
+        #sklearn.preprocessing.scale(data, axis=1, copy=False)
+        #sklearn.preprocessing.scale(all_bfr1, axis=1, copy=False)
+        #sklearn.preprocessing.scale(all_bfr2, axis=1, copy=False)
+        print(all_bfr1.mean(axis=1), all_bfr2.mean(axis=1))
+        data = numpy.vstack((data, all_bfr1, all_bfr2))
+        print("augmented data", data)
+        chain_names += ["all_bfr1", "all_bfr2"]
+        # data.astype(numpy.float64, copy=False)
     pca = PCA(n_components=2)
-    reduced = pca.fit_transform(data)
+    if all_bfr:
+        reduced = pca.fit(data[:-2, :]).transform(data)
+    else:
+        reduced = pca.fit_transform(data)
     color_range = ("darkorange", "navy")
     labels = KMeans(n_clusters=2).fit(data).labels_
     # By convention, the first data point will always be in cluster 0
