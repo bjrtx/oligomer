@@ -42,14 +42,15 @@ def analyze(
     all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
     # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
     if all_bfr:
-        logging.log("Received additiona data for homogeneous structures.")
+        logging.info("Received additional data for homogeneous structures.")
         # generated all_bfr data is not to the same scale as cryo-EM data
-        # thus we need to center and scale each dimer (losing two dimensions in the
+        # thus we need to scale each dimer (losing dimensions in the
         # process)
-        # sklearn.preprocessing.scale(data, axis=1, copy=False)
-        # sklearn.preprocessing.scale(all_bfr1, axis=1, copy=False)
-        # sklearn.preprocessing.scale(all_bfr2, axis=1, copy=False)
-        print(all_bfr1.mean(axis=1), all_bfr2.mean(axis=1))
+        # sklearn.preprocessing.scale with scores="sum" creates numerical errors
+        scale = sklearn.preprocessing.minmax_scale  # sklearn.preprocessing.minmax_scale
+        scale(data, axis=1, copy=False)
+        scale(all_bfr1, axis=1, copy=False)
+        scale(all_bfr2, axis=1, copy=False)
         data = numpy.vstack((data, all_bfr1, all_bfr2))
         print("augmented data", data)
         chain_names += ["all_bfr1", "all_bfr2"]
@@ -57,6 +58,17 @@ def analyze(
     pca = PCA(n_components=2)
     if all_bfr:
         reduced = pca.fit(data[:-2, :]).transform(data)
+        first_comp = pca.components_[0]
+        first_coeffs = {
+            chain: numpy.dot(row, first_comp)
+            for (chain, row) in zip(chain_names, data)
+        }
+        # scale so that the coeffs of all-bfr1 and all-bfr2 are 0 and 1
+        first_coeffs = {
+            k: (v - first_coeffs["all_bfr1"]) / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
+            for k, v in first_coeffs.items()
+        }
+        print("Bfr1/2 proportion", first_coeffs)
     else:
         reduced = pca.fit_transform(data)
     color_range = ("darkorange", "navy")

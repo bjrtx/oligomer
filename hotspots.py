@@ -150,6 +150,7 @@ def process(
 
 
 if __name__ == "__main__":
+    # Parse optional arguments.
     parser = argparse.ArgumentParser(description="Process and analyze an MRC map.")
     parser.add_argument(
         "map_file",
@@ -175,23 +176,31 @@ if __name__ == "__main__":
         default="sum",
         help="use threshold scoring (default: sum of densities)",
     )
+    # threshold scoring does not give plausible results for homogeneous structures
+    parser.add_argument(
+        "--homogeneous",
+        action="store_true",
+        help="add data points for homogeneous structures (default: no)"
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
     )
     kargs = {"axis": 0, "keepdims": True}  # keepdims to keep a two-dimensional array
-    all_bfr1 = process(
-        args.hotspot_file,
-        "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
-        by_dimers=args.by_dimers,
-        scores=args.scores,
-    ).mean(**kargs)
-    all_bfr2 = process(
-        args.hotspot_file,
-        "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
-        by_dimers=args.by_dimers,
-        scores=args.scores,
-    ).mean(**kargs)
-    print("out", out, "all_bfr1", all_bfr1, "all_bfr2", all_bfr2)
-    analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2)
+    if args.homogeneous:
+        all_bfr1 = process(
+            args.hotspot_file,
+            "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
+            by_dimers=args.by_dimers,
+            scores=args.scores,
+        ).mean(**kargs)
+        all_bfr2 = process(
+            args.hotspot_file,
+            "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
+            by_dimers=args.by_dimers,
+            scores=args.scores,
+        ).mean(**kargs)
+        analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2)
+    else:
+        analysis.analyze(out)
