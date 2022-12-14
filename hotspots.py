@@ -180,7 +180,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--homogeneous",
         action="store_true",
-        help="add data points for homogeneous structures (default: no)"
+        help="add data points for homogeneous structures (default: no)",
     )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
