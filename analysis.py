@@ -60,12 +60,12 @@ def analyze(
         reduced = pca.fit(data[:-2, :]).transform(data)
         first_comp = pca.components_[0]
         first_coeffs = {
-            chain: numpy.dot(row, first_comp)
-            for (chain, row) in zip(chain_names, data)
+            chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
         }
         # scale so that the coeffs of all-bfr1 and all-bfr2 are 0 and 1
         first_coeffs = {
-            k: (v - first_coeffs["all_bfr1"]) / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
+            k: (v - first_coeffs["all_bfr1"])
+            / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
             for k, v in first_coeffs.items()
         }
         print("Bfr1/2 proportion", first_coeffs)
