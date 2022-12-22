@@ -113,7 +113,7 @@ def process(
     or by number of above-threshold values ("threshold")
     """
     if scores not in ("sum", "threshold"):
-        raise ValueError("The scores parameter should be \"sum\" or \"threshold\".")
+        raise ValueError('The scores parameter should be "sum" or "threshold".')
 
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
