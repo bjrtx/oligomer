@@ -5,11 +5,11 @@
 
 The code in `analysis.py` depends on the standard Python packages NumPy and scikit-learn. Both are installable through tools such as pip or conda.
 
-The code in `oligomer.py` and written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
+The code in `oligomer.py` is written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
 
 ## Executing code
 
-### `learning.py` and `hotspots.py`
+### `analysis.py` and `hotspots.py`
 
 The code in these files can be run by the standard Python 3 interpreter though it requires installing some third-party packages.
 
