@@ -3,7 +3,7 @@
 
 ## Modules and libraries
 
-The code in `learning.py` depends on the standard Python packages NumPy and scikit-learn. Both are installable through tools such as pip or conda.
+The code in `analysis.py` depends on the standard Python packages NumPy and scikit-learn. Both are installable through tools such as pip or conda.
 
 The code in `oligomer.py` and written in Python with references to the SageMath library. SageMath is documented at https://www.sagemath.org/.
 
