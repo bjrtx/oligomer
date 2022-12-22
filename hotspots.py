@@ -35,11 +35,11 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     - "Bfr1_Molmap_TH", the value of the threshold for reading the Bfr1 map
     - "Bfr2_Molmap_TH", the value of the threshold for reading the Bfr2 map
     """
-    gloves = [0, 0]
+    gloves_ = [0, 0]
 
     for i in (1, 2):
         try:
-            gloves[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
+            gloves_[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
                 hotspot[f"Bfr{i}_Molmap_TH"]
             )
         except (FileNotFoundError, ValueError):
@@ -49,7 +49,7 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
             logging.warning(
                 f"One glove was empty: {hotspot}. This will create more warnings."
             )
-    return gloves
+    return gloves_
 
 
 def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
@@ -135,7 +135,7 @@ def process(
     columns = [
         read_mrc(filenames.replace("?", idx)) > chain_threshold for idx in indices
     ]
-    out = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
+    result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     if scores == "threshold":
         map_ = (map_ > 0.025).astype(np.float16)  # for future precision printing
@@ -157,9 +157,9 @@ def process(
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
                 f"value {output:.4} ({output.dtype})"
             )
-            out[i, j] = output
+            result[i, j] = output
     # transpose the output for compatibility with analysis methods
-    return out.transpose()
+    return result.transpose()
 
 
 if __name__ == "__main__":

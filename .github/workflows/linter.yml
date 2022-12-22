@@ -30,7 +30,7 @@ jobs:
         run: |
           sudo apt-get install sagemath
           python -m pip install --upgrade pip
-          pip install pylint scikit-learn seaborn numpy scikit-image matplotlib
+          pip install pylint scikit-learn seaborn numpy scikit-image matplotlib mrcfile
       - name: Analysing the code with pylint
         run: |
           pylint $(git ls-files '*.py')

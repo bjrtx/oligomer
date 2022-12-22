@@ -47,12 +47,11 @@ def analyze(
         # process)
         # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
         # hence the choice of min-max scaling
-        scale = sklearn.preprocessing.minmax_scale  # sklearn.preprocessing.minmax_scale
+        scale = sklearn.preprocessing.minmax_scale
         scale(data, axis=1, copy=False)
         scale(all_bfr1, axis=1, copy=False)
         scale(all_bfr2, axis=1, copy=False)
         data = numpy.vstack((data, all_bfr1, all_bfr2))
-        print("augmented data", data)
         chain_names += ["all_bfr1", "all_bfr2"]
 
     # Define the PCA estimator
@@ -79,7 +78,7 @@ def analyze(
     plt.title(
         f"""
         First component in the Principal Component Analysis of the hotspot data.
-        Variance explained by the first component: {pca.explained_variance_ratio_[0]:.1%}.
+        Variance explained by this component: {pca.explained_variance_ratio_[0]:.1%}.
         """,
         loc="left",
     )
@@ -89,8 +88,8 @@ def analyze(
     seaborn.scatterplot(x=reduced[:, 0], y=reduced[:, 1])
     plt.xlabel("First principal component")
     plt.ylabel("Second principal component")
-    for chain, xy in zip(chain_names, reduced):
-        plt.annotate(chain, xy, textcoords="offset points", xytext=(3, 3))
+    for chain, point in zip(chain_names, reduced):
+        plt.annotate(chain, point, textcoords="offset points", xytext=(3, 3))
     plt.title(
         f"""
         Principal Component Analysis of the hotspot data.
