@@ -4,7 +4,6 @@ import string
 import numpy
 import seaborn
 import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import sklearn.preprocessing
 
@@ -39,14 +38,15 @@ def analyze(
     # The dimer names are found in hotspots. The chains alone have names from A to X.
     chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
 
-    all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
     # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
+    all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
     if all_bfr:
         logging.info("Received additional data for homogeneous structures.")
         # generated all_bfr data is not to the same scale as cryo-EM data
         # thus we need to scale each dimer (losing dimensions in the
         # process)
-        # sklearn.preprocessing.scale with scores="sum" creates numerical errors
+        # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
+        # hence the choice of min-max scaling
         scale = sklearn.preprocessing.minmax_scale  # sklearn.preprocessing.minmax_scale
         scale(data, axis=1, copy=False)
         scale(all_bfr1, axis=1, copy=False)
@@ -54,9 +54,12 @@ def analyze(
         data = numpy.vstack((data, all_bfr1, all_bfr2))
         print("augmented data", data)
         chain_names += ["all_bfr1", "all_bfr2"]
-        # data.astype(numpy.float64, copy=False)
+
+    # Define the PCA estimator
     pca = PCA(n_components=2)
     if all_bfr:
+        # The principal components are learned from the empirical data,
+        # not taking into account the all-bfr rows
         reduced = pca.fit(data[:-2, :]).transform(data)
         first_comp = pca.components_[0]
         first_coeffs = {
@@ -71,24 +74,19 @@ def analyze(
         print("Bfr1/2 proportion", first_coeffs)
     else:
         reduced = pca.fit_transform(data)
-    color_range = ("darkorange", "navy")
-    labels = KMeans(n_clusters=2).fit(data).labels_
-    # By convention, the first data point will always be in cluster 0
-    labels ^= labels[0]
-    colors = [color_range[label] for label in labels]
     # Plot the first PCA component
     seaborn.swarmplot(x=reduced[:, 0], y=chain_names)
     plt.title(
         f"""
         First component in the Principal Component Analysis of the hotspot data.
-        Var. expl. by 1-D PCA: {pca.explained_variance_ratio_[0]:.1%}.
+        Variance explained by the first component: {pca.explained_variance_ratio_[0]:.1%}.
         """,
         loc="left",
     )
     plt.ylabel("Dimer name" if by_dimers else "Chain name")
     plt.show()
     # Plot the first two PCA components
-    seaborn.scatterplot(x=reduced[:, 0], y=reduced[:, 1], color=colors)
+    seaborn.scatterplot(x=reduced[:, 0], y=reduced[:, 1])
     plt.xlabel("First principal component")
     plt.ylabel("Second principal component")
     for chain, xy in zip(chain_names, reduced):

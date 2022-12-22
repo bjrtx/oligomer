@@ -1,7 +1,7 @@
 #!/usr/bin/env sage
 # pylint: disable=import-error
 """The behaviour of this code is described in [companion paper].
-It requires the SageMath library and can be run with SageMath
+It requires the SageMath library and can be run with SageMath.
 See installation instructions at https://www.sagemath.org/
 or use an online interpreter such as https://sagecell.sagemath.org/
 """
@@ -102,14 +102,18 @@ def _vertices_to_dimers() -> dict[int, str]:
 @cache
 def _vertices_to_facets() -> dict[int, Polyhedron]:
     """Return a dict mapping each vertex of the directed Bfr graph to a facet of
-    the rhombic dodecahedron."""
+    the rhombic dodecahedron. The facets are Polyhedron objects, which can be used for
+    creating 3D models of the dodecahedron."""
     facets = [f.as_polyhedron() for f in polytopes.rhombic_dodecahedron().facets()]
+    # The edges correspond to facets that intersect (along a line, a 1D object)
     edges = [
         (i, j)
         for (i, f), (j, g) in combinations(enumerate(facets), 2)
-        if f.intersection(g).dimension() == 1
+        if f.intersection(g).dimension()
     ]
     assert len(edges) == 24 and len(facets) == 12
+    # Find a graph isomorphism between the intersection graph defined by these
+    # edges and the Bfr graph.
     _, isomorphism_map = sage.graphs.graph.Graph(data=edges).is_isomorphic(
         bfr_graph().to_undirected(), certificate=True
     )
@@ -118,7 +122,8 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
 
 def oligomer_structure(blue_set: Iterable[int] = frozenset()):
     """Return a Sage Graphics object representing a 24-mer whose facets are colored
-    according to blue_set.
+    according to blue_set, that is either blue if their number is in blue_set or
+    otherwise red.
     """
     # The facets correspond to dimers
     facets = _vertices_to_facets()
@@ -132,7 +137,7 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
         # Build the two 'ingoing' edges
         edges_in = [facet.intersection(facets[j]) for j in graph.neighbors_in(i)]
         # Add the two quadrilaterals corresponding to the dimer's chains
-        # to the Graphics object
+        # to the Graphics object.
         graphics_object += sum(
             Polyhedron(vertices=chain(edge.vertices(), midpoints)).plot(
                 line={"color": "black", "thickness": 8},
@@ -147,7 +152,10 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
 
 @cache
 def more_complicated_graph() -> DiGraph:
-    """Return a digraph encoding dimer-dimer junctions for the case of heterodimers."""
+    """Return a digraph encoding dimer-dimer junctions for the case of heterodimers.
+    It has 24 vertices (one by chain) and the edges represent T-junctions
+    between chains. Note that two chains belonging to the same dimer are not
+    adjacent in this graph."""
     out_neighbours = {
         0: [(1, 1), (11, 0)],
         1: [(2, 0), (8, 0)],
@@ -192,9 +200,11 @@ def more_complicated_graph() -> DiGraph:
     return DiGraph(out_neighbours, pos=vertex_positions, immutable=True)
 
 
-# Several assertions concerning this directed graph
+# Several mathematical assertions concerning this directed graph
 if __name__ == "__main__":
     dg = bfr_graph()
+    # Up to forgetting edge directions, it is isomorphic to the Cayley graph of
+    # an alternating group
     assert dg.is_isomorphic(
         sage.all.AlternatingGroup(4).cayley_graph(), edge_labels=False
     )
@@ -203,6 +213,7 @@ if __name__ == "__main__":
     # rotational octahedral symmetry group (O, 432, etc.).
     assert sage.all.SymmetricGroup(4).is_isomorphic(dg.automorphism_group())
 
+# An object for storing adjacency information.
 Adjacencies = collections.namedtuple("Adjacencies", ["BB", "RR", "BR", "RB"])
 Adjacencies.__str__ = lambda self: (
     f"junctions: blue->orange {self.BR}, blue->blue {self.BB}, "
@@ -245,7 +256,7 @@ class Bicoloring:
         return Bicoloring(canon, blue_set={mapping[v] for v in self.blue_set})
 
     def nb_adjacencies(self, left: Iterable, right: Iterable) -> int:
-        """Count the edges from left to right."""
+        """Count the edges from the set left to the set right."""
         return sum(self.graph.has_edge(x, y) for x in set(left) for y in set(right))
 
     @cached_property
@@ -297,7 +308,8 @@ class BfrBicoloring(Bicoloring):
         super().__init__(graph=bfr_graph(), blue_set=blue_set)
 
     def show(self, mode="net") -> None:
-        """Displays a picture of the coloring.
+        """Displays a picture of the coloring, either as a net (flat map),
+        as a graph or as a 3D polyhedron.
 
         Keyword arguments:
         mode -- one of "net", "graph", "polyhedron"

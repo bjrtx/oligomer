@@ -29,7 +29,11 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two gloves associated with a given hotspot.
 
-    hotspot: dictionary with the same fields as those expected by the method process
+    hotspot: dictionary with the following fields
+    - "Bfr1_file_name", the filename for the Bfr1 mrc data
+    - "Bfr2_file_name", the filename for the Bfr2 mrc data
+    - "Bfr1_Molmap_TH", the value of the threshold for reading the Bfr1 map
+    - "Bfr2_Molmap_TH", the value of the threshold for reading the Bfr2 map
     """
     gloves = [0, 0]
 
@@ -39,8 +43,9 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
                 hotspot[f"Bfr{i}_Molmap_TH"]
             )
         except (FileNotFoundError, ValueError):
-            # This happens if the CSV file does not have either bfr info or a threshold,
+            # This happens if the CSV file does not have either Bfr info or a threshold,
             # in which case the glove is identically zero.
+            # In practice this should happen only for gloves corresponding to hemes.
             logging.warning(
                 f"One glove was empty: {hotspot}. This will create more warnings."
             )
@@ -51,20 +56,23 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
     """
     Given a logical multidimensional array, find the n largest connected regions
     and return them as a logical array. By default n is 1.
-    If n is higher the elementwise maximum of the arrays is returned.
+    If n is higher the elementwise maximum of the arrays is returned, which is the
+    union of the n largest regions.
     If the input array is all-zero then so is the output.
     """
+    # Use image processing methods from scikit-image.
     labeled = skimage.measure.label(logical)
     regions = skimage.measure.regionprops(labeled)
     # regions is a list of connected components.
-    # We select its n largest components.
+    # We select its n largest components by area.
     biggest = heapq.nlargest(n, regions, key=operator.attrgetter("area"))
     if len(biggest) < n:
+        # This happens if there were fewer than n elements in regions.
         logging.warning(
             f"Fewer connected components than expected ({len(biggest)}/{n}), "
             f"perhaps due to an empty glove."
         )
-    # return the union (logical sum) of all n largest components
+    # Return the union (logical sum) of all n largest components
     return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
 
 
@@ -82,7 +90,8 @@ def process(
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
-    then the columns are dimers.
+    then the columns are dimers. Scores can be based on the sum of densities or on
+    the number of above-threshold densitities.
 
     hotspot_filename: either a CSV file or a list of rows from a previously read file.
         The CSV file contains hotspot information. It _must_ be saved
@@ -91,18 +100,20 @@ def process(
         - "Bfr1_Molmap_TH" and "Bfr2_Molmap_TH" contain floating point numbers
           between 0 and 1 intended as thresholds.
 
-    map_filename: either the patn of an MRC file containing an electronic density map.
+    map_: either the path of an MRC file containing an electronic density map, or a map
+        that has already been loaded (as a Numpy array).
 
-    truncate: when this is set to truethe maps are cast to 16-bit floats, shortening
-    computation time.
+    truncate: when this is set to True the maps are cast to 16-bit floats, shortening
+    computation time. Roughly speaking, this keeps three digits after the decimal point.
 
     gloves_data: either a collection of already computed hotspot gloves (3-dimensional
-    arrays of Boolean values) or None.
+    arrays of Boolean values) or None. If None, the gloves will be computed.
 
     scores: whether to score by sum of electronic density ("sum", the default behaviour)
     or by number of above-threshold values ("threshold")
     """
-    assert scores in ("sum", "threshold")
+    if scores not in ("sum", "threshold"):
+        raise ValueError("The scores parameter should be \"sum\" or \"threshold\".")
 
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
@@ -117,7 +128,9 @@ def process(
             hotspot_data = list(csv.DictReader(file))
 
     chain_threshold = 0.42
+    # filenames is the generic form of all dimer / chain MRC map names
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
+    # indices will keep the dimer names or the chain names
     indices = dimer_names if by_dimers else string.ascii_uppercase[:24]
     columns = [
         read_mrc(filenames.replace("?", idx)) > chain_threshold for idx in indices
