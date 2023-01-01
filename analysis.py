@@ -19,10 +19,14 @@ def analyze(
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
+    
     The analysis is conducted by dimer when group_data is True and otherwise by chain.
     If both all_bfr1 and all_bfr2 are passed, they should contain hotspot data for an
-    all-bfr1 and an all-bfr2 map. In this case, two data points for all_bfr1 and
-    all_bfr2 are added.
+    all-bfr1 and an all-bfr2 map. In this case, two dimers representing ideal Bfr1 and
+    Bfr2 dimers are added to the data. That is, the data consists of the 12 dimers from
+    the empirical data plus two dimers obtained from all_bfr1 and all_bfr2 respectively.
+    This is useful for the analysis, when we want to assess how much empirical dimers
+    look like simulated Bfr1 or Bfr2 data.
     """
     assert data.shape[0] in (12, 24)  # dimers or chains
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers

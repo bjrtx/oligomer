@@ -47,7 +47,7 @@ def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
             # in which case the glove is identically zero.
             # In practice this should happen only for gloves corresponding to hemes.
             logging.warning(
-                f"One glove was empty: {hotspot}. This will create more warnings."
+                f"The glove of {hotspot} was missing. This will create more warnings."
             )
     return gloves_
 
@@ -132,6 +132,8 @@ def process(
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
     # indices will keep the dimer names or the chain names
     indices = dimer_names if by_dimers else string.ascii_uppercase[:24]
+    # read either dimer or chain MRC maps and convert them into logical arrays
+    # by rounding values to 0 or 1 depending on the parameter chain_threshold
     columns = [
         read_mrc(filenames.replace("?", idx)) > chain_threshold for idx in indices
     ]
