@@ -19,7 +19,7 @@ def analyze(
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
     hotspots. Conduct statistical analysis.
-    
+
     The analysis is conducted by dimer when group_data is True and otherwise by chain.
     If both all_bfr1 and all_bfr2 are passed, they should contain hotspot data for an
     all-bfr1 and an all-bfr2 map. In this case, two dimers representing ideal Bfr1 and
