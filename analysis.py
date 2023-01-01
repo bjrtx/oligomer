@@ -39,14 +39,14 @@ def analyze(
         first, second = zip(*shuffler)
         data = numpy.hstack((data[first, :], data[second, :]))
         by_dimers = True
-    # The dimer names are found in hotspots. The chains alone have names from A to X.
+    # The dimer IDs are found in hotspots. The chains alone have IDs from A to X.
     chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
 
     # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
     all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
     if all_bfr:
-        logging.info("Received additional data for homogeneous structures.")
-        # generated all_bfr data is not to the same scale as cryo-EM data
+        logging.info("Received additional data for homooligomeric structures.")
+        # simulated all_bfr data is not to the same scale as cryo-EM data
         # thus we need to scale each dimer (losing dimensions in the
         # process)
         # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
@@ -68,7 +68,7 @@ def analyze(
         first_coeffs = {
             chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
         }
-        # scale so that the coeffs of all-bfr1 and all-bfr2 are 0 and 1
+        # scale so that the coeffs of simulated all-bfr1 and all-bfr2 are 0 and 1
         first_coeffs = {
             k: (v - first_coeffs["all_bfr1"])
             / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])

@@ -25,31 +25,31 @@ def read_mrc(filename: str, dtype: type | None = None) -> np.ndarray:
         return mrc.data if dtype is None else mrc.data.astype(dtype)
 
 
-def gloves(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
+def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
-    Compute the two gloves associated with a given hotspot.
+    Compute the two masks associated with a given hotspot.
 
     hotspot: dictionary with the following fields
-    - "Bfr1_file_name", the filename for the Bfr1 mrc data
-    - "Bfr2_file_name", the filename for the Bfr2 mrc data
-    - "Bfr1_Molmap_TH", the value of the threshold for reading the Bfr1 map
-    - "Bfr2_Molmap_TH", the value of the threshold for reading the Bfr2 map
+    - "Bfr1_file_name", the filename for the Bfr1 MRC mask data
+    - "Bfr2_file_name", the filename for the Bfr2 MRC mask data
+    - "Bfr1_Molmap_TH", the value of the threshold for reading the Bfr1 mask
+    - "Bfr2_Molmap_TH", the value of the threshold for reading the Bfr2 mask
     """
-    gloves_ = [0, 0]
+    masks = [0, 0]
 
     for i in (1, 2):
         try:
-            gloves_[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
+            masks[i - 1] = read_mrc(hotspot[f"Bfr{i}_file_name"]) > float(
                 hotspot[f"Bfr{i}_Molmap_TH"]
             )
         except (FileNotFoundError, ValueError):
             # This happens if the CSV file does not have either Bfr info or a threshold,
-            # in which case the glove is identically zero.
-            # In practice this should happen only for gloves corresponding to hemes.
+            # in which case the mask is identically zero.
+            # In practice this should happen only for masks corresponding to hemes.
             logging.warning(
-                f"The glove of {hotspot} was missing. This will create more warnings."
+                f"The mask of {hotspot} was missing. This will create more warnings."
             )
-    return gloves_
+    return masks
 
 
 def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
@@ -70,7 +70,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
         # This happens if there were fewer than n elements in regions.
         logging.warning(
             f"Fewer connected components than expected ({len(biggest)}/{n}), "
-            f"perhaps due to an empty glove."
+            f"perhaps due to an empty mask."
         )
     # Return the union (logical sum) of all n largest components
     return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
@@ -84,14 +84,14 @@ def process(
     map_: str | np.ndarray,
     by_dimers: bool = False,
     truncate: bool = True,
-    gloves_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
+    mask_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
     scores: string = "sum",
 ):
     """
     Process a density map and return a 2-dimensional array (rows are hotspots,
     columns are chains, entries are scores). Alternatively, if by_dimers is True
     then the columns are dimers. Scores can be based on the sum of densities or on
-    the number of above-threshold densitities.
+    the number of above-threshold densities.
 
     hotspot_filename: either a CSV file or a list of rows from a previously read file.
         The CSV file contains hotspot information. It _must_ be saved
@@ -106,8 +106,8 @@ def process(
     truncate: when this is set to True the maps are cast to 16-bit floats, shortening
     computation time. Roughly speaking, this keeps three digits after the decimal point.
 
-    gloves_data: either a collection of already computed hotspot gloves (3-dimensional
-    arrays of Boolean values) or None. If None, the gloves will be computed.
+    mask_data: either a collection of already computed hotspot masks (3-dimensional
+    arrays of Boolean values) or None. If None, the masks will be computed.
 
     scores: whether to score by sum of electronic density ("sum", the default behaviour)
     or by number of above-threshold values ("threshold")
@@ -144,9 +144,9 @@ def process(
         logging.warning("Using threshold scoring.")
 
     for i, hotspot in enumerate(hotspot_data):
-        bfr1, bfr2 = gloves(hotspot) if gloves_data is None else gloves_data[i]
+        bfr1, bfr2 = hotspot_masks(hotspot) if mask_data is None else mask_data[i]
         for j, chain_or_dimer in enumerate(columns):
-            # To avoid parts of hotspots coming from other chains, only the
+            # To avoid parts of hotspot masks coming from other chains, only the
             # largest connected component of the hotspot-chain intersection
             # is kept.
             n_blobs = 2 if by_dimers else 1
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         "map_file",
         nargs="?",
         default="284postprocess.mrc",
-        help="MRC file containing the map",
+        help="MRC file of the experimental cryo-EM map",
     )
     parser.add_argument(
         "hotspot_file",
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         default="sum",
         help="use threshold scoring (default: sum of densities)",
     )
-    # threshold scoring does not give plausible results for homogeneous structures
+    # threshold scoring does not give plausible results for homooligomeric structures
     parser.add_argument(
         "--homogeneous",
         action="store_true",
