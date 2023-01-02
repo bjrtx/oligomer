@@ -7,6 +7,7 @@ import logging
 import heapq
 import functools
 import argparse
+from typing import Optional
 from collections.abc import Collection
 
 import numpy as np
@@ -16,7 +17,7 @@ import mrcfile
 import analysis
 
 
-def read_mrc(filename: str, dtype: type | None = None) -> np.ndarray:
+def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
     The values are cast to the specified data type if one is given.
@@ -84,7 +85,7 @@ def process(
     map_: str | np.ndarray,
     by_dimers: bool = False,
     truncate: bool = True,
-    mask_data: Collection[tuple[np.ndarray, np.ndarray]] | None = None,
+    mask_data: Optional[Collection[tuple[np.ndarray, np.ndarray]]] = None,
     scores: string = "sum",
 ):
     """
@@ -152,7 +153,8 @@ def process(
             n_blobs = 2 if by_dimers else 1
             bfr1_spot = biggest_blob(bfr1 & chain_or_dimer, n_blobs)
             bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n_blobs)
-            assert np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0
+            assert np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0, \
+                "The Bfr1 and Bfr2 masks should be different."
             output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"

@@ -1,5 +1,6 @@
 import logging
 import string
+from typing import Optional
 
 import numpy
 import seaborn
@@ -13,8 +14,8 @@ import hotspots
 def analyze(
     data: numpy.ndarray,
     group_data: bool = True,
-    all_bfr1: numpy.ndarray | None = None,
-    all_bfr2: numpy.ndarray | None = None,
+    all_bfr1: Optional[numpy.ndarray] = None,
+    all_bfr2: Optional[numpy.ndarray] = None,
 ):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
@@ -28,7 +29,7 @@ def analyze(
     This is useful for the analysis, when we want to assess how much empirical dimers
     look like simulated Bfr1 or Bfr2 data.
     """
-    assert data.shape[0] in (12, 24)  # dimers or chains
+    assert data.shape[0] in (12, 24), "The data must have either 12 or 24 rows."
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers
     if not by_dimers and group_data:
         # if the data is given by chain but we want to analyze it by dimer, we need to
