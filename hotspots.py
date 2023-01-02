@@ -153,8 +153,9 @@ def process(
             n_blobs = 2 if by_dimers else 1
             bfr1_spot = biggest_blob(bfr1 & chain_or_dimer, n_blobs)
             bfr2_spot = biggest_blob(bfr2 & chain_or_dimer, n_blobs)
-            assert np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0, \
-                "The Bfr1 and Bfr2 masks should be different."
+            assert (
+                np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0
+            ), "The Bfr1 and Bfr2 masks should be different."
             output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
