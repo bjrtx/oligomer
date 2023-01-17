@@ -83,7 +83,7 @@ dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw",
 def process(
     hotspot_data: str | Collection[dict[str]],
     map_: str | np.ndarray,
-    *, # keyword only arguments
+    *,  # keyword only arguments
     mask_data: Optional[Collection[tuple[np.ndarray, np.ndarray]]] = None,
     by_dimers: bool = False,
     truncate: bool = True,
