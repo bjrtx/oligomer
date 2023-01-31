@@ -115,7 +115,9 @@ def process(
     or by number of above-threshold values ("threshold")
     """
     if scores not in ("sum", "sum_by_volume", "threshold"):
-        raise ValueError('The scores parameter should be "sum", "sum_by_volume" or "threshold".')
+        raise ValueError(
+            'The scores parameter should be "sum", "sum_by_volume" or "threshold".'
+        )
 
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
@@ -160,9 +162,8 @@ def process(
             if scores == "sum_by_volume":
                 bfr1_size = np.count_nonzero(bfr1_spot)
                 bfr2_size = np.count_nonzero(bfr2_spot)
-                output = (
-                    (map_.sum(where=bfr1_spot) / bfr1_size if bfr1_size else 0)
-                    - (map_.sum(where=bfr2_spot) / bfr2_size if bfr2_size else 0)
+                output = (map_.sum(where=bfr1_spot) / bfr1_size if bfr1_size else 0) - (
+                    map_.sum(where=bfr2_spot) / bfr2_size if bfr2_size else 0
                 )
             else:
                 output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
