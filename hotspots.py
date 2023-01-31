@@ -168,12 +168,13 @@ def process(
     return result.transpose()
 
 
+# Main script: parse and handle the optional arguments
 if __name__ == "__main__":
     # Parse optional arguments.
     parser = argparse.ArgumentParser(description="Process and analyze an MRC map.")
     parser.add_argument(
         "map_file",
-        nargs="?",
+        nargs="?",  # zero or one
         default="284postprocess.mrc",
         help="MRC file of the experimental cryo-EM map",
     )
@@ -182,6 +183,10 @@ if __name__ == "__main__":
         nargs="?",
         default="bbRefinedHotSpotsListDaniel.csv",
         help="CSV file containing hotspot information",
+    )
+    parser.add_argument(
+        "--divide_by_volume"
+        # Todo
     )
     parser.add_argument(
         "--by_chain",

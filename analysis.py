@@ -90,18 +90,18 @@ def analyze(
     plt.ylabel("Dimer name" if by_dimers else "Chain name")
     plt.show()
     # Plot the first two PCA components
-    seaborn.scatterplot(x=reduced[:, 0], y=reduced[:, 1])
-    plt.xlabel("First principal component")
-    plt.ylabel("Second principal component")
-    for chain, point in zip(chain_names, reduced):
-        plt.annotate(chain, point, textcoords="offset points", xytext=(3, 3))
-    plt.title(
-        f"""
-        Principal Component Analysis of the hotspot data.
-        Var. expl. by 1-D PCA: {pca.explained_variance_ratio_[0]:.1%}.
-        Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
-        """,
-        loc="left",
-    )
-    logging.info(f"First two components {pca.components_[:2]}")
-    plt.show()
+    # seaborn.scatterplot(x=reduced[:, 0], y=reduced[:, 1])
+    # plt.xlabel("First principal component")
+    # plt.ylabel("Second principal component")
+    # for chain, point in zip(chain_names, reduced):
+    #     plt.annotate(chain, point, textcoords="offset points", xytext=(3, 3))
+    # plt.title(
+    #     f"""
+    #     Principal Component Analysis of the hotspot data.
+    #     Var. expl. by 1-D PCA: {pca.explained_variance_ratio_[0]:.1%}.
+    #     Var. expl. by 2-D PCA: {sum(pca.explained_variance_ratio_):.1%}.
+    #     """,
+    #     loc="left",
+    # )
+    # logging.info(f"First two components {pca.components_[:2]}")
+    # plt.show()
