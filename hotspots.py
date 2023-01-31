@@ -114,8 +114,8 @@ def process(
     scores: whether to score by sum of electronic density ("sum", the default behaviour)
     or by number of above-threshold values ("threshold")
     """
-    if scores not in ("sum", "threshold"):
-        raise ValueError('The scores parameter should be "sum" or "threshold".')
+    if scores not in ("sum", "sum_by_volume", "threshold"):
+        raise ValueError('The scores parameter should be "sum", "sum_by_volume" or "threshold".')
 
     if isinstance(map_, str):
         logging.info(f"Processing new map: {map_}.")
@@ -157,7 +157,15 @@ def process(
             assert (
                 np.count_nonzero(bfr1_spot ^ bfr2_spot) > 0
             ), "The Bfr1 and Bfr2 masks should be different."
-            output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
+            if scores == "sum_by_volume":
+                bfr1_size = np.count_nonzero(bfr1_spot)
+                bfr2_size = np.count_nonzero(bfr2_spot)
+                output = (
+                    (map_.sum(where=bfr1_spot) / bfr1_size if bfr1_size else 0)
+                    - (map_.sum(where=bfr2_spot) / bfr2_size if bfr2_size else 0)
+                )
+            else:
+                output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
             logging.info(
                 f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
                 f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
@@ -196,9 +204,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--scores",
-        choices=("sum", "threshold"),
+        choices=("sum", "sum_by_volume", "threshold"),
         default="sum",
-        help="use threshold scoring (default: sum of densities)",
+        help="use threshold scoring or sum of densities scaled by volume (default: sum of densities unscaled)",
     )
     # threshold scoring does not give plausible results for homooligomeric structures
     parser.add_argument(
