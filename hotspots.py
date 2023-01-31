@@ -194,10 +194,6 @@ if __name__ == "__main__":
         help="CSV file containing hotspot information",
     )
     parser.add_argument(
-        "--divide_by_volume"
-        # Todo
-    )
-    parser.add_argument(
         "--by_chain",
         dest="by_dimers",
         action="store_false",
