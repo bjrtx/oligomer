@@ -67,7 +67,8 @@ def analyze(
     if all_bfr:
         # The principal components are learned from the empirical data,
         # not taking into account the all-bfr rows
-        reduced = pca.fit(data[: len(chain_names), :]).transform(data)
+        hue = [0] * nbr_chains + [1] * nbr_chains + [2] * nbr_chains 
+        reduced = pca.fit(data[: nbr_chains, :]).transform(data)
         # first_comp = pca.components_[0]
         # first_coeffs = {
         #     chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
@@ -80,9 +81,10 @@ def analyze(
         # }
         # print("Bfr1/2 proportion", first_coeffs)
     else:
+        hue = [0] * nbr_chains
         reduced = pca.fit_transform(data)
     # Plot the first PCA component
-    seaborn.swarmplot(x=reduced[:, 0], y=chain_names)
+    seaborn.relplot(x=reduced[:, 0], y=chain_names, hue=hue, legend=None)
     plt.title(
         f"""
         First component in the Principal Component Analysis of the hotspot data.
