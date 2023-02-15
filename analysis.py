@@ -67,7 +67,7 @@ def analyze(
     if all_bfr:
         # The principal components are learned from the empirical data,
         # not taking into account the all-bfr rows
-        reduced = pca.fit(data[:len(chain_names), :]).transform(data)
+        reduced = pca.fit(data[: len(chain_names), :]).transform(data)
         # first_comp = pca.components_[0]
         # first_coeffs = {
         #     chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
