@@ -56,26 +56,29 @@ def analyze(
         scale(data, axis=1, copy=False)
         scale(all_bfr1, axis=1, copy=False)
         scale(all_bfr2, axis=1, copy=False)
+        nbr_chains = len(data)
         data = numpy.vstack((data, all_bfr1, all_bfr2))
-        chain_names += ["all_bfr1", "all_bfr2"]
+        print(f"data rows {len(data)}")
+        chain_names += ["all_bfr1_" + name for name in chain_names[:nbr_chains]]
+        chain_names += ["all_bfr2_" + name for name in chain_names[:nbr_chains]]
 
     # Define the PCA estimator
     pca = PCA(n_components=2)
     if all_bfr:
         # The principal components are learned from the empirical data,
         # not taking into account the all-bfr rows
-        reduced = pca.fit(data[:-2, :]).transform(data)
-        first_comp = pca.components_[0]
-        first_coeffs = {
-            chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
-        }
+        reduced = pca.fit(data[:len(chain_names), :]).transform(data)
+        # first_comp = pca.components_[0]
+        # first_coeffs = {
+        #     chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
+        # }
         # scale so that the coeffs of simulated all-bfr1 and all-bfr2 are 0 and 1
-        first_coeffs = {
-            k: (v - first_coeffs["all_bfr1"])
-            / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
-            for k, v in first_coeffs.items()
-        }
-        print("Bfr1/2 proportion", first_coeffs)
+        # first_coeffs = {
+        #    k: (v - first_coeffs["all_bfr1"])
+        #    / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
+        #    for k, v in first_coeffs.items()
+        # }
+        # print("Bfr1/2 proportion", first_coeffs)
     else:
         reduced = pca.fit_transform(data)
     # Plot the first PCA component

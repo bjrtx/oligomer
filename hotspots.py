@@ -223,13 +223,13 @@ if __name__ == "__main__":
             "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
             by_dimers=args.by_dimers,
             scores=args.scores,
-        ).mean(**kargs)
+        )
         all_bfr2 = process(
             args.hotspot_file,
             "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
             by_dimers=args.by_dimers,
             scores=args.scores,
-        ).mean(**kargs)
+        )
         analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2)
     else:
         analysis.analyze(out)
