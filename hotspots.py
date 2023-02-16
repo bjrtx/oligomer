@@ -22,7 +22,7 @@ import analysis
 ### This is clearly an inferior mechanism and must eventually
 ### be changed.
 chain_threshold = 0.42
-map_threshold = 0.025 # for threshold scoring
+map_threshold = 0.025  # for threshold scoring
 default_main_map = "284postprocess.mrc"
 all_bfr1_map = "all_Bfr1-phenix005.mrc"
 all_bfr2_map = "all_Bfr2-phenix007.mrc"
@@ -159,7 +159,9 @@ def process(
     result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     if scores == "threshold":
-        map_ = (map_ > map_threshold).astype(np.float16)  # for future precision printing
+        map_ = (map_ > map_threshold).astype(
+            np.float16
+        )  # for future precision printing
         logging.warning("Using threshold scoring.")
 
     for i, hotspot in enumerate(hotspot_data):
@@ -231,37 +233,55 @@ if __name__ == "__main__":
         action="store_true",
         help="add data points for a symmetric map (default: no)",
     )
-   
+
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
     )
     kargs = {"axis": 0, "keepdims": True}  # keepdims to keep a two-dimensional array
-    all_bfr1 = process(
+    all_bfr1 = (
+        process(
             args.hotspot_file,
             all_bfr1_map,
             by_dimers=args.by_dimers,
             scores=args.scores,
-        ) if args.homogeneous else None
-    all_bfr2 = process(
+        )
+        if args.homogeneous
+        else None
+    )
+    all_bfr2 = (
+        process(
             args.hotspot_file,
             all_bfr2_map,
             by_dimers=args.by_dimers,
             scores=args.scores,
-        ) if args.homogeneous else None
+        )
+        if args.homogeneous
+        else None
+    )
     # hard-coded paths. TODO: change
-    sym_map_file = sym_prefix + default_sym_map 
+    sym_map_file = sym_prefix + default_sym_map
     sym_hotspot = sym_prefix + default_sym_hotspot
     if args.symmetric:
         logging.info(f"Reading hotspot information: {sym_hotspot}.")
         with open(sym_hotspot, encoding="utf-8") as file:
             sym_hotspot_data = list(csv.DictReader(file))
         for row in sym_hotspot_data:
-            row["Bfr1_file_name"] = (sym_prefix + row["Bfr1_file_name"]) if row["Bfr1_file_name"] else ""
-            row["Bfr2_file_name"] = (sym_prefix + row["Bfr2_file_name"]) if row["Bfr2_file_name"] else ""
-            
-    symmetric = process(
-        sym_hotspot_data, sym_map_file, by_dimers=args.by_dimers, scores=args.scores
-    ) if args.symmetric else None
-    analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2, symmetric_data=symmetric)    
+            row["Bfr1_file_name"] = (
+                (sym_prefix + row["Bfr1_file_name"]) if row["Bfr1_file_name"] else ""
+            )
+            row["Bfr2_file_name"] = (
+                (sym_prefix + row["Bfr2_file_name"]) if row["Bfr2_file_name"] else ""
+            )
+
+    symmetric = (
+        process(
+            sym_hotspot_data, sym_map_file, by_dimers=args.by_dimers, scores=args.scores
+        )
+        if args.symmetric
+        else None
+    )
+    analysis.analyze(
+        out, all_bfr1=all_bfr1, all_bfr2=all_bfr2, symmetric_data=symmetric
+    )

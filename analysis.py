@@ -16,7 +16,7 @@ def analyze(
     group_data: bool = True,
     all_bfr1: Optional[numpy.ndarray] = None,
     all_bfr2: Optional[numpy.ndarray] = None,
-    symmetric_data: Optional[numpy.ndarray] = None
+    symmetric_data: Optional[numpy.ndarray] = None,
 ):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
