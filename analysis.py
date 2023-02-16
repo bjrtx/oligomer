@@ -16,6 +16,7 @@ def analyze(
     group_data: bool = True,
     all_bfr1: Optional[numpy.ndarray] = None,
     all_bfr2: Optional[numpy.ndarray] = None,
+    symmetric_data: Optional[numpy.ndarray] = None
 ):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
@@ -28,6 +29,7 @@ def analyze(
     the empirical data plus two dimers obtained from all_bfr1 and all_bfr2 respectively.
     This is useful for the analysis, when we want to assess how much empirical dimers
     look like simulated Bfr1 or Bfr2 data.
+    If symmetric_data is passed, it should contain hotspot data for a symmetric map.
     """
     assert data.shape[0] in (12, 24), "The data must have either 12 or 24 rows."
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers
@@ -61,13 +63,15 @@ def analyze(
         print(f"data rows {len(data)}")
         chain_names += ["all_bfr1_" + name for name in chain_names[:nbr_chains]]
         chain_names += ["all_bfr2_" + name for name in chain_names[:nbr_chains]]
-
+    if symmetric_data is not None:
+        data = numpy.vstack((data, symmetric_data))
+        chain_names += ["sym_" + name for name in chain_names[:nbr_chains]]
     # Define the PCA estimator
     pca = PCA(n_components=2)
     if all_bfr:
         # The principal components are learned from the empirical data,
         # not taking into account the all-bfr rows
-        hue = [0] * nbr_chains + [1] * nbr_chains + [2] * nbr_chains
+        hue = [0] * nbr_chains + [1] * nbr_chains + [2] * nbr_chains + [3] * nbr_chains
         reduced = pca.fit(data[:nbr_chains, :]).transform(data)
         # first_comp = pca.components_[0]
         # first_coeffs = {

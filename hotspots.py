@@ -16,6 +16,22 @@ import mrcfile
 
 import analysis
 
+#############################################################
+###  HARDCODED VALUES #######################################
+#############################################################
+### This is clearly an inferior mechanism and must eventually
+### be changed.
+chain_threshold = 0.42
+map_threshold = 0.025 # for threshold scoring
+default_main_map = "284postprocess.mrc"
+all_bfr1_map = "all_Bfr1-phenix005.mrc"
+all_bfr2_map = "all_Bfr2-phenix007.mrc"
+default_hotspot_file = "bbRefinedHotSpotsListDaniel_new.csv"
+sym_prefix = "292postprocess/"
+default_sym_map = "292postprocess.mrc"
+default_sym_hotspot = "bbRefinedHotSpotsListDaniel_292.csv"
+#############################################################
+
 
 def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     """
@@ -131,7 +147,6 @@ def process(
         with open(hotspot_data, encoding="utf-8") as file:
             hotspot_data = list(csv.DictReader(file))
 
-    chain_threshold = 0.42
     # filenames is the generic form of all dimer / chain MRC map names
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
     # indices will keep the dimer names or the chain names
@@ -144,7 +159,7 @@ def process(
     result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     if scores == "threshold":
-        map_ = (map_ > 0.025).astype(np.float16)  # for future precision printing
+        map_ = (map_ > map_threshold).astype(np.float16)  # for future precision printing
         logging.warning("Using threshold scoring.")
 
     for i, hotspot in enumerate(hotspot_data):
@@ -184,13 +199,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "map_file",
         nargs="?",  # zero or one
-        default="284postprocess.mrc",
+        default=default_main_map,
         help="MRC file of the experimental cryo-EM map",
     )
     parser.add_argument(
         "hotspot_file",
         nargs="?",
-        default="bbRefinedHotSpotsListDaniel.csv",
+        default=default_hotspot_file,
         help="CSV file containing hotspot information",
     )
     parser.add_argument(
@@ -211,25 +226,42 @@ if __name__ == "__main__":
         action="store_true",
         help="add data points for homogeneous structures (default: no)",
     )
+    parser.add_argument(
+        "--symmetric",
+        action="store_true",
+        help="add data points for a symmetric map (default: no)",
+    )
+   
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
     )
     kargs = {"axis": 0, "keepdims": True}  # keepdims to keep a two-dimensional array
-    if args.homogeneous:
-        all_bfr1 = process(
+    all_bfr1 = process(
             args.hotspot_file,
-            "molmap_Bfr1_284_raz-rerefined-correction-res4.mrc",
+            all_bfr1_map,
             by_dimers=args.by_dimers,
             scores=args.scores,
-        )
-        all_bfr2 = process(
+        ) if args.homogeneous else None
+    all_bfr2 = process(
             args.hotspot_file,
-            "molmap_Bfr2_284_raz-rerefined-correction-res4.mrc",
+            all_bfr2_map,
             by_dimers=args.by_dimers,
             scores=args.scores,
-        )
-        analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2)
-    else:
-        analysis.analyze(out)
+        ) if args.homogeneous else None
+    # hard-coded paths. TODO: change
+    sym_map_file = sym_prefix + default_sym_map 
+    sym_hotspot = sym_prefix + default_sym_hotspot
+    if args.symmetric:
+        logging.info(f"Reading hotspot information: {sym_hotspot}.")
+        with open(sym_hotspot, encoding="utf-8") as file:
+            sym_hotspot_data = list(csv.DictReader(file))
+        for row in sym_hotspot_data:
+            row["Bfr1_file_name"] = (sym_prefix + row["Bfr1_file_name"]) if row["Bfr1_file_name"] else ""
+            row["Bfr2_file_name"] = (sym_prefix + row["Bfr2_file_name"]) if row["Bfr2_file_name"] else ""
+            
+    symmetric = process(
+        sym_hotspot_data, sym_map_file, by_dimers=args.by_dimers, scores=args.scores
+    ) if args.symmetric else None
+    analysis.analyze(out, all_bfr1=all_bfr1, all_bfr2=all_bfr2, symmetric_data=symmetric)    
