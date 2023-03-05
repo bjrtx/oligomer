@@ -36,7 +36,7 @@ def analyze(
     assert data.shape[0] in (12, 24), "The data must have either 12 or 24 rows."
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers
     if not by_dimers and group_data:
-        # if the data is given by chain but we want to analyze it by dimer, we need to
+        # If the data is given by chain but we want to analyze it by dimer, we need to
         # group said chains into dimers
         shuffler = [
             (ord(x) - ord("a"), ord(y) - ord("a")) for x, y in hotspots.dimer_names
@@ -60,15 +60,16 @@ def analyze(
         # process)
         # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
         # hence the choice of min-max scaling
-        scale = sklearn.preprocessing.minmax_scale
-        scale(data, axis=1, copy=False)
-        scale(all_bfr1, axis=1, copy=False)
-        scale(all_bfr2, axis=1, copy=False)
-        data = numpy.vstack((data, all_bfr1, all_bfr2))
-        print(f"data rows {len(data)}")
+        #scale = sklearn.preprocessing.minmax_scale
+        #scale(data, axis=1, copy=False)
+        #scale(all_bfr1, axis=1, copy=False)
+        #scale(all_bfr2, axis=1, copy=False)
+        #data = numpy.vstack((data, all_bfr1, all_bfr2))
+        #print(f"data rows {len(data)}")
     if symmetric_data is not None:
         data_blocks += ["sym_"]
         data = numpy.vstack((data, symmetric_data))
+
     chain_names = [prefix + name for prefix in data_blocks for name in chain_names]
     # Define the PCA estimator
     pca = PCA(n_components=1)

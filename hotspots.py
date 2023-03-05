@@ -10,6 +10,7 @@ import argparse
 from typing import Optional
 from collections.abc import Collection
 
+import sklearn
 import numpy as np
 import skimage
 import mrcfile
@@ -40,6 +41,10 @@ def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     """
     with mrcfile.open(filename) as mrc:
         return mrc.data if dtype is None else mrc.data.astype(dtype)
+
+    
+def scale_mrc(data: np.ndarray) -> np.ndarray:
+    return data #(data - data.mean()) / data.std()
 
 
 def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
@@ -164,6 +169,9 @@ def process(
         )  # for future precision printing
         logging.warning("Using threshold scoring.")
 
+    # scaling
+    map_ = scale_mrc(map_)
+        
     for i, hotspot in enumerate(hotspot_data):
         bfr1, bfr2 = hotspot_masks(hotspot) if mask_data is None else mask_data[i]
         for j, chain_or_dimer in enumerate(columns):
@@ -205,6 +213,12 @@ if __name__ == "__main__":
         help="MRC file of the experimental cryo-EM map",
     )
     parser.add_argument(
+        "--no_scaling",
+        action="store_true",
+        help="skip the rescaling of input MRC data (default: no)"
+        # TODO not implemented yet
+    )
+    parser.add_argument(
         "hotspot_file",
         nargs="?",
         default=default_hotspot_file,
@@ -236,6 +250,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
+
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
     )
