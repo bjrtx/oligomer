@@ -60,12 +60,12 @@ def analyze(
         # process)
         # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
         # hence the choice of min-max scaling
-        #scale = sklearn.preprocessing.minmax_scale
-        #scale(data, axis=1, copy=False)
-        #scale(all_bfr1, axis=1, copy=False)
-        #scale(all_bfr2, axis=1, copy=False)
-        #data = numpy.vstack((data, all_bfr1, all_bfr2))
-        #print(f"data rows {len(data)}")
+        # scale = sklearn.preprocessing.minmax_scale
+        # scale(data, axis=1, copy=False)
+        # scale(all_bfr1, axis=1, copy=False)
+        # scale(all_bfr2, axis=1, copy=False)
+        # data = numpy.vstack((data, all_bfr1, all_bfr2))
+        # print(f"data rows {len(data)}")
     if symmetric_data is not None:
         data_blocks += ["sym_"]
         data = numpy.vstack((data, symmetric_data))

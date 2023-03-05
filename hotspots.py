@@ -42,9 +42,9 @@ def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     with mrcfile.open(filename) as mrc:
         return mrc.data if dtype is None else mrc.data.astype(dtype)
 
-    
+
 def scale_mrc(data: np.ndarray) -> np.ndarray:
-    return data #(data - data.mean()) / data.std()
+    return data  # (data - data.mean()) / data.std()
 
 
 def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
@@ -171,7 +171,7 @@ def process(
 
     # scaling
     map_ = scale_mrc(map_)
-        
+
     for i, hotspot in enumerate(hotspot_data):
         bfr1, bfr2 = hotspot_masks(hotspot) if mask_data is None else mask_data[i]
         for j, chain_or_dimer in enumerate(columns):
