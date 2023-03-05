@@ -48,7 +48,7 @@ def analyze(
     chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
     nbr_chains = data.shape[0]
     data_blocks = [""]  # base data
-   
+
     # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
     all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
     nbr_chains = len(data)
@@ -72,7 +72,9 @@ def analyze(
     chain_names = [prefix + name for prefix in data_blocks for name in chain_names]
     # Define the PCA estimator
     pca = PCA(n_components=1)
-    hue = itertools.chain.from_iterable([i] * nbr_chains for i in range(len(data_blocks)))
+    hue = itertools.chain.from_iterable(
+        [i] * nbr_chains for i in range(len(data_blocks))
+    )
     hue = list(hue)
     # The principal components are learned from the empirical data,
     # not taking into account the other rows
