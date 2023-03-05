@@ -264,6 +264,7 @@ if __name__ == "__main__":
     sym_map_file = sym_prefix + default_sym_map
     sym_hotspot = sym_prefix + default_sym_hotspot
     if args.symmetric:
+        # Read the hotspot information, appending the right prefix to paths
         logging.info(f"Reading hotspot information: {sym_hotspot}.")
         with open(sym_hotspot, encoding="utf-8") as file:
             sym_hotspot_data = list(csv.DictReader(file))

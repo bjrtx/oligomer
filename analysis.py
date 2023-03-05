@@ -1,6 +1,7 @@
 import logging
 import string
 from typing import Optional
+import itertools
 
 import numpy
 import seaborn
@@ -31,6 +32,7 @@ def analyze(
     look like simulated Bfr1 or Bfr2 data.
     If symmetric_data is passed, it should contain hotspot data for a symmetric map.
     """
+
     assert data.shape[0] in (12, 24), "The data must have either 12 or 24 rows."
     by_dimers = data.shape[0] == 12  # whether the rows are in fact dimers
     if not by_dimers and group_data:
@@ -44,11 +46,15 @@ def analyze(
         by_dimers = True
     # The dimer IDs are found in hotspots. The chains alone have IDs from A to X.
     chain_names = hotspots.dimer_names if by_dimers else string.ascii_uppercase[:24]
-
+    nbr_chains = data.shape[0]
+    data_blocks = [""]  # base data
+   
     # Do we want to add comparison points for all-Bfr1 and all-Bfr2 structures?
     all_bfr = (all_bfr1 is not None) and (all_bfr2 is not None) and by_dimers
+    nbr_chains = len(data)
     if all_bfr:
         logging.info("Received additional data for homooligomeric structures.")
+        data_blocks += ["all_bfr1_", "all_bfr2_"]
         # simulated all_bfr data is not to the same scale as cryo-EM data
         # thus we need to scale each dimer (losing dimensions in the
         # process)
@@ -58,35 +64,30 @@ def analyze(
         scale(data, axis=1, copy=False)
         scale(all_bfr1, axis=1, copy=False)
         scale(all_bfr2, axis=1, copy=False)
-        nbr_chains = len(data)
         data = numpy.vstack((data, all_bfr1, all_bfr2))
         print(f"data rows {len(data)}")
-        chain_names += ["all_bfr1_" + name for name in chain_names[:nbr_chains]]
-        chain_names += ["all_bfr2_" + name for name in chain_names[:nbr_chains]]
     if symmetric_data is not None:
+        data_blocks += ["sym_"]
         data = numpy.vstack((data, symmetric_data))
-        chain_names += ["sym_" + name for name in chain_names[:nbr_chains]]
+    chain_names = [prefix + name for prefix in data_blocks for name in chain_names]
     # Define the PCA estimator
-    pca = PCA(n_components=2)
-    if all_bfr:
-        # The principal components are learned from the empirical data,
-        # not taking into account the all-bfr rows
-        hue = [0] * nbr_chains + [1] * nbr_chains + [2] * nbr_chains + [3] * nbr_chains
-        reduced = pca.fit(data[:nbr_chains, :]).transform(data)
-        # first_comp = pca.components_[0]
-        # first_coeffs = {
-        #     chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
-        # }
-        # scale so that the coeffs of simulated all-bfr1 and all-bfr2 are 0 and 1
-        # first_coeffs = {
-        #    k: (v - first_coeffs["all_bfr1"])
-        #    / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
-        #    for k, v in first_coeffs.items()
-        # }
-        # print("Bfr1/2 proportion", first_coeffs)
-    else:
-        hue = [0] * nbr_chains
-        reduced = pca.fit_transform(data)
+    pca = PCA(n_components=1)
+    hue = itertools.chain.from_iterable([i] * nbr_chains for i in range(len(data_blocks)))
+    hue = list(hue)
+    # The principal components are learned from the empirical data,
+    # not taking into account the other rows
+    reduced = pca.fit(data[:nbr_chains, :]).transform(data)
+    # first_comp = pca.components_[0]
+    # first_coeffs = {
+    #     chain: numpy.dot(row, first_comp) for (chain, row) in zip(chain_names, data)
+    # }
+    # scale so that the coeffs of simulated all-bfr1 and all-bfr2 are 0 and 1
+    # first_coeffs = {
+    #    k: (v - first_coeffs["all_bfr1"])
+    #    / (first_coeffs["all_bfr2"] - first_coeffs["all_bfr1"])
+    #    for k, v in first_coeffs.items()
+    # }
+    # print("Bfr1/2 proportion", first_coeffs)
     # Plot the first PCA component
     seaborn.relplot(x=reduced[:, 0], y=chain_names, hue=hue, legend=None)
     plt.title(
