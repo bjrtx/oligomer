@@ -10,7 +10,6 @@ import argparse
 from typing import Optional
 from collections.abc import Collection
 
-import sklearn
 import numpy as np
 import skimage
 import mrcfile
@@ -23,13 +22,14 @@ import analysis
 ### This is clearly an inferior mechanism and must eventually
 ### be changed.
 chain_threshold = 0.42
-map_threshold = 0.025  # for threshold scoring
+map_threshold = 0.05  # for threshold scoring
 default_main_map = "284postprocess.mrc"
 all_bfr1_map = "all_Bfr1-phenix005.mrc"
 all_bfr2_map = "all_Bfr2-phenix007.mrc"
 default_hotspot_file = "bbRefinedHotSpotsListDaniel_new.csv"
-sym_prefix = "292postprocess/"
-default_sym_map = "292postprocess.mrc"
+normalize = "unit-stdev" # unit-stdev, unit-max and none
+sym_prefix = ""  # The folder with sym. data, "" if same folder
+default_sym_map = "284postprocess_symO.mrc"
 default_sym_hotspot = "bbRefinedHotSpotsListDaniel_292.csv"
 #############################################################
 
@@ -44,9 +44,16 @@ def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
 
 
 def scale_mrc(data: np.ndarray) -> np.ndarray:
-    return data  # (data - data.mean()) / data.std()
-
-
+    logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
+    if normalize == "unit-stdev":
+        logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
+        tmp = (data - data.mean())
+        return tmp / tmp.std()
+    elif normalize == "unit-max":
+        return (data - data.min()) / (data.max() - data.min())
+    elif normalize == "none":
+        return data
+    
 def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two masks associated with a given hotspot.
@@ -107,7 +114,7 @@ def process(
     *,  # keyword only arguments
     mask_data: Optional[Collection[tuple[np.ndarray, np.ndarray]]] = None,
     by_dimers: bool = False,
-    truncate: bool = True,
+    truncate: bool = False,
     scores: string = "sum",
 ):
     """
@@ -164,9 +171,8 @@ def process(
     result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     if scores == "threshold":
-        map_ = (map_ > map_threshold).astype(
-            np.float16
-        )  # for future precision printing
+        map_ = (map_ > map_threshold)
+        #.astype(np.float16)  # for future precision printing
         logging.warning("Using threshold scoring.")
 
     # scaling
@@ -192,11 +198,11 @@ def process(
                 )
             else:
                 output = map_.sum(where=bfr1_spot) - map_.sum(where=bfr2_spot)
-            logging.info(
-                f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
-                f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
-                f"value {output:.4} ({output.dtype})"
-            )
+            # logging.debug(
+            #     f"hotspot {i + 1} {'dimer ' if by_dimers else 'chain '}"
+            #     f"{(dimer_names if by_dimers else string.ascii_uppercase)[j]} "
+            #     f"value {output:.4} ({output.dtype})"
+            # )
             result[i, j] = output
     # transpose the output for compatibility with analysis methods
     return result.transpose()

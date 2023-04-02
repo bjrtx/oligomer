@@ -151,7 +151,7 @@ def oligomer_structure(blue_set: Iterable[int] = frozenset()):
 
 
 @cache
-def more_complicated_graph() -> DiGraph:
+def more_complicated_graph(halve_edges: bool = True) -> DiGraph:
     """Return a digraph encoding dimer-dimer junctions for the case of heterodimers.
     It has 24 vertices (one by chain) and the edges represent T-junctions
     between chains. Note that two chains belonging to the same dimer are not
@@ -171,7 +171,11 @@ def more_complicated_graph() -> DiGraph:
         11: [(3, 1), (4, 1)],
     }
     # here a monomer is a tuple (k, i) where k is a dimer and i is either 0 or 1
-    out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
+    if halve_edges:
+        out_neighbours = (((k, 0), v[0:1]) for k, v in out_neighbours.items())
+    else:
+        out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
+        
     out_neighbours = dict(chain(out_neighbours))
 
     # Fix vertex positions for drawing the graph
