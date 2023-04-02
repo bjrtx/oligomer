@@ -174,8 +174,10 @@ def more_complicated_graph(halve_edges: bool = True) -> DiGraph:
     if halve_edges:
         out_neighbours = (((k, 0), v[0:1]) for k, v in out_neighbours.items())
     else:
-        out_neighbours = (((k, i), v) for k, v in out_neighbours.items() for i in (0, 1))
-        
+        out_neighbours = (
+            ((k, i), v) for k, v in out_neighbours.items() for i in (0, 1)
+        )
+
     out_neighbours = dict(chain(out_neighbours))
 
     # Fix vertex positions for drawing the graph

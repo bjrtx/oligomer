@@ -59,12 +59,12 @@ def analyze(
         # process)
         # sklearn.preprocessing.scale with scores="sum" creates numerical errors,
         # hence the choice of min-max scaling
-        #scale = sklearn.preprocessing.minmax_scale
-        #scale(data, axis=1, copy=False)
-        #scale(all_bfr1, axis=1, copy=False)
-        #scale(all_bfr2, axis=1, copy=False)
+        # scale = sklearn.preprocessing.minmax_scale
+        # scale(data, axis=1, copy=False)
+        # scale(all_bfr1, axis=1, copy=False)
+        # scale(all_bfr2, axis=1, copy=False)
         data = numpy.vstack((data, all_bfr1, all_bfr2))
-        #print(f"data rows {len(data)}")
+        # print(f"data rows {len(data)}")
     if symmetric_data is not None:
         data_blocks += ["sym_"]
         data = numpy.vstack((data, symmetric_data))
@@ -92,10 +92,12 @@ def analyze(
     # print("Bfr1/2 proportion", first_coeffs)
     # Plot the first PCA component
     seaborn.relplot(x=reduced[:, 0], y=chain_names, hue=hue, legend=None)
-    #print(chain_names)
-    #print(len(reduced[:, 0]))
-    #seaborn.relplot(x=reduced[:, 0], legend=None)
-    logging.info(f"First PCA component explains {pca.explained_variance_ratio_[0]:.1%} of the variance")
+    # print(chain_names)
+    # print(len(reduced[:, 0]))
+    # seaborn.relplot(x=reduced[:, 0], legend=None)
+    logging.info(
+        f"First PCA component explains {pca.explained_variance_ratio_[0]:.1%} of the variance"
+    )
     plt.title(
         f"""
         First component in the Principal Component Analysis of the hotspot data.

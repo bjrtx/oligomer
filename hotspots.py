@@ -27,7 +27,7 @@ default_main_map = "284postprocess.mrc"
 all_bfr1_map = "all_Bfr1-phenix005.mrc"
 all_bfr2_map = "all_Bfr2-phenix007.mrc"
 default_hotspot_file = "bbRefinedHotSpotsListDaniel_new.csv"
-normalize = "unit-stdev" # unit-stdev, unit-max and none
+normalize = "unit-stdev"  # unit-stdev, unit-max and none
 sym_prefix = ""  # The folder with sym. data, "" if same folder
 default_sym_map = "284postprocess_symO.mrc"
 default_sym_hotspot = "bbRefinedHotSpotsListDaniel_292.csv"
@@ -47,13 +47,14 @@ def scale_mrc(data: np.ndarray) -> np.ndarray:
     logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
     if normalize == "unit-stdev":
         logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
-        tmp = (data - data.mean())
+        tmp = data - data.mean()
         return tmp / tmp.std()
     elif normalize == "unit-max":
         return (data - data.min()) / (data.max() - data.min())
     elif normalize == "none":
         return data
-    
+
+
 def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
     """
     Compute the two masks associated with a given hotspot.
@@ -171,8 +172,8 @@ def process(
     result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
     if scores == "threshold":
-        map_ = (map_ > map_threshold)
-        #.astype(np.float16)  # for future precision printing
+        map_ = map_ > map_threshold
+        # .astype(np.float16)  # for future precision printing
         logging.warning("Using threshold scoring.")
 
     # scaling
