@@ -23,6 +23,7 @@ import analysis
 ### be changed.
 chain_threshold = 0.42
 map_threshold = 0.05  # for threshold scoring
+force_threshold = True # force thresholding regardless of scoring method
 default_main_map = "284postprocess.mrc"
 all_bfr1_map = "all_Bfr1-phenix005.mrc"
 all_bfr2_map = "all_Bfr2-phenix007.mrc"
@@ -171,8 +172,11 @@ def process(
     ]
     result = np.empty([len(hotspot_data), len(columns)], dtype=np.float16)
 
-    if scores == "threshold":
+    if scores == "threshold" or force_threshold:
         map_ = map_ > map_threshold
+    if force_threshold:
+        logging.warning("Thresholding the map")
+    if scores == "threshold":
         # .astype(np.float16)  # for future precision printing
         logging.warning("Using threshold scoring.")
 
