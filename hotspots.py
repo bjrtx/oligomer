@@ -23,7 +23,7 @@ import analysis
 ### be changed.
 chain_threshold = 0.42
 map_threshold = 0.05  # for threshold scoring
-force_threshold = True # force thresholding regardless of scoring method
+force_threshold = True  # force thresholding regardless of scoring method
 default_main_map = "284postprocess.mrc"
 all_bfr1_map = "all_Bfr1-phenix005.mrc"
 all_bfr2_map = "all_Bfr2-phenix007.mrc"
