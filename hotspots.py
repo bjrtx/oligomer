@@ -9,6 +9,8 @@ import functools
 import argparse
 from typing import Optional
 from collections.abc import Collection
+import tomli
+
 
 import numpy as np
 import skimage
@@ -32,9 +34,45 @@ normalize = "unit-stdev"  # unit-stdev, unit-max and none
 sym_prefix = ""  # The folder with sym. data, "" if same folder
 default_sym_map = "284postprocess_symO.mrc"
 default_sym_hotspot = "bbRefinedHotSpotsListDaniel_292.csv"
+sym_threshold = 0.1
 #############################################################
 
 
+def read_toml(filename: str) -> dict:
+    with open(filename, mode="rb") as f:
+        d = tomli.load(f)
+    if not d.get("maps"):
+        logging.error("Misformed TOML file: no maps")
+        return
+    for map_name, map in d["maps"].items():
+        if not ({"map_file", "hotspot_file", "chain_threshold"} <= map.keys()):
+            logging.error("Map entry {} missing required entries".format(map_name))
+            return
+    logging.info("Read TOML conf. file containing {} maps".format(len(d["maps"])))
+    return d
+
+def process_toml(d: dict) :
+    # TODO: handle all options and other maps
+    if "normalize" in d:
+        global normalize
+        normalize = d["normalize"]
+        
+    if "scoring" in d and d["scoring"] == "threshold":
+        global scoring_threshold
+        scoring_threshold = d["scoring_threshold"]
+    
+    output = [
+        process(
+            m["hotspot_file"],
+            m["map_file"],
+            scores=d["scoring"]
+        )
+        for m in d["maps"]
+    ]
+
+    
+
+    
 def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
@@ -47,7 +85,6 @@ def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
 def scale_mrc(data: np.ndarray) -> np.ndarray:
     logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
     if normalize == "unit-stdev":
-        logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
         tmp = data - data.mean()
         return tmp / tmp.std()
     elif normalize == "unit-max":
@@ -108,7 +145,6 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 
 
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
-
 
 def process(
     hotspot_data: str | Collection[dict[str]],
@@ -215,6 +251,9 @@ def process(
 
 # Main script: parse and handle the optional arguments
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    # Read TOML file
+    d = read_toml("example.toml")
     # Parse optional arguments.
     parser = argparse.ArgumentParser(description="Process and analyze an MRC map.")
     parser.add_argument(
@@ -260,7 +299,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO)
+    
 
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
@@ -304,7 +343,7 @@ if __name__ == "__main__":
 
     symmetric = (
         process(
-            sym_hotspot_data, sym_map_file, by_dimers=args.by_dimers, scores=args.scores
+            sym_hotspot_data, read_mrc(sym_map_file) > sym_threshold, by_dimers=args.by_dimers, scores=args.scores
         )
         if args.symmetric
         else None
