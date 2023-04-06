@@ -51,28 +51,23 @@ def read_toml(filename: str) -> dict:
     logging.info("Read TOML conf. file containing {} maps".format(len(d["maps"])))
     return d
 
-def process_toml(d: dict) :
+
+def process_toml(d: dict):
     # TODO: handle all options and other maps
     if "normalize" in d:
         global normalize
         normalize = d["normalize"]
-        
+
     if "scoring" in d and d["scoring"] == "threshold":
         global scoring_threshold
         scoring_threshold = d["scoring_threshold"]
-    
+
     output = [
-        process(
-            m["hotspot_file"],
-            m["map_file"],
-            scores=d["scoring"]
-        )
+        process(m["hotspot_file"], m["map_file"], scores=d["scoring"])
         for m in d["maps"]
     ]
 
-    
 
-    
 def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
     """
     Read an MRC map from a file and convert it into a Numpy multidimensional array.
@@ -145,6 +140,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
 
 
 dimer_names = ["aq", "bo", "cv", "du", "ep", "fr", "gk", "hn", "is", "jt", "lw", "mx"]
+
 
 def process(
     hotspot_data: str | Collection[dict[str]],
@@ -299,7 +295,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    
 
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores
@@ -343,7 +338,10 @@ if __name__ == "__main__":
 
     symmetric = (
         process(
-            sym_hotspot_data, read_mrc(sym_map_file) > sym_threshold, by_dimers=args.by_dimers, scores=args.scores
+            sym_hotspot_data,
+            read_mrc(sym_map_file) > sym_threshold,
+            by_dimers=args.by_dimers,
+            scores=args.scores,
         )
         if args.symmetric
         else None
