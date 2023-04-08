@@ -49,7 +49,11 @@ def read_toml(filename: str) -> dict:
         if not ({"map_file", "hotspot_file", "chain_threshold"} <= map.keys()):
             logging.error("Map entry {} missing required entries".format(map_name))
             return
-    logging.info("Read TOML conf. file containing {} maps: {}".format(len(d["maps"]), list(d["maps"].keys())))
+    logging.info(
+        "Read TOML conf. file containing {} maps: {}".format(
+            len(d["maps"]), list(d["maps"].keys())
+        )
+    )
     return d
 
 
@@ -64,7 +68,9 @@ def process_toml(d: dict):
         scoring_threshold = d["global"]["scoring_threshold"]
 
     for name, m in d["maps"].items():
-        m["output"] = process(m["hotspot_file"], m["map_file"], scores=d["global"]["scoring"])
+        m["output"] = process(
+            m["hotspot_file"], m["map_file"], scores=d["global"]["scoring"]
+        )
 
 
 def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
@@ -290,10 +296,7 @@ if __name__ == "__main__":
         action="store_true",
         help="add data points for a symmetric map (default: no)",
     )
-    parser.add_argument(
-        "--toml",
-        action="store_true"
-    )
+    parser.add_argument("--toml", action="store_true")
 
     args = parser.parse_args()
 

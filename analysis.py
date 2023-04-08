@@ -124,7 +124,7 @@ def analyze(
     # logging.info(f"First two components {pca.components_[:2]}")
     # plt.show()
 
-    
+
 def analyze_dicts(d: dict):
     """
     Read a data file whose rows correspond to chains and whose columns correspond to
@@ -159,9 +159,7 @@ def analyze_dicts(d: dict):
     # Define the PCA estimator
     pca = PCA(n_components=1)
     hue = list(
-        itertools.chain.from_iterable(
-            [i] * nbr_chains for i, _ in enumerate(d["maps"])
-        )
+        itertools.chain.from_iterable([i] * nbr_chains for i, _ in enumerate(d["maps"]))
     )
     # The principal components are learned from the empirical data,
     # not taking into account the other rows
