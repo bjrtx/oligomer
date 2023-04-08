@@ -7,6 +7,7 @@ import logging
 import heapq
 import functools
 import argparse
+import os
 from typing import Optional
 from collections.abc import Collection
 import tomli
@@ -48,24 +49,22 @@ def read_toml(filename: str) -> dict:
         if not ({"map_file", "hotspot_file", "chain_threshold"} <= map.keys()):
             logging.error("Map entry {} missing required entries".format(map_name))
             return
-    logging.info("Read TOML conf. file containing {} maps".format(len(d["maps"])))
+    logging.info("Read TOML conf. file containing {} maps: {}".format(len(d["maps"]), list(d["maps"].keys())))
     return d
 
 
 def process_toml(d: dict):
     # TODO: handle all options and other maps
-    if "normalize" in d:
+    if "normalize" in d["global"]:
         global normalize
-        normalize = d["normalize"]
+        normalize = d["global"]["normalize"]
 
-    if "scoring" in d and d["scoring"] == "threshold":
+    if d["global"]["scoring"] == "threshold":
         global scoring_threshold
-        scoring_threshold = d["scoring_threshold"]
+        scoring_threshold = d["global"]["scoring_threshold"]
 
-    output = [
-        process(m["hotspot_file"], m["map_file"], scores=d["scoring"])
-        for m in d["maps"]
-    ]
+    for name, m in d["maps"].items():
+        m["output"] = process(m["hotspot_file"], m["map_file"], scores=d["global"]["scoring"])
 
 
 def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
@@ -248,8 +247,6 @@ def process(
 # Main script: parse and handle the optional arguments
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    # Read TOML file
-    d = read_toml("example.toml")
     # Parse optional arguments.
     parser = argparse.ArgumentParser(description="Process and analyze an MRC map.")
     parser.add_argument(
@@ -293,8 +290,18 @@ if __name__ == "__main__":
         action="store_true",
         help="add data points for a symmetric map (default: no)",
     )
+    parser.add_argument(
+        "--toml",
+        action="store_true"
+    )
 
     args = parser.parse_args()
+
+    if args.toml or os.path.isfile("params.toml"):
+        d = read_toml("params.toml")
+        process_toml(d)
+        analysis.analyze_dicts(d)
+        quit()
 
     out = process(
         args.hotspot_file, args.map_file, by_dimers=args.by_dimers, scores=args.scores

@@ -123,3 +123,61 @@ def analyze(
     # )
     # logging.info(f"First two components {pca.components_[:2]}")
     # plt.show()
+
+    
+def analyze_dicts(d: dict):
+    """
+    Read a data file whose rows correspond to chains and whose columns correspond to
+    hotspots. Conduct statistical analysis.
+
+    The analysis is conducted by dimer when group_data is True and otherwise by chain.
+    If both all_bfr1 and all_bfr2 are passed, they should contain hotspot data for an
+    all-bfr1 and an all-bfr2 map. In this case, two dimers representing ideal Bfr1 and
+    Bfr2 dimers are added to the data. That is, the data consists of the 12 dimers from
+    the empirical data plus two dimers obtained from all_bfr1 and all_bfr2 respectively.
+    This is useful for the analysis, when we want to assess how much empirical dimers
+    look like simulated Bfr1 or Bfr2 data.
+    If symmetric_data is passed, it should contain hotspot data for a symmetric map.
+    """
+    data = numpy.vstack([m["output"] for m in d["maps"].values()])
+    # If the data is given by chain but we want to analyze it by dimer, we need to
+    # group said chains into dimers
+    shuffler = [
+        (ord(x) - ord("a") + 24 * i, ord(y) - ord("a") + 24 * i)
+        for i, _ in enumerate(d["maps"])
+        for x, y in hotspots.dimer_names
+    ]
+    first, second = zip(*shuffler)
+    data = numpy.hstack((data[first, :], data[second, :]))
+    chain_names = [
+        m.get("chain_name_prefix", "") + n
+        for m in d["maps"].values()
+        for n in hotspots.dimer_names
+    ]
+
+    nbr_chains = 12
+    # Define the PCA estimator
+    pca = PCA(n_components=1)
+    hue = list(
+        itertools.chain.from_iterable(
+            [i] * nbr_chains for i, _ in enumerate(d["maps"])
+        )
+    )
+    # The principal components are learned from the empirical data,
+    # not taking into account the other rows
+    reduced = pca.fit(data[:nbr_chains, :]).transform(data)
+    seaborn.relplot(x=reduced[:, 0], y=chain_names, hue=hue, legend=None)
+    logging.info(
+        "First PCA component explains {:.1%} of the variance".format(
+            pca.explained_variance_ratio_[0]
+        )
+    )
+    plt.title(
+        f"""
+        First component in the Principal Component Analysis of the hotspot data.
+        Variance explained by this component: {pca.explained_variance_ratio_[0]:.1%}.
+        """,
+        loc="left",
+    )
+    plt.ylabel("Dimer name")
+    plt.show()
