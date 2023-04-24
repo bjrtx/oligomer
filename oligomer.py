@@ -109,7 +109,7 @@ def _vertices_to_facets() -> dict[int, Polyhedron]:
     edges = [
         (i, j)
         for (i, f), (j, g) in combinations(enumerate(facets), 2)
-        if f.intersection(g).dimension()
+        if f.intersection(g).dimension() > 0
     ]
     assert len(edges) == 24 and len(facets) == 12
     # Find a graph isomorphism between the intersection graph defined by these
