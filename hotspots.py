@@ -142,7 +142,9 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
     if len(biggest) < n:
         # This happens if there were fewer than n elements in regions.
         logging.warning(
-            "Fewer connected components than expected (%d/%d), perhaps due to an empty mask.", len(biggest), n
+            "Fewer connected components than expected (%d/%d), perhaps due to an empty mask.",
+            len(biggest),
+            n,
         )
     # Return the union (logical sum) of all n largest components
     return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
@@ -287,8 +289,10 @@ if __name__ == "__main__":
         "--scores",
         choices=("sum", "sum_by_volume", "threshold"),
         default="sum",
-        help=("use threshold scoring or sum of densities scaled"
-              " by volume (default: sum of densities unscaled)"),
+        help=(
+            "use threshold scoring or sum of densities scaled"
+            " by volume (default: sum of densities unscaled)"
+        ),
     )
     # threshold scoring does not give plausible results for homooligomeric structures
     parser.add_argument(
