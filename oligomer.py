@@ -297,8 +297,10 @@ class Bicoloring:
         """Count the vertices which have distinct colors in self and in other."""
         return len(self.blue_set.symmetric_difference(other.blue_set))
 
-    def show(self) -> None:
+    def show(self, mode="graph") -> None:
         """Displays a picture of the coloring."""
+        if mode is not None and mode != "graph":
+            raise ValueError("Unexpected mode in Bicoloring.show")
         self.graph.plot(
             vertex_labels=None,
             vertex_color=_CHIMERA_RED,

@@ -40,36 +40,36 @@ sym_threshold = 0.1
 
 
 def read_toml(filename: str) -> dict:
-    with open(filename, mode="rb") as f:
-        d = tomli.load(f)
-    if not d.get("maps"):
+    with open(filename, mode="rb") as config_file:
+        config = tomli.load(config_file)
+    if not config.get("maps"):
         logging.error("Misformed TOML file: no maps")
-        return
-    for map_name, map in d["maps"].items():
-        if not ({"map_file", "hotspot_file", "chain_threshold"} <= map.keys()):
-            logging.error("Map entry {} missing required entries".format(map_name))
-            return
+        return {}
+    for map_name, map_ in config["maps"].items():
+        if not ({"map_file", "hotspot_file", "chain_threshold"} <= map_.keys()):
+            logging.error("Map entry %s missing required entries", map_name)
+            return {}
     logging.info(
         "Read TOML conf. file containing {} maps: {}".format(
-            len(d["maps"]), list(d["maps"].keys())
+            len(config["maps"]), list(config["maps"].keys())
         )
     )
-    return d
+    return config
 
 
-def process_toml(d: dict):
+def process_toml(config: dict):
     # TODO: handle all options and other maps
-    if "normalize" in d["global"]:
+    if "normalize" in config["global"]:
         global normalize
-        normalize = d["global"]["normalize"]
+        normalize = config["global"]["normalize"]
 
-    if d["global"]["scoring"] == "threshold":
+    if config["global"]["scoring"] == "threshold":
         global scoring_threshold
-        scoring_threshold = d["global"]["scoring_threshold"]
+        scoring_threshold = config["global"]["scoring_threshold"]
 
-    for name, m in d["maps"].items():
-        m["output"] = process(
-            m["hotspot_file"], m["map_file"], scores=d["global"]["scoring"]
+    for _, map_ in config["maps"].items():
+        map_["output"] = process(
+            map_["hotspot_file"], map_["map_file"], scores=config["global"]["scoring"]
         )
 
 
@@ -83,14 +83,19 @@ def read_mrc(filename: str, dtype: Optional[type] = None) -> np.ndarray:
 
 
 def scale_mrc(data: np.ndarray) -> np.ndarray:
-    logging.info("scaling: mean {} stdev {}".format(data.mean(), data.std()))
+    """
+    Normalize the input following the process specified by global
+    variable normalize.
+    """
+    logging.info("scaling: mean %f stdev %f", data.mean(), data.std())
     if normalize == "unit-stdev":
         tmp = data - data.mean()
         return tmp / tmp.std()
-    elif normalize == "unit-max":
+    if normalize == "unit-max":
         return (data - data.min()) / (data.max() - data.min())
-    elif normalize == "none":
+    if normalize == "none":
         return data
+    raise ValueError("Unknown normalize option")
 
 
 def hotspot_masks(hotspot: dict[str]) -> list[np.ndarray, np.ndarray]:
@@ -137,8 +142,7 @@ def biggest_blob(logical: "np.ndarray[bool]", n: int = 1) -> "np.ndarray[bool]":
     if len(biggest) < n:
         # This happens if there were fewer than n elements in regions.
         logging.warning(
-            f"Fewer connected components than expected ({len(biggest)}/{n}), "
-            f"perhaps due to an empty mask."
+            "Fewer connected components than expected (%d/%d), perhaps due to an empty mask.", len(biggest), n
         )
     # Return the union (logical sum) of all n largest components
     return functools.reduce(np.logical_or, (labeled == r.label for r in biggest), 0)
@@ -187,7 +191,7 @@ def process(
         )
 
     if isinstance(map_, str):
-        logging.info(f"Processing new map: {map_}.")
+        logging.info("Processing new map: %s.", map_)
         map_ = read_mrc(map_)
 
     if truncate:
@@ -195,8 +199,8 @@ def process(
 
     if isinstance(hotspot_data, str):
         logging.info(f"Reading hotspot information: {hotspot_data}.")
-        with open(hotspot_data, encoding="utf-8") as file:
-            hotspot_data = list(csv.DictReader(file))
+        with open(hotspot_data, encoding="utf-8") as hotspot_file:
+            hotspot_data = list(csv.DictReader(hotspot_file))
 
     # filenames is the generic form of all dimer / chain MRC map names
     filenames = f"{'dimer' if by_dimers else 'chain'}_plus_heme_?.mrc"
@@ -283,7 +287,8 @@ if __name__ == "__main__":
         "--scores",
         choices=("sum", "sum_by_volume", "threshold"),
         default="sum",
-        help="use threshold scoring or sum of densities scaled by volume (default: sum of densities unscaled)",
+        help=("use threshold scoring or sum of densities scaled"
+              " by volume (default: sum of densities unscaled)"),
     )
     # threshold scoring does not give plausible results for homooligomeric structures
     parser.add_argument(
@@ -301,9 +306,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.toml or os.path.isfile("params.toml"):
-        d = read_toml("params.toml")
-        process_toml(d)
-        analysis.analyze_dicts(d)
+        toml_config = read_toml("params.toml")
+        process_toml(toml_config)
+        analysis.analyze_dicts(toml_config)
         quit()
 
     out = process(
