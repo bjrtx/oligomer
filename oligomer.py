@@ -303,7 +303,7 @@ class Bicoloring:
             vertex_labels=None,
             vertex_color=_CHIMERA_RED,
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
-        ).show()
+        ).show(transparent=True)
 
 
 @dataclass(frozen=True, eq=False)  # inherit inequality from the parent class
@@ -355,13 +355,13 @@ class BfrBicoloring(Bicoloring):
             }
 
             sum(diamond(center, idx) for idx, center in centers.items()).show(
-                axes=False
+                axes=False, transparent=True
             )
 
         elif mode == "graph":
             super().show()
         elif mode == "polyhedron":
-            oligomer_structure(self.blue_set).show(frame=False)
+            oligomer_structure(self.blue_set).show(frame=False, transparent=True)
         else:
             raise ValueError(
                 "Unknown mode for displaying the coloring: mode must be one of net,"
