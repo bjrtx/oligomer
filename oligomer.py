@@ -24,7 +24,7 @@ from sage.geometry.polyhedron.constructor import Polyhedron
 
 
 # Define colors matching UCSF Chimera's
-_CHIMERA_RED = (0.776, 0.208, 0.031)
+_CHIMERA_RED = (1.000, 0.427, 0.000)
 _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
 # Define type aliases
