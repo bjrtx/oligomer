@@ -324,14 +324,15 @@ class BfrBicoloring(Bicoloring):
             # Build a diamond shape for each dimer
             def diamond(center, idx):
                 x, y = center
+                alpha = 0.95 # sligthly less than 1 for spacing
                 return sage.all.polygon(
-                    [(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)],
+                    [(x - alpha, y), (x, y - alpha), (x + alpha, y), (x, y + alpha)],
                     color=(_MEDIUM_BLUE if idx in self.blue_set else _CHIMERA_RED),
                     edgecolor="black",
                 ) + sage.all.line(
-                    [(x - 0.5, y - 0.5), (x + 0.5, y + 0.5)]
+                    [(x - alpha / 2, y - alpha / 2), (x + alpha / 2, y + alpha / 2)]
                     if y == 1
-                    else [(x - 0.5, y + 0.5), (x + 0.5, y - 0.5)],
+                    else [(x - alpha / 2, y + alpha / 2), (x + alpha / 2, y - alpha / 2)],
                     rgbcolor="black",
                 )
 
