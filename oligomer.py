@@ -308,7 +308,7 @@ class Bicoloring:
         self.graph.plot(
             vertex_size=_VERTEX_SIZE,
             vertex_color=_CHIMERA_RED,
-            vertex_labels = _vertices_to_dimers(), # None
+            vertex_labels=_vertices_to_dimers(),  # None
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
         ).show(transparent=True)
 
