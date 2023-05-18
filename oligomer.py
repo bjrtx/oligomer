@@ -87,7 +87,21 @@ def _vertices_to_dimers() -> dict[int, str]:
     Bfr graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
-    return {5: 'bo', 6: 'aq', 9: 'lw', 1: 'is', 2: 'jt', 8: 'gk', 10: 'ep', 0: 'fr', 3: 'du', 11: 'mx', 4: 'cv', 7: 'hn'}
+    return {
+        5: "bo",
+        6: "aq",
+        9: "lw",
+        1: "is",
+        2: "jt",
+        8: "gk",
+        10: "ep",
+        0: "fr",
+        3: "du",
+        11: "mx",
+        4: "cv",
+        7: "hn",
+    }
+
 
 @cache
 def _vertices_to_facets() -> dict[int, Polyhedron]:
@@ -295,7 +309,7 @@ class Bicoloring:
             vertex_size=_VERTEX_SIZE,
             vertex_labels=None,
             vertex_color=_CHIMERA_RED,
-            vertex_labels = _vertices_to_dimers(),
+            vertex_labels=_vertices_to_dimers(),
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
         ).show(transparent=True)
 
@@ -319,21 +333,43 @@ class BfrBicoloring(Bicoloring):
             def diamond(center, idx):
                 x, y = center
                 alpha = 0.95  # sligthly less than 1 for spacing
-                return sage.all.polygon(
-                    [(x - alpha, y), (x, y - alpha), (x + alpha, y), (x, y + alpha)],
-                    color=(_MEDIUM_BLUE if idx in self.blue_set else _CHIMERA_RED),
-                    edgecolor="black",
-                ) + sage.all.line(
-                    [(x - alpha / 2, y - alpha / 2), (x + alpha / 2, y + alpha / 2)]
-                    if y == 1
-                    else [
-                        (x - alpha / 2, y + alpha / 2),
-                        (x + alpha / 2, y - alpha / 2),
-                    ],
-                    rgbcolor="black",
-                ) + sage.all.text(_vertices_to_dimers()[idx], center, color="black")
+                return (
+                    sage.all.polygon(
+                        [
+                            (x - alpha, y),
+                            (x, y - alpha),
+                            (x + alpha, y),
+                            (x, y + alpha),
+                        ],
+                        color=(_MEDIUM_BLUE if idx in self.blue_set else _CHIMERA_RED),
+                        edgecolor="black",
+                    )
+                    + sage.all.line(
+                        [(x - alpha / 2, y - alpha / 2), (x + alpha / 2, y + alpha / 2)]
+                        if y == 1
+                        else [
+                            (x - alpha / 2, y + alpha / 2),
+                            (x + alpha / 2, y - alpha / 2),
+                        ],
+                        rgbcolor="black",
+                    )
+                    + sage.all.text(_vertices_to_dimers()[idx], center, color="black")
+                )
 
-            centers = {5: (7, 2), 6: (6, 1), 9: (5, 2), 1: (3, 2), 2: (4, 1), 8: (1, 2), 10: (5, 0), 0: (2, 1), 3: (3, 0), 11: (1, 0), 4: (0, 1), 7: (7, 0)}
+            centers = {
+                5: (7, 2),
+                6: (6, 1),
+                9: (5, 2),
+                1: (3, 2),
+                2: (4, 1),
+                8: (1, 2),
+                10: (5, 0),
+                0: (2, 1),
+                3: (3, 0),
+                11: (1, 0),
+                4: (0, 1),
+                7: (7, 0),
+            }
 
             sum(diamond(center, idx) for idx, center in centers.items()).show(
                 axes=False, transparent=True
@@ -496,6 +532,7 @@ def _experimental_coloring(switch=True) -> BfrBicoloring:
     red or blue as switch is True or False."""
     return BfrBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
 
-_experimental_coloring().show('graph')
-_experimental_coloring().show('net')
+
+_experimental_coloring().show("graph")
+_experimental_coloring().show("net")
 _experimental_coloring().print_Chimera_commands()
