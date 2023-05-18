@@ -87,21 +87,7 @@ def _vertices_to_dimers() -> dict[int, str]:
     Bfr graph to the two letters designing its dimers (first top then bottom) in
     Chimera-generated net pictures.
     """
-    return {
-        10: "ob",
-        9: "nh",
-        2: "cv",
-        3: "kg",
-        1: "xm",
-        0: "fr",
-        11: "is",
-        8: "ud",
-        4: "tj",
-        7: "wl",
-        5: "pe",
-        6: "qa",
-    }
-
+    return {5: 'bo', 6: 'aq', 9: 'lw', 1: 'is', 2: 'jt', 8: 'gk', 10: 'ep', 0: 'fr', 3: 'du', 11: 'mx', 4: 'cv', 7: 'hn'}
 
 @cache
 def _vertices_to_facets() -> dict[int, Polyhedron]:
@@ -309,6 +295,7 @@ class Bicoloring:
             vertex_size=_VERTEX_SIZE,
             vertex_labels=None,
             vertex_color=_CHIMERA_RED,
+            vertex_labels = _vertices_to_dimers(),
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
         ).show(transparent=True)
 
@@ -344,22 +331,9 @@ class BfrBicoloring(Bicoloring):
                         (x + alpha / 2, y - alpha / 2),
                     ],
                     rgbcolor="black",
-                )
+                ) + sage.all.text(_vertices_to_dimers()[idx], center, color="black")
 
-            centers = {
-                9: (0, 0),
-                10: (0, 2),
-                2: (1, 1),
-                1: (2, 0),
-                3: (2, 2),
-                0: (3, 1),
-                8: (4, 0),
-                11: (4, 2),
-                4: (5, 1),
-                5: (6, 0),
-                7: (6, 2),
-                6: (7, 1),
-            }
+            centers = {5: (7, 2), 6: (6, 1), 9: (5, 2), 1: (3, 2), 2: (4, 1), 8: (1, 2), 10: (5, 0), 0: (2, 1), 3: (3, 0), 11: (1, 0), 4: (0, 1), 7: (7, 0)}
 
             sum(diamond(center, idx) for idx, center in centers.items()).show(
                 axes=False, transparent=True
@@ -521,3 +495,7 @@ def _experimental_coloring(switch=True) -> BfrBicoloring:
     """Return the coloring which the data seem to indicate, with the last vertex either
     red or blue as switch is True or False."""
     return BfrBicoloring(blue_set=[10, 2, 1, 11, 4, 5] + ([] if switch else [0]))
+
+_experimental_coloring().show('graph')
+_experimental_coloring().show('net')
+_experimental_coloring().print_Chimera_commands()
