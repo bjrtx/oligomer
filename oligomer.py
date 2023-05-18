@@ -32,6 +32,8 @@ _VERTEX_SIZE = 400
 
 # Should we print dimer names?
 _DEBUG = True
+if _DEBUG:
+    print("You can hide dimer names by setting DEBUG=False")
 
 
 # Define type aliases
