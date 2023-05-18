@@ -27,6 +27,10 @@ from sage.geometry.polyhedron.constructor import Polyhedron
 _CHIMERA_RED = (1.000, 0.427, 0.000)
 _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 
+# Vertex size for plotting graphs
+_VERTEX_SIZE = 400
+
+
 # Define type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
@@ -302,6 +306,7 @@ class Bicoloring:
         if mode is not None and mode != "graph":
             raise ValueError("Unexpected mode in Bicoloring.show")
         self.graph.plot(
+            vertex_size=_VERTEX_SIZE,
             vertex_labels=None,
             vertex_color=_CHIMERA_RED,
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
