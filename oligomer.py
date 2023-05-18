@@ -30,6 +30,9 @@ _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 # Vertex size for plotting graphs
 _VERTEX_SIZE = 400
 
+# Should we print dimer names?
+_DEBUG = True
+
 
 # Define type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
@@ -308,7 +311,7 @@ class Bicoloring:
         self.graph.plot(
             vertex_size=_VERTEX_SIZE,
             vertex_color=_CHIMERA_RED,
-            vertex_labels=_vertices_to_dimers(),  # None
+            vertex_labels = _vertices_to_dimers() if _DEBUG else None,
             vertex_colors={_MEDIUM_BLUE: self.blue_set},
         ).show(transparent=True)
 
@@ -332,7 +335,7 @@ class BfrBicoloring(Bicoloring):
             def diamond(center, idx):
                 x, y = center
                 alpha = 0.95  # sligthly less than 1 for spacing
-                return (
+                figure = (
                     sage.all.polygon(
                         [
                             (x - alpha, y),
@@ -352,8 +355,11 @@ class BfrBicoloring(Bicoloring):
                         ],
                         rgbcolor="black",
                     )
-                    + sage.all.text(_vertices_to_dimers()[idx], center, color="black")
                 )
+                if _DEBUG:
+                    figure += sage.all.text(_vertices_to_dimers()[idx], center, color="black")
+                return figure
+
 
             centers = {
                 5: (7, 2),
