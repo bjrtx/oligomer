@@ -7,20 +7,21 @@ or use an online interpreter such as https://sagecell.sagemath.org/
 """
 
 from __future__ import annotations
-from itertools import chain, combinations
-from functools import cache, cached_property
+
 import collections
-from collections.abc import Iterable, Collection
-from dataclasses import dataclass, field
-
 import csv
-import sys
-
 # Import explicitly to allow use as Python code
 import sage
 import sage.all
-from sage.geometry.polyhedron.library import polytopes
+import sys
+from collections.abc import Iterable, Collection
+from dataclasses import dataclass, field
+from functools import cache, cached_property
+from itertools import chain, combinations
 from sage.geometry.polyhedron.constructor import Polyhedron
+from sage.geometry.polyhedron.library import polytopes
+
+# ===================== Constant values =================
 
 
 # Define colors matching UCSF Chimera's
@@ -30,15 +31,17 @@ _MEDIUM_BLUE = sage.plot.colors.Color("#3232cd").rgb()
 # Vertex size for plotting graphs
 _VERTEX_SIZE = 400
 
-# Should we print dimer names?
+# Should we print dimer names when drawing figures?
 _DEBUG = True
 if _DEBUG:
     print("You can hide dimer names by setting DEBUG=False")
 
-
 # Define type aliases
 Graph = sage.graphs.generic_graph.GenericGraph
 DiGraph = sage.graphs.digraph.DiGraph
+
+
+# ===================== Main logic ====================
 
 
 @cache
@@ -48,6 +51,7 @@ def bfr_graph() -> DiGraph:
     0 to 11 inclusive. The graph cannot be modified.
     """
 
+    # Each vertex has two out-neighbours
     out_neighbours = {
         0: [1, 11],
         1: [2, 8],
@@ -62,7 +66,7 @@ def bfr_graph() -> DiGraph:
         10: [2, 7],
         11: [3, 4],
     }
-    # Fix vertex positions for drawing the graph
+    # Fixed vertex positions for drawing the graph
     vertex_positions = dict(
         enumerate(
             [
@@ -106,6 +110,13 @@ def _vertices_to_dimers() -> dict[int, str]:
         4: "cv",
         7: "hn",
     }
+
+
+@cache
+def _dimers_to_vertices() -> dict[int, str]:
+    """Return a dict mapping each dimer name to a vertex label
+    """
+    return {name: vertex for vertex, name in _vertices_to_dimers().items()}
 
 
 @cache
@@ -167,21 +178,22 @@ def more_complicated_graph(halve_edges: bool = True) -> DiGraph:
     adjacent in this graph."""
     out_neighbours = {
         0: [(1, 1), (11, 0)],
-        1: [(2, 0), (8, 0)],
+        1: [(2, 1), (8, 0)],
         2: [(3, 0), (9, 1)],
-        3: [(0, 1), (10, 1)],
-        4: [(7, 0), (8, 1)],
+        3: [(10, 1), (0, 1)],
+        4: [(8, 1), (7, 0)],
         5: [(4, 0), (9, 0)],
         6: [(10, 0), (5, 1)],
-        7: [(6, 1), (11, 1)],
-        8: [(5, 0), (0, 0)],
-        9: [(1, 0), (6, 0)],
-        10: [(2, 1), (7, 1)],
+        7: [(11, 1), (6, 0)],
+        8: [(0, 0), (5, 0)],
+        9: [(6, 1), (1, 0)],
+        10: [(7, 1), (2, 0)],
         11: [(3, 1), (4, 1)],
     }
     # here a monomer is a tuple (k, i) where k is a dimer and i is either 0 or 1
     if halve_edges:
-        out_neighbours = (((k, 0), v[0:1]) for k, v in out_neighbours.items())
+        out_neighbours = chain((((k, 0), v[0:1]) for k, v in out_neighbours.items()),
+                               (((k, 1), v[1:]) for k, v in out_neighbours.items()))
     else:
         out_neighbours = (
             ((k, i), v) for k, v in out_neighbours.items() for i in (0, 1)
@@ -194,14 +206,14 @@ def more_complicated_graph(halve_edges: bool = True) -> DiGraph:
     vertex_positions = dict(
         enumerate(
             [
-                ([-1 - eps, -1 - eps], [-1 + eps, -1 + eps]),
-                ([-1 - eps, 1 + eps], [-1 + eps, 1 - eps]),
-                ([1 - eps, 1 - eps], [1 + eps, 1 + eps]),
-                ([1 - eps, -1 + eps], [1 + eps, -1 - eps]),
-                ([-5 - eps, -5 - eps], [-5 + eps, -5 + eps]),
-                ([-5 + eps, 5 - eps], [-5 - eps, 5 + eps]),
-                ([5 - eps, 5 - eps], [5 + eps, 5 + eps]),
-                ([5 + eps, -5 - eps], [5 - eps, -5 + eps]),
+                ([-1 - eps, -1 + eps], [-1 + eps, -1 - eps]),
+                ([-1 + eps, 1 + eps], [-1 - eps, 1 - eps]),
+                ([1 + eps, 1 - eps], [1 - eps, 1 + eps]),
+                ([1 + eps, -1 + eps], [1 - eps, -1 - eps]),
+                ([-5 - eps, -5 + eps], [-5 + eps, -5 - eps]),
+                ([-5 - eps, 5 - eps], [-5 + eps, 5 + eps]),
+                ([5 + eps, 5 - eps], [5 - eps, 5 + eps]),
+                ([5 - eps, -5 - eps], [5 + eps, -5 + eps]),
                 ([-3 + eps, 0], [-3 - 2 * eps, 0]),
                 ([0, 3 + 2 * eps], [0, 3 - eps]),
                 ([3 + 2 * eps, 0], [3 - eps, 0]),
@@ -248,8 +260,9 @@ class Bicoloring:
     red_set: Iterable = field(init=False)
 
     def __post_init__(self):
-        # using __setattr__ because the class if frozen (its values cannot be modified
-        # in the standard way)
+        # Using __setattr__ because the class is frozen (its values cannot be modified
+        # in the standard way).
+        # Attributes are set to their "frozen" versions.
         if not self.graph.is_immutable():
             object.__setattr__(self, "graph", self.graph.copy(immutable=True))
         object.__setattr__(self, "blue_set", frozenset(self.blue_set))
@@ -408,11 +421,11 @@ class BfrBicoloring(Bicoloring):
 
 
 def unique_colorings(
-    nb_blue_vertices: int,
-    *,
-    default_graph=True,
-    graph: Graph | None = None,
-    isomorphism=True,
+        nb_blue_vertices: int,
+        *,
+        default_graph=True,
+        graph: Graph | None = None,
+        isomorphism=True,
 ) -> Collection[Bicoloring]:
     """List the colorings with a given number of blue vertices in the directed graph,
     either up to rotations (if isomorphism is True) or not. Return a list or a set.
@@ -438,11 +451,11 @@ def unique_colorings(
 
 
 def write_to_csv(
-    colorings: Iterable[Bicoloring],
-    csv_file: str | None = None,
-    *,
-    csv_header=True,
-    dialect="excel",
+        colorings: Iterable[Bicoloring],
+        csv_file: str | None = None,
+        *,
+        csv_header=True,
+        dialect="excel",
 ):
     """Write the contents of colorings in the CSV format to csv_file.
 
@@ -455,6 +468,7 @@ def write_to_csv(
 
     def write(file):
         writer = csv.writer(file, dialect=dialect)
+        # If required, add column headings
         if csv_header:
             writer.writerow(
                 [
@@ -467,6 +481,7 @@ def write_to_csv(
                     "symmetry number",
                 ]
             )
+
         for coloring in colorings:
             writer.writerow(
                 [
@@ -480,6 +495,7 @@ def write_to_csv(
                 ]
             )
 
+    # Output the table either to a CSV file or to the standard output.
     if csv_file:
         with open(csv_file, "a", encoding="locale") as file:
             write(file)
@@ -488,10 +504,10 @@ def write_to_csv(
 
 
 def short_display(
-    nb_blue_vertices: int,
-    csv_=False,
-    graph: Graph | None = None,
-    **csv_options,
+        nb_blue_vertices: int,
+        csv_=False,
+        graph: Graph | None = None,
+        **csv_options,
 ):
     """Display the unique colorings for a given number of blue vertices.
 
@@ -541,3 +557,5 @@ def _experimental_coloring(switch=True) -> BfrBicoloring:
 _experimental_coloring().show("graph")
 _experimental_coloring().show("net")
 _experimental_coloring().print_Chimera_commands()
+bfr_graph().show()
+more_complicated_graph().show()
