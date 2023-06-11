@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import collections
 import csv
+
 # Import explicitly to allow use as Python code
 import sage
 import sage.all
@@ -114,8 +115,7 @@ def _vertices_to_dimers() -> dict[int, str]:
 
 @cache
 def _dimers_to_vertices() -> dict[int, str]:
-    """Return a dict mapping each dimer name to a vertex label
-    """
+    """Return a dict mapping each dimer name to a vertex label"""
     return {name: vertex for vertex, name in _vertices_to_dimers().items()}
 
 
@@ -192,8 +192,10 @@ def more_complicated_graph(halve_edges: bool = True) -> DiGraph:
     }
     # here a monomer is a tuple (k, i) where k is a dimer and i is either 0 or 1
     if halve_edges:
-        out_neighbours = chain((((k, 0), v[0:1]) for k, v in out_neighbours.items()),
-                               (((k, 1), v[1:]) for k, v in out_neighbours.items()))
+        out_neighbours = chain(
+            (((k, 0), v[0:1]) for k, v in out_neighbours.items()),
+            (((k, 1), v[1:]) for k, v in out_neighbours.items()),
+        )
     else:
         out_neighbours = (
             ((k, i), v) for k, v in out_neighbours.items() for i in (0, 1)
@@ -421,11 +423,11 @@ class BfrBicoloring(Bicoloring):
 
 
 def unique_colorings(
-        nb_blue_vertices: int,
-        *,
-        default_graph=True,
-        graph: Graph | None = None,
-        isomorphism=True,
+    nb_blue_vertices: int,
+    *,
+    default_graph=True,
+    graph: Graph | None = None,
+    isomorphism=True,
 ) -> Collection[Bicoloring]:
     """List the colorings with a given number of blue vertices in the directed graph,
     either up to rotations (if isomorphism is True) or not. Return a list or a set.
@@ -451,11 +453,11 @@ def unique_colorings(
 
 
 def write_to_csv(
-        colorings: Iterable[Bicoloring],
-        csv_file: str | None = None,
-        *,
-        csv_header=True,
-        dialect="excel",
+    colorings: Iterable[Bicoloring],
+    csv_file: str | None = None,
+    *,
+    csv_header=True,
+    dialect="excel",
 ):
     """Write the contents of colorings in the CSV format to csv_file.
 
@@ -504,10 +506,10 @@ def write_to_csv(
 
 
 def short_display(
-        nb_blue_vertices: int,
-        csv_=False,
-        graph: Graph | None = None,
-        **csv_options,
+    nb_blue_vertices: int,
+    csv_=False,
+    graph: Graph | None = None,
+    **csv_options,
 ):
     """Display the unique colorings for a given number of blue vertices.
 
