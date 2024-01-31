@@ -362,12 +362,14 @@ class BfrBicoloring(Bicoloring):
                     color=(_MEDIUM_BLUE if idx in self.blue_set else _CHIMERA_RED),
                     edgecolor="black",
                 ) + sage.all.line(
-                    [(x - alpha / 2, y - alpha / 2), (x + alpha / 2, y + alpha / 2)]
-                    if y == 1
-                    else [
-                        (x - alpha / 2, y + alpha / 2),
-                        (x + alpha / 2, y - alpha / 2),
-                    ],
+                    (
+                        [(x - alpha / 2, y - alpha / 2), (x + alpha / 2, y + alpha / 2)]
+                        if y == 1
+                        else [
+                            (x - alpha / 2, y + alpha / 2),
+                            (x + alpha / 2, y - alpha / 2),
+                        ]
+                    ),
                     rgbcolor="black",
                 )
                 if _DEBUG:

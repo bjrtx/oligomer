@@ -270,7 +270,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--no_scaling",
         action="store_true",
-        help="skip the rescaling of input MRC data (default: no)"
+        help="skip the rescaling of input MRC data (default: no)",
         # TODO not implemented yet
     )
     parser.add_argument(
